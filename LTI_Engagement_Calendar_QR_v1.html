@@ -227,72 +227,96 @@ footer.legal{font-family:"Helvetica Neue",Arial,sans-serif;margin-top:20px;text-
 .gh-remember input{width:auto;margin:0}
 @media(max-width:780px){.share-grid{grid-template-columns:1fr}.qrcard{position:static}}
 @media print{.qr-steps,.qr-actions,.link-preview{display:none !important}}
+
+/* ---------- Wizard chrome ---------- */
+.appbar{margin:0 0 18px;padding:0 4px}
+.appbar .eyebrow{color:var(--navy);margin:0 0 8px}
+.appbar .eyebrow .tick{background:var(--gold)}
+.appbar h1{font-family:"Georgia",serif;margin:0;font-size:26px;line-height:1.1;color:var(--navy);letter-spacing:-.01em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden}
+.wizard{display:flex;flex-direction:column}
+.stepper{display:flex;gap:0;margin:0;padding:0;list-style:none;background:linear-gradient(135deg,var(--navy),var(--navy-700));font-family:"Helvetica Neue",Arial,sans-serif}
+.stepper li{flex:1;display:flex;align-items:center;justify-content:center;gap:9px;padding:15px 10px;color:rgba(255,255,255,.62);font-size:13px;font-weight:700;cursor:pointer;border-bottom:3px solid transparent;transition:color .15s,border-color .15s;text-align:center}
+.stepper li .sdot{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.16);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex:none}
+.stepper li.done{color:rgba(255,255,255,.9)}
+.stepper li.done .sdot{background:var(--mint);color:var(--navy)}
+.stepper li.active{color:#fff;border-bottom-color:var(--mint)}
+.stepper li.active .sdot{background:#fff;color:var(--navy)}
+.stepper li .slabel-min{display:none}
+.step-body{padding:26px 30px 6px;min-height:340px}
+.pane{animation:fade .18s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.pane-head{margin-bottom:16px}
+.pane-head h2{font-family:"Helvetica Neue",Arial,sans-serif;margin:0;color:var(--navy);font-size:21px;letter-spacing:-.01em}
+.pane-head .pane-sub{font-family:"Helvetica Neue",Arial,sans-serif;margin:5px 0 0;color:var(--muted);font-size:13px;line-height:1.5}
+#paneDetails{max-width:520px}
+.opts{margin-top:16px;border-top:1px solid var(--line);padding-top:6px}
+.opts>summary{font-family:"Helvetica Neue",Arial,sans-serif;cursor:pointer;list-style:none;color:var(--navy);font-weight:700;font-size:12.5px;letter-spacing:.02em;padding:10px 0;display:flex;align-items:center;gap:7px}
+.opts>summary::-webkit-details-marker{display:none}
+.opts>summary::before{content:"▸";color:var(--gold);font-size:11px;transition:transform .15s}
+.opts[open]>summary::before{transform:rotate(90deg)}
+.opts-body{padding:4px 0 10px}
+.wiz-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 30px;border-top:1px solid var(--line);background:#fbfdfe;font-family:"Helvetica Neue",Arial,sans-serif}
+.wiz-nav .btn{min-width:104px}
+.wiz-progress{color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.03em}
+.wizard .progress, .wizard .status{margin:0 30px}
+.wizard .status{margin-bottom:8px}
+@media(max-width:620px){
+  .step-body{padding:20px 16px 4px}
+  .wiz-nav{padding:14px 16px}
+  .stepper li{flex-direction:column;gap:5px;font-size:11px;padding:11px 4px}
+  .stepper li .slabel{display:none}
+  .stepper li .slabel-min{display:block}
+}
 </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="hero">
-      <div class="hero-top">
-        <p class="eyebrow"><span class="tick"></span> Capital Group · Capital Learning</p>
-        <h1>Long-Term Investing Post-Workshop Engagement Calendar</h1>
-        <p class="lede">Build a focused three-touchpoint follow-up sequence for advisers who completed the Long-Term Investing workshop. Attach the right resource to each touchpoint, export one calendar file with the resources embedded, then turn the hosted file into a QR code an adviser can scan to add it to their phone or Outlook.</p>
-        <div class="hero-meta">
-          <div class="hmetric"><strong id="reminderCount">3</strong><span>Touchpoints</span></div>
-          <div class="hmetric"><strong id="assetCount">0</strong><span>Resources loaded</span></div>
-          <div class="hmetric"><strong id="linkCount">0</strong><span>Resource links</span></div>
-        </div>
-      </div>
-      <div class="content">
-        <div class="layout">
-          <aside class="panel sticky">
-            <h2>Session details</h2>
-            <p class="hint">Enter the adviser and workshop details. Resources are chosen inside each touchpoint below.</p>
+    <header class="appbar">
+      <p class="eyebrow"><span class="tick"></span> Capital Group · Capital Learning</p>
+      <h1>LTI Engagement Calendar</h1>
+    </header>
 
-            <label for="clientName">Adviser / firm name</label>
-            <input id="clientName" placeholder="e.g., DBS Private Bank" />
+    <div class="card wizard">
+      <ol class="stepper" id="stepper"></ol>
 
-            <label for="startDate">Workshop completion date</label>
-            <input id="startDate" type="date" />
-
-            <div class="two">
-              <div><label for="reminderTime">Reminder time</label><input id="reminderTime" type="time" value="09:00" /></div>
-              <div><label for="duration">Duration</label><select id="duration"><option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option></select></div>
+      <div class="step-body">
+        <!-- Step 1: Details (kept in the DOM so the fields are always readable) -->
+        <section id="paneDetails" class="pane">
+          <div class="pane-head"><h2>Session details</h2><p class="pane-sub">Who is this follow-up for, and when did the workshop finish?</p></div>
+          <label for="clientName">Adviser / firm name</label>
+          <input id="clientName" placeholder="e.g., DBS Private Bank" />
+          <label for="startDate">Workshop completion date</label>
+          <input id="startDate" type="date" />
+          <details class="opts">
+            <summary>Timing options</summary>
+            <div class="opts-body">
+              <div class="two">
+                <div><label for="reminderTime">Reminder time</label><input id="reminderTime" type="time" value="09:00" /></div>
+                <div><label for="duration">Duration</label><select id="duration"><option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option></select></div>
+              </div>
+              <label for="timezone">Time zone</label>
+              <select id="timezone"><option>Asia/Singapore</option><option>Asia/Hong_Kong</option><option>Asia/Tokyo</option><option>Europe/London</option><option>America/New_York</option><option>Australia/Sydney</option></select>
+              <label for="weekendRule">Weekend handling</label>
+              <select id="weekendRule"><option value="nextMonday">Move weekend reminders to Monday</option><option value="previousFriday">Move weekend reminders to Friday</option></select>
             </div>
+          </details>
+        </section>
 
-            <label for="timezone">Time zone</label>
-            <select id="timezone"><option>Asia/Singapore</option><option>Asia/Hong_Kong</option><option>Asia/Tokyo</option><option>Europe/London</option><option>America/New_York</option><option>Australia/Sydney</option></select>
-
-            <label for="weekendRule">Weekend handling</label>
-            <select id="weekendRule"><option value="nextMonday">Move weekend reminders to Monday</option><option value="previousFriday">Move weekend reminders to Friday</option></select>
-
-            <div class="divider"></div>
-
-            <button class="btn primary full" onclick="downloadICS()"><span class="ico" aria-hidden="true">↓</span> Export calendar to send</button>
-            <button class="btn secondary full" style="margin-top:9px" onclick="setTab('share')"><span class="ico" aria-hidden="true">▦</span> Make a QR to share</button>
-            <button class="btn ghost full" style="margin-top:9px" onclick="setTab('assets');uploadFileAssets()"><span class="ico" aria-hidden="true">+</span> Upload resources</button>
-
-            <div class="small">Active touchpoints: <strong id="activeCount">3</strong></div>
-
-            <div class="progress" id="progress"><div class="bar-wrap"><div class="bar" id="bar"></div></div><p id="progressText">Preparing…</p></div>
-            <div class="status" id="status" role="status" aria-live="polite"></div>
-
-            <div class="note"><strong>How resources attach:</strong> each file is embedded into the specific touchpoint you link it to, so the adviser's calendar event carries exactly the resource it needs.</div>
-            <div class="warning">Keep files compact. Large attachments make the calendar file heavy and slower for the adviser to import.</div>
-          </aside>
-
-          <main>
-            <div class="tabs">
-              <button id="tab-sequence" class="tab active" onclick="setTab('sequence')">Touchpoint sequence</button>
-              <button id="tab-assets" class="tab" onclick="setTab('assets')">Resource library</button>
-              <button id="tab-preview" class="tab" onclick="setTab('preview')">Preview &amp; export</button>
-              <button id="tab-share" class="tab" onclick="setTab('share')">Share by QR</button>
-            </div>
-
-            <div id="mainPanel"></div>
-          </main>
-        </div>
+        <!-- Steps 2-4 render here -->
+        <div id="mainPanel" class="pane" style="display:none"></div>
       </div>
+
+      <div class="progress" id="progress"><div class="bar-wrap"><div class="bar" id="bar"></div></div><p id="progressText">Preparing…</p></div>
+      <div class="status" id="status" role="status" aria-live="polite"></div>
+
+      <nav class="wiz-nav">
+        <button class="btn ghost" id="navBack" onclick="prevStep()"><span class="ico" aria-hidden="true">←</span> Back</button>
+        <span class="wiz-progress" id="wizProgress"></span>
+        <button class="btn primary" id="navNext" onclick="nextStep()">Next <span class="ico" aria-hidden="true">→</span></button>
+      </nav>
     </div>
+
     <footer class="legal">For Capital Group adviser engagement use. Resources remain in this browser session until you export. No data leaves your device.</footer>
   </div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -793,7 +817,7 @@ var DEFAULT_REMINDERS=[
 var LS_REMINDERS=BUILD_ID+"-reminders";
 var LS_ASSETS=BUILD_ID+"-assets";
 var LS_GH=BUILD_ID+"-gh";
-var activeTab="sequence";
+var activeStep="details";
 var reminders=loadReminders();
 var assets=loadAssets();
 var sessionFiles={};
@@ -816,27 +840,57 @@ function formatBytes(n){if(!n)return"0 KB";var u=["B","KB","MB","GB"],i=0;while(
 function displayNameFromFile(file){return file.name.replace(/\.[^.]+$/,"").replace(/[_-]+/g," ").replace(/\b\w/g,function(m){return m.toUpperCase();});}
 function assetType(file){var n=file.name.toLowerCase();if(n.endsWith(".pptx")||n.endsWith(".ppt"))return"PowerPoint";if(n.endsWith(".docx")||n.endsWith(".doc"))return"Word";if(n.endsWith(".xlsx")||n.endsWith(".xls"))return"Excel";if(n.endsWith(".pdf"))return"PDF";if(n.endsWith(".png")||n.endsWith(".jpg")||n.endsWith(".jpeg")||n.endsWith(".gif"))return"Image";return"File";}
 function downloadBlob(blob,filename){var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href);},500);}
-function setTab(tab){activeTab=tab;["sequence","assets","preview","share"].forEach(function(x){var el=$("tab-"+x);if(el)el.classList.toggle("active",tab===x);});render();}
+/* ---------- Wizard navigation ---------- */
+var STEPS=[
+  {id:"details",label:"Details",min:"Details"},
+  {id:"touchpoints",label:"Touchpoints",min:"Steps"},
+  {id:"resources",label:"Resources",min:"Files"},
+  {id:"share",label:"Share & QR",min:"Share"}
+];
+function stepIndex(id){for(var i=0;i<STEPS.length;i++){if(STEPS[i].id===id)return i;}return 0;}
+function setText(id,v){var el=$(id);if(el)el.textContent=v;}
+/* Back-compat: existing code calls setTab('sequence'|'assets'|'preview'|'share'). */
+function setTab(tab){var map={sequence:"touchpoints",assets:"resources",preview:"details",share:"share",details:"details",touchpoints:"touchpoints",resources:"resources"};goStep(map[tab]||tab);}
+function goStep(id){activeStep=id;renderActive();try{window.scrollTo({top:0,behavior:"smooth"});}catch(e){}}
+function nextStep(){var i=stepIndex(activeStep);if(i<STEPS.length-1)goStep(STEPS[i+1].id);}
+function prevStep(){var i=stepIndex(activeStep);if(i>0)goStep(STEPS[i-1].id);}
+function renderStepper(){
+  var cur=stepIndex(activeStep);
+  $("stepper").innerHTML=STEPS.map(function(s,i){
+    var cls=i===cur?"active":(i<cur?"done":"");
+    var mark=i<cur?"✓":(i+1);
+    return '<li class="'+cls+'" onclick="goStep(\''+s.id+'\')"><span class="sdot">'+mark+'</span><span class="slabel">'+escapeHtml(s.label)+'</span><span class="slabel-min">'+escapeHtml(s.min)+'</span></li>';
+  }).join("");
+}
+function updateNav(){
+  var i=stepIndex(activeStep);
+  $("navBack").style.visibility=i===0?"hidden":"visible";
+  $("navNext").style.display=i===STEPS.length-1?"none":"inline-flex";
+  setText("wizProgress","Step "+(i+1)+" of "+STEPS.length);
+}
+function renderActive(){
+  updateStats();
+  var onDetails=activeStep==="details";
+  $("paneDetails").style.display=onDetails?"block":"none";
+  $("mainPanel").style.display=onDetails?"none":"block";
+  if(activeStep==="touchpoints")renderSequence();
+  else if(activeStep==="resources")renderAssets();
+  else if(activeStep==="share")renderShare();
+  renderStepper();updateNav();
+}
 
 function updateStats(){
-  $("assetCount").textContent=assets.length;
   var active=reminders.filter(function(r){return r.enabled;}).length;
-  $("reminderCount").textContent=active;
-  if($("activeCount"))$("activeCount").textContent=active;
   var linked=0;reminders.forEach(function(r){linked+=(r.assetIds||[]).length;});
-  $("linkCount").textContent=linked;
+  setText("assetCount",assets.length);setText("reminderCount",active);setText("activeCount",active);setText("linkCount",linked);
 }
-function render(){updateStats();if(activeTab==="sequence")renderSequence();if(activeTab==="assets")renderAssets();if(activeTab==="preview")renderPreview();if(activeTab==="share")renderShare();}
+function render(){renderActive();}
 
 /* ---------- Sequence ---------- */
 function renderSequence(openId){
   $("mainPanel").innerHTML=
-  '<div class="quick-start">'+
-    '<div class="step"><div class="num">STEP 01</div><strong>Upload resources</strong><p>Add the PDFs, decks and charts you want advisers to receive. Files stay in this session.</p></div>'+
-    '<div class="step"><div class="num">STEP 02</div><strong>Link to touchpoints</strong><p>Open a touchpoint and attach the resource that fits that moment in the journey.</p></div>'+
-    '<div class="step"><div class="num">STEP 03</div><strong>Export &amp; QR</strong><p>Export one calendar file, host it at a public link, then generate a QR advisers scan to add it.</p></div>'+
-  '</div>'+
-  '<div class="section-head"><div><h2>Touchpoint sequence</h2><p class="sub">A focused three-touchpoint follow-up journey. Open any touchpoint to edit it or attach resources.</p></div>'+
+  '<div class="pane-head"><h2>Touchpoints</h2><p class="pane-sub">Three follow-up moments after the workshop. Open any one to edit it or attach a resource.</p></div>'+
+  '<div class="section-head"><div></div>'+
   '<div class="actions"><button class="btn ghost small" onclick="addReminder()">+ Add touchpoint</button><button class="btn ghost small" onclick="resetReminders()">Reset to default</button></div></div>'+
   '<div class="sequence">'+reminders.map(reminderCard).join("")+'</div>';
   bindReminderInputs();
@@ -901,10 +955,11 @@ function clearReminderAssets(id){var r=findReminder(id);if(!r)return;r.assetIds=
 /* ---------- Resource library ---------- */
 function renderAssets(){
   $("mainPanel").innerHTML=
-  '<div class="section-head"><div><h2>Resource library</h2><p class="sub">Upload the materials advisers receive. Each file embeds into the touchpoints you link it to.</p></div>'+
+  '<div class="pane-head"><h2>Resources</h2><p class="pane-sub">Upload the materials advisers receive, then attach them to touchpoints on the previous step. They publish as tappable links inside the events.</p></div>'+
+  '<div class="section-head"><div></div>'+
   '<div class="actions"><button class="btn primary small" onclick="uploadFileAssets()">+ Upload resources</button><button class="btn ghost small" onclick="exportSettings()">Export setup</button><button class="btn ghost small" onclick="importSettings()">Import setup</button></div></div>'+
   (assets.length?'<div class="asset-grid">'+assets.map(assetCard).join("")+'</div>':'<div class="empty"><strong>No resources uploaded yet.</strong><br>Select <strong>Upload resources</strong> to add PDFs, PowerPoints, Word documents, charts or other workshop materials.</div>')+
-  '<div class="note"><strong>Session storage:</strong> file contents stay in this browser tab while you work. The touchpoint structure is saved automatically. Use <strong>Export setup</strong> to save your full configuration <em>including the resource files</em> in one .json — importing it later restores everything with no reselecting needed.</div>';
+  '<details class="opts" style="margin-top:16px"><summary>About storage &amp; backups</summary><div class="opts-body"><p class="share-sub">File contents stay in this browser tab while you work; the touchpoint structure is saved automatically. Use <strong>Export setup</strong> to save your full configuration <em>including the resource files</em> in one .json — importing it later restores everything.</p></div></details>';
 }
 function assetCard(a){
   var linkedCount=0;reminders.forEach(function(r){if((r.assetIds||[]).indexOf(a.id)>=0)linkedCount++;});
@@ -1274,61 +1329,62 @@ function printQR(){
   w.document.close();setTimeout(function(){w.print();},300);
 }
 function renderShare(){
+  var configured=!!((ghState.repo||"").trim() && (ghState.token||"").trim());
+  var repoLine=configured?('<p class="share-sub">Publishing to <strong>'+escapeHtml(ghState.repo)+'</strong> · '+escapeHtml(ghState.path||"lti-followup.ics")+'</p>'):'';
   $("mainPanel").innerHTML=
-  '<div class="section-head"><div><h2>Share by QR</h2><p class="sub">Get the exported <strong>.ics</strong> to a public link, then generate a QR. Advisers scan it to download and add the calendar — resources included — to their phone or Outlook. <strong>Option 1</strong> publishes to GitHub for you; <strong>Option 2</strong> lets you paste a link you hosted yourself.</p></div></div>'+
+  '<div class="pane-head"><h2>Share &amp; QR</h2><p class="pane-sub">Publish the calendar (with your resources) to a public link and make a QR advisers scan to add it to their phone or Outlook.</p></div>'+
   '<div class="share-grid">'+
     '<div>'+
-      '<label for="spName">Label shown under the QR (optional)</label>'+
-      '<input id="spName" type="text" placeholder="e.g. LTI Follow-Up — June cohort" oninput="renderLabel()">'+
-
       '<div class="share-card">'+
-        '<h4 class="share-sec">Option 1 · Publish to GitHub automatically</h4>'+
-        '<p class="share-sub">Uploads your attached resources <em>and</em> the calendar to a public repo, links each resource inside the events (so it shows in advisers\' calendars), and generates the QR. The token stays in this browser only.</p>'+
-        '<label for="ghRepo">Repository (owner / name)</label>'+
-        '<input id="ghRepo" type="text" placeholder="yourname/lti-calendar" oninput="onGhInput()">'+
-        '<div class="two">'+
-          '<div><label for="ghBranch">Branch</label><input id="ghBranch" type="text" placeholder="main" oninput="onGhInput()"></div>'+
-          '<div><label for="ghPath">File path</label><input id="ghPath" type="text" placeholder="lti-followup.ics" oninput="onGhInput()"></div>'+
-        '</div>'+
-        '<label for="ghToken">GitHub access token</label>'+
-        '<input id="ghToken" type="password" autocomplete="off" placeholder="github_pat_… (Contents: Read and write)" oninput="onGhInput()">'+
-        '<label class="gh-remember"><input type="checkbox" id="ghRemember" onchange="onGhInput()"> Remember repo &amp; token on this device</label>'+
+        '<h4 class="share-sec">Publish to GitHub &amp; make QR</h4>'+
+        '<p class="share-sub">Uploads your resources and the calendar, links each resource inside the events, and generates the QR — one click. Your token stays in this browser only.</p>'+
+        repoLine+
+        '<details class="opts" id="ghSettings"'+(configured?'':' open')+'>'+
+          '<summary>GitHub settings</summary>'+
+          '<div class="opts-body">'+
+            '<label for="ghRepo">Repository (owner / name)</label>'+
+            '<input id="ghRepo" type="text" placeholder="yourname/lti-calendar" oninput="onGhInput()">'+
+            '<div class="two">'+
+              '<div><label for="ghBranch">Branch</label><input id="ghBranch" type="text" placeholder="main" oninput="onGhInput()"></div>'+
+              '<div><label for="ghPath">File path</label><input id="ghPath" type="text" placeholder="lti-followup.ics" oninput="onGhInput()"></div>'+
+            '</div>'+
+            '<label for="ghToken">GitHub access token</label>'+
+            '<input id="ghToken" type="password" autocomplete="off" placeholder="github_pat_… (Contents: Read and write)" oninput="onGhInput()">'+
+            '<label class="gh-remember"><input type="checkbox" id="ghRemember" onchange="onGhInput()"> Remember repo &amp; token on this device</label>'+
+            '<p class="share-sub" style="margin-top:10px">Fine-grained token scoped to this one repo with <strong>Contents: Read and write</strong>. Keep the same repo/branch/path each cohort and the QR never changes.</p>'+
+          '</div>'+
+        '</details>'+
+        '<label for="spName" style="margin-top:14px">Label under the QR (optional)</label>'+
+        '<input id="spName" type="text" placeholder="e.g. LTI Follow-Up — June cohort" oninput="renderLabel()">'+
         '<button class="btn primary full" style="margin-top:14px" onclick="publishToGitHub()"><span class="ico" aria-hidden="true">▦</span> Publish &amp; make QR</button>'+
-        '<p class="share-sub" style="margin-top:10px">Create a token at <code>github.com → Settings → Developer settings → Fine-grained tokens</code>, scoped to this one repo with <strong>Contents: Read and write</strong>. Keep the same repo, branch and path each cohort and the URL — and the QR — never change; you just re-publish to overwrite the file.</p>'+
       '</div>'+
 
-      '<div class="share-card">'+
-        '<h4 class="share-sec">Option 2 · Paste a public link you hosted</h4>'+
-        '<p class="share-sub">Already uploaded the .ics somewhere public? Paste the link and generate.</p>'+
-        '<label for="spLink">Public file link</label>'+
+      '<details class="opts"><summary>Other ways to share</summary><div class="opts-body">'+
+        '<button class="btn ghost full" onclick="downloadICS()"><span class="ico" aria-hidden="true">↓</span> Download the .ics file</button>'+
+        '<label for="spLink" style="margin-top:14px">Already hosted it? Paste the public link</label>'+
         '<input id="spLink" type="url" placeholder="https://raw.githubusercontent.com/user/repo/main/lti-followup.ics" oninput="onLinkInput()">'+
         '<div id="linkPreview" class="link-preview"></div>'+
-        '<button class="btn secondary full" style="margin-top:14px" onclick="generateFromLink()"><span class="ico" aria-hidden="true">▦</span> Generate QR for this link</button>'+
-        '<ol class="qr-steps">'+
-          '<li><span class="n">1</span><span>Export the <strong>.ics</strong> on <strong>Preview &amp; export</strong> (resources are embedded into it).</span></li>'+
-          '<li><span class="n">2</span><span>Upload it to a <strong>public</strong> GitHub repo or cloud bucket. A normal GitHub <code>/blob/</code> link is fine; this tool converts it to the raw download form automatically.</span></li>'+
-          '<li><span class="n">3</span><span>Paste the link and generate. Advisers scan to download and import — attachments included. On most phones the file opens straight into the calendar / Outlook app.</span></li>'+
-        '</ol>'+
-      '</div>'+
+        '<button class="btn secondary full" style="margin-top:12px" onclick="generateFromLink()"><span class="ico" aria-hidden="true">▦</span> Generate QR for this link</button>'+
+        '<p class="share-sub" style="margin-top:10px">Manual hosting won\'t auto-link your resources — use Publish to GitHub for that.</p>'+
+      '</div></details>'+
 
-      '<div class="warning"><strong>Public means public:</strong> anyone with the link or QR can open the file and its resources. Keep the calendar to generic LTI material with nothing client-specific or confidential.</div>'+
-      '<div class="note"><strong>How resources reach advisers:</strong> calendar apps (iOS, Outlook, Google) don\'t display files embedded inside an event, so Option 1 hosts each resource and adds a <strong>tappable link in the event\'s notes</strong> — which they do show. The QR itself only carries the calendar\'s link (a QR holds ~3 KB). After each publish, raw.githubusercontent.com can take a few minutes to refresh.</div>'+
+      '<div class="note" style="margin-top:16px"><strong>Resources reach advisers as tappable links</strong> in each event\'s notes — calendar apps don\'t show files embedded in events. Anything you publish is <strong>public</strong>, so keep it to generic LTI material. After publishing, the link can take a few minutes to refresh.</div>'+
     '</div>'+
     '<div>'+
       '<div class="qrcard">'+
         '<h3>Scan to add</h3><p class="qsub" id="qrSub">Your QR will appear here</p>'+
-        '<div class="qr-holder" id="qrHolder"><span class="qr-empty" id="qrEmpty">Publish to GitHub or paste a link, then generate to see the QR code.</span></div>'+
+        '<div class="qr-holder" id="qrHolder"><span class="qr-empty" id="qrEmpty">Publish (or paste a link) to see the QR.</span></div>'+
         '<p class="qr-label" id="qrLabel"></p>'+
         '<div class="qr-actions hide" id="qrActions"><button class="btn ghost small" onclick="downloadQR()">Download PNG</button><button class="btn ghost small" onclick="printQR()">Print</button></div>'+
       '</div>'+
     '</div>'+
   '</div>';
-  if(shareState.label)$("spName").value=shareState.label;
   $("ghRepo").value=ghState.repo||"";
   $("ghBranch").value=ghState.branch||"main";
   $("ghPath").value=ghState.path||"lti-followup.ics";
   $("ghToken").value=ghState.token||"";
   $("ghRemember").checked=!!ghState.remember;
+  if(shareState.label)$("spName").value=shareState.label;
   if(shareState.link){$("spLink").value=shareState.link;onLinkInput();}
   if(lastQRCanvas){showQR(lastQRCanvas,lastQRSub||"Scan to add",shareState.label||"");}
 }
@@ -1338,9 +1394,8 @@ function init(){
   loadGh();
   var today=new Date();
   $("startDate").value=today.getFullYear()+"-"+pad(today.getMonth()+1)+"-"+pad(today.getDate());
-  ["clientName","startDate","reminderTime","duration","timezone","weekendRule"].forEach(function(id){var el=$(id);if(el)el.addEventListener("input",function(){if(activeTab==="preview")renderPreview();});});
   document.addEventListener("keydown",function(e){if(e.key==="Escape"){var open=document.querySelector(".reminder-card.open");if(open){open.classList.remove("open");}}});
-  render();
+  goStep("details");
 }
 try{init();}catch(e){console.error(e);var target=$("mainPanel");if(target)target.innerHTML='<div class="warning"><strong>Interactive mode did not load.</strong> Open this file in Chrome, Edge or Safari.</div>';}
 </script>
