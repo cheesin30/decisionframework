@@ -220,6 +220,11 @@ footer.legal{font-family:"Helvetica Neue",Arial,sans-serif;margin-top:20px;text-
 .qr-steps li{display:flex;gap:11px;align-items:flex-start;font-size:12.5px;color:var(--ink);line-height:1.5}
 .qr-steps .n{flex:none;width:21px;height:21px;border-radius:50%;background:var(--navy);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px}
 .hide{display:none!important}
+.share-card{border:1px solid var(--line);border-radius:var(--r-md);padding:16px;background:#fff;box-shadow:var(--shadow-sm);margin-top:16px}
+.share-sec{font-family:"Helvetica Neue",Arial,sans-serif;margin:0 0 4px;font-size:14px;color:var(--navy);letter-spacing:-.01em}
+.share-sub{font-family:"Helvetica Neue",Arial,sans-serif;margin:0 0 6px;font-size:12px;color:var(--muted);line-height:1.5}
+.gh-remember{display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-weight:600;color:var(--ink);font-size:12.5px;margin:12px 0 0}
+.gh-remember input{width:auto;margin:0}
 @media(max-width:780px){.share-grid{grid-template-columns:1fr}.qrcard{position:static}}
 @media print{.qr-steps,.qr-actions,.link-preview{display:none !important}}
 </style>
@@ -787,6 +792,7 @@ var DEFAULT_REMINDERS=[
 ];
 var LS_REMINDERS=BUILD_ID+"-reminders";
 var LS_ASSETS=BUILD_ID+"-assets";
+var LS_GH=BUILD_ID+"-gh";
 var activeTab="sequence";
 var reminders=loadReminders();
 var assets=loadAssets();
@@ -1000,23 +1006,25 @@ async function appendFileAttachment(parts,file,asset,onProgress,totalBytesDone,t
 }
 function showStatus(msg){var s=$("status");s.textContent=msg;s.style.display="block";clearTimeout(s._t);s._t=setTimeout(function(){s.style.display="none";},3800);}
 
-async function downloadICS(){
-  if(!$("startDate").value){alert("Select the workshop completion date first.");setTab("preview");return;}
+/* Build the full .ics (validating inputs and embedding attachments). Returns
+   {parts, client} ready to download or publish, or null if it cannot proceed. */
+async function assembleIcs(){
+  if(!$("startDate").value){alert("Select the workshop completion date first.");setTab("preview");return null;}
   var rows=scheduledReminders();
-  if(!rows.length){alert("No active touchpoints to export. Enable at least one in the Touchpoint sequence.");return;}
+  if(!rows.length){alert("No active touchpoints to export. Enable at least one in the Touchpoint sequence.");return null;}
 
   var missing=[],seen={};
   rows.forEach(function(r){(r.assetIds||[]).forEach(function(id){var a=getAsset(id);if(a&&!sessionFiles[a.id]&&!seen[a.id]){seen[a.id]=true;missing.push(a);}});});
   if(missing.length){
     alert("Reselect these files before exporting:\n\n"+missing.map(function(a){return "• "+a.name;}).join("\n"));
     setTab("assets");
-    return;
+    return null;
   }
 
   var totalBytes=0,attachmentCount=0;
   rows.forEach(function(r){(r.assetIds||[]).forEach(function(id){var a=getAsset(id),f=a?sessionFiles[a.id]:null;if(f){totalBytes+=f.size;attachmentCount++;}});});
   if(totalBytes>25*1024*1024){
-    if(!confirm("This will embed "+attachmentCount+" file(s), about "+formatBytes(totalBytes)+" before encoding. Large calendars can be slow for advisers to import. Continue?"))return;
+    if(!confirm("This will embed "+attachmentCount+" file(s), about "+formatBytes(totalBytes)+" before encoding. Large calendars can be slow for advisers to import. Continue?"))return null;
   }
 
   var progress=$("progress"),bar=$("bar"),progressText=$("progressText");
@@ -1055,12 +1063,19 @@ async function downloadICS(){
     parts.push("END:VALARM\r\nEND:VEVENT\r\n");
   }
   parts.push("END:VCALENDAR\r\n");
-  bar.style.width="100%";progressText.textContent="Finalising download…";
-  downloadBlob(new Blob(parts,{type:"text/calendar;charset=utf-8"}),slug(client||"LTI")+"_LTI_Follow_Up_"+$("startDate").value+".ics");
-  showStatus("Calendar exported. Next: host it and make a QR on the Share by QR tab.");
+  bar.style.width="100%";progressText.textContent="Finalising…";
+  return {parts:parts,client:client};
+}
+
+async function downloadICS(){
+  var built=await assembleIcs();
+  if(!built)return;
+  var client=built.client;
+  downloadBlob(new Blob(built.parts,{type:"text/calendar;charset=utf-8"}),slug(client||"LTI")+"_LTI_Follow_Up_"+$("startDate").value+".ics");
+  showStatus("Calendar exported. Next: publish it to GitHub (or host it yourself) and make a QR on the Share by QR tab.");
   if(!shareState.label)shareState.label=(client?client+" — ":"")+"Long-Term Investing Follow-Up";
-  setTimeout(function(){progress.style.display="none";},1600);
-  toast("Calendar exported — host it, then make a QR to share");
+  var progress=$("progress");setTimeout(function(){if(progress)progress.style.display="none";},1600);
+  toast("Calendar exported — now publish & make a QR to share");
   setTab("share");
 }
 
@@ -1072,6 +1087,71 @@ function importSettings(){var input=document.createElement("input");input.type="
 /* ---------- Share by QR ---------- */
 var lastQRCanvas=null, lastQRSub="";
 var shareState={link:"",label:""};
+var ghState={repo:"",branch:"main",path:"lti-followup.ics",token:"",remember:false};
+function loadGh(){try{var s=JSON.parse(localStorage.getItem(LS_GH));if(s&&typeof s==="object"){for(var k in s){if(s.hasOwnProperty(k))ghState[k]=s[k];}ghState.remember=true;}}catch(e){}}
+function saveGh(){try{if(ghState.remember){localStorage.setItem(LS_GH,JSON.stringify(ghState));}else{localStorage.removeItem(LS_GH);}}catch(e){}}
+function onGhInput(){
+  if($("ghRepo"))ghState.repo=$("ghRepo").value.trim();
+  if($("ghBranch"))ghState.branch=$("ghBranch").value.trim();
+  if($("ghPath"))ghState.path=$("ghPath").value.trim();
+  if($("ghToken"))ghState.token=$("ghToken").value;
+  if($("ghRemember"))ghState.remember=$("ghRemember").checked;
+  saveGh();
+}
+/* Minimal GitHub REST helper. Throws Error with .status on failure. */
+async function ghApi(method,path,token,body){
+  var res=await fetch("https://api.github.com"+path,{method:method,headers:{"Authorization":"Bearer "+token,"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"},body:body?JSON.stringify(body):undefined});
+  var data=null;try{data=await res.json();}catch(e){}
+  if(!res.ok){var err=new Error((data&&data.message)?data.message:("HTTP "+res.status));err.status=res.status;throw err;}
+  return data;
+}
+/* Commit the exported .ics to a repo via the Git Data API (handles large
+   files / embedded PDFs), then generate the QR from the stable raw URL. */
+async function publishToGitHub(){
+  onGhInput();
+  var repoFull=(ghState.repo||"").replace(/^https?:\/\/github\.com\//i,"").replace(/\.git$/,"").replace(/\/+$/,"");
+  var m=repoFull.match(/^([^\/\s]+)\/([^\/\s]+)$/);
+  if(!m){toast("Enter the repo as owner/name, e.g. yourname/lti-calendar");return;}
+  var owner=m[1],repo=m[2];
+  var branch=(ghState.branch||"main")||"main";
+  var path=(ghState.path||"lti-followup.ics").replace(/^\/+/,"")||"lti-followup.ics";
+  if(!/\.ics$/i.test(path))path+=".ics";
+  var token=(ghState.token||"").trim();
+  if(!token){toast("Paste a GitHub access token first");return;}
+
+  var built=await assembleIcs();
+  if(!built)return;
+  var text=built.parts.join("");
+  var progress=$("progress"),bar=$("bar"),progressText=$("progressText");
+  if(progress){progress.style.display="block";bar.style.width="100%";progressText.textContent="Publishing to GitHub…";}
+  try{
+    var b64=bytesToBase64(new TextEncoder().encode(text));
+    var blob=await ghApi("POST","/repos/"+owner+"/"+repo+"/git/blobs",token,{content:b64,encoding:"base64"});
+    var ref=await ghApi("GET","/repos/"+owner+"/"+repo+"/git/ref/heads/"+encodeURIComponent(branch),token);
+    var parentSha=ref.object.sha;
+    var commit=await ghApi("GET","/repos/"+owner+"/"+repo+"/git/commits/"+parentSha,token);
+    var tree=await ghApi("POST","/repos/"+owner+"/"+repo+"/git/trees",token,{base_tree:commit.tree.sha,tree:[{path:path,mode:"100644",type:"blob",sha:blob.sha}]});
+    var newCommit=await ghApi("POST","/repos/"+owner+"/"+repo+"/git/commits",token,{message:"Update LTI follow-up calendar ("+(built.client||"general")+")",tree:tree.sha,parents:[parentSha]});
+    await ghApi("PATCH","/repos/"+owner+"/"+repo+"/git/refs/heads/"+encodeURIComponent(branch),token,{sha:newCommit.sha});
+    var rawUrl="https://raw.githubusercontent.com/"+owner+"/"+repo+"/"+branch+"/"+path.split("/").map(encodeURIComponent).join("/");
+    shareState.link=rawUrl;if($("spLink"))$("spLink").value=rawUrl;onLinkInput();
+    var name=$("spName")?$("spName").value.trim():(shareState.label||"");
+    showQR(drawQR(rawUrl),"Scan to download the calendar",name);
+    saveGh();
+    showStatus("Published to GitHub and QR generated. raw.githubusercontent.com can take a few minutes to refresh after each update.");
+    toast("Published to GitHub — QR ready");
+  }catch(e){
+    var msg=e.message||"Publish failed";
+    if(e.status===401)msg="Token rejected (401). Check it is valid and not expired.";
+    else if(e.status===403)msg="Forbidden (403). The token likely lacks Contents: Read and write on this repo.";
+    else if(e.status===404)msg="Not found (404). Check owner/repo, that branch '"+branch+"' exists (the repo needs at least one commit), and that the token can access it.";
+    else if(e.status===409||e.status===422)msg="Conflict updating the branch — someone/something else pushed. Try again.";
+    alert("GitHub publish failed:\n\n"+msg);
+    toast("Publish failed");
+  }finally{
+    if(progress)setTimeout(function(){progress.style.display="none";},1200);
+  }
+}
 
 /* Convert a normal share/blob link into a direct-download raw URL where we can.
    Returns {url, converted, direct, note}. */
@@ -1147,39 +1227,67 @@ function printQR(){
 }
 function renderShare(){
   $("mainPanel").innerHTML=
-  '<div class="section-head"><div><h2>Share by QR</h2><p class="sub">Host the exported <strong>.ics</strong> at a public link, paste it here, and generate a QR. Advisers scan it to download and add the calendar — resources included — to their phone or Outlook.</p></div></div>'+
+  '<div class="section-head"><div><h2>Share by QR</h2><p class="sub">Get the exported <strong>.ics</strong> to a public link, then generate a QR. Advisers scan it to download and add the calendar — resources included — to their phone or Outlook. <strong>Option 1</strong> publishes to GitHub for you; <strong>Option 2</strong> lets you paste a link you hosted yourself.</p></div></div>'+
   '<div class="share-grid">'+
     '<div>'+
-      '<label for="spLink">Public file link (where you hosted the .ics)</label>'+
-      '<input id="spLink" type="url" placeholder="https://raw.githubusercontent.com/user/repo/main/lti-followup.ics" oninput="onLinkInput()">'+
-      '<div id="linkPreview" class="link-preview"></div>'+
       '<label for="spName">Label shown under the QR (optional)</label>'+
       '<input id="spName" type="text" placeholder="e.g. LTI Follow-Up — June cohort" oninput="renderLabel()">'+
-      '<button class="btn primary" style="margin-top:16px" onclick="generateFromLink()"><span class="ico" aria-hidden="true">▦</span> Generate QR for this link</button>'+
-      '<ol class="qr-steps">'+
-        '<li><span class="n">1</span><span>On <strong>Preview &amp; export</strong>, export the <strong>.ics</strong> (resources are embedded into it).</span></li>'+
-        '<li><span class="n">2</span><span>Upload that file to a <strong>public</strong> location — a public GitHub repo or cloud bucket. A normal GitHub <code>/blob/</code> link is fine; this tool converts it to the raw download form automatically.</span></li>'+
-        '<li><span class="n">3</span><span>Paste the link above and generate. Advisers scan to download and import — attachments included. On most phones the file opens straight into the calendar / Outlook app.</span></li>'+
-      '</ol>'+
+
+      '<div class="share-card">'+
+        '<h4 class="share-sec">Option 1 · Publish to GitHub automatically</h4>'+
+        '<p class="share-sub">Commits the exported calendar to a public repo and generates the QR — no manual upload. The token stays in this browser only.</p>'+
+        '<label for="ghRepo">Repository (owner / name)</label>'+
+        '<input id="ghRepo" type="text" placeholder="yourname/lti-calendar" oninput="onGhInput()">'+
+        '<div class="two">'+
+          '<div><label for="ghBranch">Branch</label><input id="ghBranch" type="text" placeholder="main" oninput="onGhInput()"></div>'+
+          '<div><label for="ghPath">File path</label><input id="ghPath" type="text" placeholder="lti-followup.ics" oninput="onGhInput()"></div>'+
+        '</div>'+
+        '<label for="ghToken">GitHub access token</label>'+
+        '<input id="ghToken" type="password" autocomplete="off" placeholder="github_pat_… (Contents: Read and write)" oninput="onGhInput()">'+
+        '<label class="gh-remember"><input type="checkbox" id="ghRemember" onchange="onGhInput()"> Remember repo &amp; token on this device</label>'+
+        '<button class="btn primary full" style="margin-top:14px" onclick="publishToGitHub()"><span class="ico" aria-hidden="true">▦</span> Publish &amp; make QR</button>'+
+        '<p class="share-sub" style="margin-top:10px">Create a token at <code>github.com → Settings → Developer settings → Fine-grained tokens</code>, scoped to this one repo with <strong>Contents: Read and write</strong>. Keep the same repo, branch and path each cohort and the URL — and the QR — never change; you just re-publish to overwrite the file.</p>'+
+      '</div>'+
+
+      '<div class="share-card">'+
+        '<h4 class="share-sec">Option 2 · Paste a public link you hosted</h4>'+
+        '<p class="share-sub">Already uploaded the .ics somewhere public? Paste the link and generate.</p>'+
+        '<label for="spLink">Public file link</label>'+
+        '<input id="spLink" type="url" placeholder="https://raw.githubusercontent.com/user/repo/main/lti-followup.ics" oninput="onLinkInput()">'+
+        '<div id="linkPreview" class="link-preview"></div>'+
+        '<button class="btn secondary full" style="margin-top:14px" onclick="generateFromLink()"><span class="ico" aria-hidden="true">▦</span> Generate QR for this link</button>'+
+        '<ol class="qr-steps">'+
+          '<li><span class="n">1</span><span>Export the <strong>.ics</strong> on <strong>Preview &amp; export</strong> (resources are embedded into it).</span></li>'+
+          '<li><span class="n">2</span><span>Upload it to a <strong>public</strong> GitHub repo or cloud bucket. A normal GitHub <code>/blob/</code> link is fine; this tool converts it to the raw download form automatically.</span></li>'+
+          '<li><span class="n">3</span><span>Paste the link and generate. Advisers scan to download and import — attachments included. On most phones the file opens straight into the calendar / Outlook app.</span></li>'+
+        '</ol>'+
+      '</div>'+
+
       '<div class="warning"><strong>Public means public:</strong> anyone with the link or QR can open the file and its resources. Keep the calendar to generic LTI material with nothing client-specific or confidential.</div>'+
-      '<div class="note"><strong>Why a link, not the file itself?</strong> A QR code holds at most ~3 KB — far less than an .ics carrying embedded PDFs — so the QR points to the hosted file rather than containing it.</div>'+
+      '<div class="note"><strong>Why a link, not the file itself?</strong> A QR code holds at most ~3 KB — far less than an .ics carrying embedded PDFs — so the QR points to the hosted file rather than containing it. After each publish, raw.githubusercontent.com can take a few minutes to refresh.</div>'+
     '</div>'+
     '<div>'+
       '<div class="qrcard">'+
         '<h3>Scan to add</h3><p class="qsub" id="qrSub">Your QR will appear here</p>'+
-        '<div class="qr-holder" id="qrHolder"><span class="qr-empty" id="qrEmpty">Paste your hosted link, then generate to see the QR code.</span></div>'+
+        '<div class="qr-holder" id="qrHolder"><span class="qr-empty" id="qrEmpty">Publish to GitHub or paste a link, then generate to see the QR code.</span></div>'+
         '<p class="qr-label" id="qrLabel"></p>'+
         '<div class="qr-actions hide" id="qrActions"><button class="btn ghost small" onclick="downloadQR()">Download PNG</button><button class="btn ghost small" onclick="printQR()">Print</button></div>'+
       '</div>'+
     '</div>'+
   '</div>';
+  if(shareState.label)$("spName").value=shareState.label;
+  $("ghRepo").value=ghState.repo||"";
+  $("ghBranch").value=ghState.branch||"main";
+  $("ghPath").value=ghState.path||"lti-followup.ics";
+  $("ghToken").value=ghState.token||"";
+  $("ghRemember").checked=!!ghState.remember;
   if(shareState.link){$("spLink").value=shareState.link;onLinkInput();}
-  if(shareState.label){$("spName").value=shareState.label;}
   if(lastQRCanvas){showQR(lastQRCanvas,lastQRSub||"Scan to add",shareState.label||"");}
 }
 
 /* ---------- Init ---------- */
 function init(){
+  loadGh();
   var today=new Date();
   $("startDate").value=today.getFullYear()+"-"+pad(today.getMonth()+1)+"-"+pad(today.getDate());
   ["clientName","startDate","reminderTime","duration","timezone","weekendRule"].forEach(function(id){var el=$(id);if(el)el.addEventListener("input",function(){if(activeTab==="preview")renderPreview();});});
