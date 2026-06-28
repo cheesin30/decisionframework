@@ -12,6 +12,8 @@ A QR code is tiny (~3 KB max), so it **cannot** hold a calendar file that has PD
 
 So the flow is always: **build → export the `.ics` → get it to a public link → QR.**
 
+**About the resource files:** calendar apps (iOS, Outlook, Google) do **not** display files embedded inside a calendar event — they just ignore them. So resources can't travel *inside* the event. Instead, **Option 1 (Publish to GitHub) uploads each resource to your repo and puts a tappable link to it in the event's Notes**, which calendar apps *do* show. The adviser taps the link to open the PDF. (This is why the auto-publish option is recommended — it wires the resource links up for you.)
+
 The tool gives you two ways to do the "get it to a public link" part:
 
 - **Option 1 — Publish to GitHub automatically** (recommended): the tool uploads the file and makes the QR for you.
@@ -73,8 +75,8 @@ https://raw.githubusercontent.com/your-username/lti-calendar/main/lti-followup.i
 1. Open `LTI_Engagement_Calendar_QR_v1.html`.
 2. Fill in **Session details** and adjust the **touchpoint sequence** / **resources** if needed.
 3. Click **Export calendar** (this also jumps you to the **Share by QR** tab).
-4. **Option 1 (automatic):** in the *Publish to GitHub* card, enter your repo / branch / file path, paste your token, then click **Publish & make QR**.
-   - **Option 2 (manual):** upload the exported `.ics` to your repo (drag it in via **Add file → Upload files**, keep the same filename, **Commit**), then paste the file's link into the *Paste a public link* card and click **Generate QR**.
+4. **Option 1 (automatic, recommended):** in the *Publish to GitHub* card, enter your repo / branch / file path, paste your token, then click **Publish & make QR**. The tool uploads your attached resources to a `resources/` folder, links them inside the events, commits the calendar, and draws the QR — all in one click.
+   - **Option 2 (manual):** upload the exported `.ics` to your repo (drag it in via **Add file → Upload files**, keep the same filename, **Commit**), then paste the file's link into the *Paste a public link* card and click **Generate QR**. *(Note: Option 2 does not auto-host resources — for resources to appear in advisers' calendars, use Option 1.)*
 5. **Download PNG** or **Print** the QR and share it (slide, email, poster, handout).
 
 Because the repo, branch and filename don't change, the URL and QR stay identical — re-publishing just replaces the file behind the same QR.
@@ -86,6 +88,7 @@ Because the repo, branch and filename don't change, the URL and QR stay identica
 1. Scan the QR with their phone camera.
 2. Tap the link that appears → the `.ics` downloads.
 3. Tap the downloaded file → their phone offers to add the events. To land in **Outlook** specifically, open the file with the Outlook app (set it as the default handler, or choose it from the share sheet).
+4. Open any event → its **Notes** show the talking-point and a **tappable link to each resource**. Tap a link to open the PDF.
 
 This is a couple of taps — not fully automatic. No QR can silently write events into someone's mailbox; that would need an authenticated calendar integration, which is out of scope for a simple shareable QR.
 

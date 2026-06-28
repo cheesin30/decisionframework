@@ -1006,9 +1006,13 @@ async function appendFileAttachment(parts,file,asset,onProgress,totalBytesDone,t
 }
 function showStatus(msg){var s=$("status");s.textContent=msg;s.style.display="block";clearTimeout(s._t);s._t=setTimeout(function(){s.style.display="none";},3800);}
 
-/* Build the full .ics (validating inputs and embedding attachments). Returns
-   {parts, client} ready to download or publish, or null if it cannot proceed. */
-async function assembleIcs(){
+/* Build the full .ics. Returns {parts, client} or null if it cannot proceed.
+   opts.urlMap (assetId -> public URL) switches resources from embedded binary
+   to hosted links (in the notes + as URL attachments) — what calendar apps
+   actually display. Without it, resources are embedded as before. */
+async function assembleIcs(opts){
+  opts=opts||{};
+  var urlMap=opts.urlMap||null;
   if(!$("startDate").value){alert("Select the workshop completion date first.");setTab("preview");return null;}
   var rows=scheduledReminders();
   if(!rows.length){alert("No active touchpoints to export. Enable at least one in the Touchpoint sequence.");return null;}
@@ -1021,10 +1025,13 @@ async function assembleIcs(){
     return null;
   }
 
-  var totalBytes=0,attachmentCount=0;
-  rows.forEach(function(r){(r.assetIds||[]).forEach(function(id){var a=getAsset(id),f=a?sessionFiles[a.id]:null;if(f){totalBytes+=f.size;attachmentCount++;}});});
-  if(totalBytes>25*1024*1024){
-    if(!confirm("This will embed "+attachmentCount+" file(s), about "+formatBytes(totalBytes)+" before encoding. Large calendars can be slow for advisers to import. Continue?"))return null;
+  if(!urlMap){
+    var totalBytes=0,attachmentCount=0;
+    rows.forEach(function(r){(r.assetIds||[]).forEach(function(id){var a=getAsset(id),f=a?sessionFiles[a.id]:null;if(f){totalBytes+=f.size;attachmentCount++;}});});
+    if(totalBytes>25*1024*1024){
+      if(!confirm("This will embed "+attachmentCount+" file(s), about "+formatBytes(totalBytes)+" before encoding. Large calendars can be slow for advisers to import. Continue?"))return null;
+    }
+    var _tb=totalBytes;
   }
 
   var progress=$("progress"),bar=$("bar"),progressText=$("progressText");
@@ -1044,6 +1051,11 @@ async function assembleIcs(){
     var r=rows[i],end=new Date(r.date),hm=time.split(":").map(Number);end.setHours(hm[0],hm[1]+duration,0,0);
     var linked=(r.assetIds||[]).map(getAsset).filter(Boolean);
     var desc=r.description;
+    if(urlMap){
+      var lines=[];
+      linked.forEach(function(a){var u=urlMap[a.id];if(u)lines.push("• "+a.name+" — "+u);});
+      if(lines.length)desc=desc+"\n\nResources:\n"+lines.join("\n");
+    }
     parts.push("BEGIN:VEVENT\r\n");
     pushLine(parts,"UID:lti-"+r.id+"-"+i+"-"+$("startDate").value+"@capitalgroup-learning");
     parts.push("DTSTAMP:"+stamp+"\r\n");
@@ -1052,10 +1064,16 @@ async function assembleIcs(){
     pushLine(parts,"SUMMARY:"+escIcs((client?client+": ":"")+r.title));
     pushLine(parts,"DESCRIPTION:"+escIcs(desc));
     for(var j=0;j<linked.length;j++){
-      var asset=linked[j],file=sessionFiles[asset.id];
-      if(file){
-        await appendFileAttachment(parts,file,asset,function(done,total,filename){var pct=total?Math.min(99,Math.round((done/total)*100)):60;bar.style.width=pct+"%";progressText.textContent="Embedding "+filename+" — "+pct+"%";},bytesCompletedBefore,totalBytes);
-        bytesCompletedBefore+=file.size;
+      var asset=linked[j];
+      if(urlMap){
+        var u2=urlMap[asset.id];
+        if(u2)pushLine(parts,"ATTACH;FMTTYPE="+(asset.mime||"application/octet-stream")+":"+u2);
+      }else{
+        var file=sessionFiles[asset.id];
+        if(file){
+          await appendFileAttachment(parts,file,asset,function(done,total,filename){var pct=total?Math.min(99,Math.round((done/total)*100)):60;bar.style.width=pct+"%";progressText.textContent="Embedding "+filename+" — "+pct+"%";},bytesCompletedBefore,_tb);
+          bytesCompletedBefore+=file.size;
+        }
       }
     }
     parts.push("BEGIN:VALARM\r\nTRIGGER:-PT15M\r\nACTION:DISPLAY\r\n");
@@ -1105,8 +1123,10 @@ async function ghApi(method,path,token,body){
   if(!res.ok){var err=new Error((data&&data.message)?data.message:("HTTP "+res.status));err.status=res.status;throw err;}
   return data;
 }
-/* Commit the exported .ics to a repo via the Git Data API (handles large
-   files / embedded PDFs), then generate the QR from the stable raw URL. */
+function ghSafeName(name){return String(name||"file").trim().replace(/[^a-zA-Z0-9._-]+/g,"_").replace(/^[_.]+/,"").slice(0,80)||"file";}
+/* Commit the resource files AND the .ics to a repo in one commit (Git Data
+   API, so it handles large files), with each resource referenced by its
+   public link in the events, then generate the QR from the stable raw URL. */
 async function publishToGitHub(){
   onGhInput();
   var repoFull=(ghState.repo||"").replace(/^https?:\/\/github\.com\//i,"").replace(/\.git$/,"").replace(/\/+$/,"");
@@ -1119,26 +1139,54 @@ async function publishToGitHub(){
   var token=(ghState.token||"").trim();
   if(!token){toast("Paste a GitHub access token first");return;}
 
-  var built=await assembleIcs();
-  if(!built)return;
-  var text=built.parts.join("");
+  // Which resources are linked in active touchpoints (and loaded)?
+  if(!$("startDate").value){alert("Select the workshop completion date first.");setTab("preview");return;}
+  var rows=scheduledReminders();
+  if(!rows.length){alert("No active touchpoints to publish. Enable at least one in the Touchpoint sequence.");return;}
+  var resAssets=[],seen={},missing=[];
+  rows.forEach(function(r){(r.assetIds||[]).forEach(function(id){if(seen[id])return;seen[id]=true;var a=getAsset(id);if(!a)return;if(sessionFiles[id])resAssets.push(a);else missing.push(a);});});
+  if(missing.length){alert("Reselect these files before publishing:\n\n"+missing.map(function(a){return "• "+a.name;}).join("\n"));setTab("assets");return;}
+
   var progress=$("progress"),bar=$("bar"),progressText=$("progressText");
-  if(progress){progress.style.display="block";bar.style.width="100%";progressText.textContent="Publishing to GitHub…";}
+  if(progress){progress.style.display="block";bar.style.width="5%";progressText.textContent="Publishing to GitHub…";}
   try{
-    var b64=bytesToBase64(new TextEncoder().encode(text));
-    var blob=await ghApi("POST","/repos/"+owner+"/"+repo+"/git/blobs",token,{content:b64,encoding:"base64"});
-    var ref=await ghApi("GET","/repos/"+owner+"/"+repo+"/git/ref/heads/"+encodeURIComponent(branch),token);
+    var apiBase="/repos/"+owner+"/"+repo;
+    var rawBase="https://raw.githubusercontent.com/"+owner+"/"+repo+"/"+branch+"/";
+    var treeEntries=[],urlMap={},usedPaths={};
+    // 1. Upload each resource as a blob and map it to its public link.
+    for(var k=0;k<resAssets.length;k++){
+      var a=resAssets[k],file=sessionFiles[a.id];
+      if(progress){bar.style.width=(5+Math.round(70*(k/(resAssets.length||1))))+"%";progressText.textContent="Uploading "+(a.filename||a.name)+" — "+(k+1)+"/"+resAssets.length;}
+      var fbytes=await readBlobPart(file,0,file.size);
+      var fb=await ghApi("POST",apiBase+"/git/blobs",token,{content:bytesToBase64(fbytes),encoding:"base64"});
+      var rname=ghSafeName(a.filename||a.name);
+      var rpath="resources/"+rname,n=2;
+      while(usedPaths[rpath.toLowerCase()]){rpath="resources/"+rname.replace(/(\.[^.]*)?$/,"_"+(n++)+"$1");}
+      usedPaths[rpath.toLowerCase()]=true;
+      treeEntries.push({path:rpath,mode:"100644",type:"blob",sha:fb.sha});
+      urlMap[a.id]=rawBase+rpath.split("/").map(encodeURIComponent).join("/");
+    }
+    // 2. Build the .ics referencing those links, and upload it as a blob.
+    if(progress){bar.style.width="80%";progressText.textContent="Building calendar…";}
+    var built=await assembleIcs({urlMap:urlMap});
+    if(!built){if(progress)progress.style.display="none";return;}
+    var icsB64=bytesToBase64(new TextEncoder().encode(built.parts.join("")));
+    var icsBlob=await ghApi("POST",apiBase+"/git/blobs",token,{content:icsB64,encoding:"base64"});
+    treeEntries.push({path:path,mode:"100644",type:"blob",sha:icsBlob.sha});
+    // 3. Commit all entries in one commit on the branch.
+    if(progress){bar.style.width="92%";progressText.textContent="Committing…";}
+    var ref=await ghApi("GET",apiBase+"/git/ref/heads/"+encodeURIComponent(branch),token);
     var parentSha=ref.object.sha;
-    var commit=await ghApi("GET","/repos/"+owner+"/"+repo+"/git/commits/"+parentSha,token);
-    var tree=await ghApi("POST","/repos/"+owner+"/"+repo+"/git/trees",token,{base_tree:commit.tree.sha,tree:[{path:path,mode:"100644",type:"blob",sha:blob.sha}]});
-    var newCommit=await ghApi("POST","/repos/"+owner+"/"+repo+"/git/commits",token,{message:"Update LTI follow-up calendar ("+(built.client||"general")+")",tree:tree.sha,parents:[parentSha]});
-    await ghApi("PATCH","/repos/"+owner+"/"+repo+"/git/refs/heads/"+encodeURIComponent(branch),token,{sha:newCommit.sha});
-    var rawUrl="https://raw.githubusercontent.com/"+owner+"/"+repo+"/"+branch+"/"+path.split("/").map(encodeURIComponent).join("/");
+    var commit=await ghApi("GET",apiBase+"/git/commits/"+parentSha,token);
+    var tree=await ghApi("POST",apiBase+"/git/trees",token,{base_tree:commit.tree.sha,tree:treeEntries});
+    var newCommit=await ghApi("POST",apiBase+"/git/commits",token,{message:"Update LTI follow-up calendar ("+(built.client||"general")+")",tree:tree.sha,parents:[parentSha]});
+    await ghApi("PATCH",apiBase+"/git/refs/heads/"+encodeURIComponent(branch),token,{sha:newCommit.sha});
+    var rawUrl=rawBase+path.split("/").map(encodeURIComponent).join("/");
     shareState.link=rawUrl;if($("spLink"))$("spLink").value=rawUrl;onLinkInput();
     var name=$("spName")?$("spName").value.trim():(shareState.label||"");
     showQR(drawQR(rawUrl),"Scan to download the calendar",name);
     saveGh();
-    showStatus("Published to GitHub and QR generated. raw.githubusercontent.com can take a few minutes to refresh after each update.");
+    showStatus("Published "+resAssets.length+" resource(s) and the calendar. raw.githubusercontent.com can take a few minutes to refresh after each update.");
     toast("Published to GitHub — QR ready");
   }catch(e){
     var msg=e.message||"Publish failed";
@@ -1235,7 +1283,7 @@ function renderShare(){
 
       '<div class="share-card">'+
         '<h4 class="share-sec">Option 1 · Publish to GitHub automatically</h4>'+
-        '<p class="share-sub">Commits the exported calendar to a public repo and generates the QR — no manual upload. The token stays in this browser only.</p>'+
+        '<p class="share-sub">Uploads your attached resources <em>and</em> the calendar to a public repo, links each resource inside the events (so it shows in advisers\' calendars), and generates the QR. The token stays in this browser only.</p>'+
         '<label for="ghRepo">Repository (owner / name)</label>'+
         '<input id="ghRepo" type="text" placeholder="yourname/lti-calendar" oninput="onGhInput()">'+
         '<div class="two">'+
@@ -1264,7 +1312,7 @@ function renderShare(){
       '</div>'+
 
       '<div class="warning"><strong>Public means public:</strong> anyone with the link or QR can open the file and its resources. Keep the calendar to generic LTI material with nothing client-specific or confidential.</div>'+
-      '<div class="note"><strong>Why a link, not the file itself?</strong> A QR code holds at most ~3 KB — far less than an .ics carrying embedded PDFs — so the QR points to the hosted file rather than containing it. After each publish, raw.githubusercontent.com can take a few minutes to refresh.</div>'+
+      '<div class="note"><strong>How resources reach advisers:</strong> calendar apps (iOS, Outlook, Google) don\'t display files embedded inside an event, so Option 1 hosts each resource and adds a <strong>tappable link in the event\'s notes</strong> — which they do show. The QR itself only carries the calendar\'s link (a QR holds ~3 KB). After each publish, raw.githubusercontent.com can take a few minutes to refresh.</div>'+
     '</div>'+
     '<div>'+
       '<div class="qrcard">'+
