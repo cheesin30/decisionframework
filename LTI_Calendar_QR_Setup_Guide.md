@@ -14,35 +14,46 @@ So the flow is always: **build → export the `.ics` → host it → QR.**
 
 **About the resource files:** calendar apps (iOS, Outlook, Google) do **not** display files embedded inside a calendar event — they just ignore them. So resources can't travel *inside* the event. Instead, each resource is hosted and a **tappable link to it goes in the event's Notes**, which calendar apps *do* show. The adviser taps the link to open the PDF.
 
-> **Compliance note:** the tool does not send anything anywhere. *You* choose where the calendar and resources are hosted. For Capital Group, host on your **approved SharePoint / OneDrive** — see below. (A public-GitHub auto-publish option also exists under *Advanced*, but only use it if your policy permits public hosting of this material.)
+> **Compliance note:** the tool does not send anything anywhere. *You* choose where the calendar and resources are hosted. For Capital Group, host on **firm-controlled cloud storage with a signed (capability) link** — see below. (A public-GitHub auto-publish option also exists under *Advanced*, but only use it if your policy permits public hosting of this material.)
 
 ---
 
-## SharePoint hosting (the compliant path)
+## Private hosting with a signed link (the compliant path)
 
-### What has to be true for an adviser to open it
+### Why a signed link
 
-A QR ultimately points to a URL the adviser's phone fetches. For an **external** adviser to open a SharePoint file **without a Microsoft 365 login**, two things must hold:
+A QR points to a URL the adviser's phone fetches. For an **external** adviser to open it **without a login**, the link has to be anonymously reachable — but you don't want it *public*. The enterprise answer is a **capability URL**: an unguessable, **time-limited signed link** to a file in the firm's own cloud storage:
 
-1. The file is shared as **"Anyone with the link"** (not "People in your organisation" — that's internal-only and external advisers get a login wall / **HTTP 403**).
-2. The link is a **direct download** of the file, not the SharePoint preview page. The tool appends `download=1` for you, but the share itself must allow anonymous access.
+- **Azure Blob Storage** → a **SAS** (Shared Access Signature) URL
+- **Amazon S3** → a **pre-signed** URL
+- **Google Cloud Storage** → a **signed** URL
 
-If your tenant **blocks** "Anyone with the link" sharing (common at financial firms), external advisers cannot open it — confirm with IT before relying on this. ("Anyone with the link" also means anyone holding the QR can open it, so keep the content to generic LTI material cleared for external sharing.)
+These are **private** (unguessable + expiring + revocable), the data stays in **the firm's own tenant** (not a third party), and they open with **no login** on any adviser's phone. The tool recognises all three and a SharePoint "Anyone with the link" URL.
+
+> SharePoint also works *if* your tenant allows "Anyone with the link" sharing — but many financial firms disable that (external advisers then hit an **HTTP 403** login wall). Signed cloud links avoid that problem, which is why they're the recommendation here.
+
+**Important — don't modify a signed URL.** The signature covers the exact URL, so paste it exactly as issued. The tool will not alter signed links (unlike SharePoint, where it adds `download=1`). When you create the link, set the storage object's content settings so it **downloads** (e.g. `Content-Disposition: attachment`) rather than rendering inline.
 
 ### Each cohort
 
-1. **Upload your resource PDFs to SharePoint.** For each, get its "Anyone with the link" share URL and, in the tool, open **Resources → Edit** and paste it into the resource's **hosted link** field. The card will show **"Hosted link set."**
-2. On **Share & QR**, click **Download the .ics file.** The downloaded calendar already has each resource's SharePoint link in the event Notes (no files embedded — calendar apps ignore those).
-3. **Upload the `.ics` to SharePoint**, share it as **"Anyone with the link"**, and copy that URL.
-4. Back in the tool, paste it into **SharePoint link to the .ics** and click **Generate QR.** The tool converts it to a download link and shows a checklist to confirm before you share. **Download PNG / Print** the QR.
+1. **Upload your resource files** to the storage. For each, generate a **signed download link** with an expiry that comfortably outlasts the follow-up window (e.g. **3+ months**). In the tool, open **Resources → Edit** and paste it into the resource's **hosted link** field — the card shows **"Hosted link set."**
+2. On **Share & QR**, click **Download the .ics file.** The calendar already has each resource's signed link in the event Notes (no files embedded — calendar apps ignore those).
+3. **Upload the `.ics`** the same way and generate **its** signed download link.
+4. Back in the tool, paste it into **Signed link to the .ics** and click **Generate QR.** The tool shows a checklist to confirm before you share, then **Download PNG / Print** the QR.
 
-Keep the same SharePoint folder and file names each cohort and the link — and the QR — stay the same, so you only print it once.
+**On expiry:** signed links lapse on purpose. Set them long enough for the whole journey, and re-issue + re-generate the QR when you start a new cohort. (If your storage supports it, a stored access policy lets you rotate/revoke without re-issuing every link.)
+
+---
+
+## Alternative: SharePoint "Anyone with the link"
+
+Only if your tenant permits anonymous link sharing. Same steps as above, but the share URL is a SharePoint one; the tool appends `download=1`. If IT blocks anonymous sharing, external advisers get a 403 — use signed cloud links instead.
 
 ---
 
 ## Optional: public GitHub hosting (only if your policy allows)
 
-> Skip this entirely if public hosting is not permitted. Use SharePoint above instead.
+> Skip this entirely if public hosting is not permitted. Use signed cloud links above instead.
 
 ### Step 1 — Create a public GitHub repository
 

@@ -960,7 +960,7 @@ function clearReminderAssets(id){var r=findReminder(id);if(!r)return;r.assetIds=
 /* ---------- Resource library ---------- */
 function renderAssets(){
   $("mainPanel").innerHTML=
-  '<div class="pane-head"><h2>Resources</h2><p class="pane-sub">Upload each resource, attach it to a touchpoint (previous step), and use <strong>Edit</strong> to paste its SharePoint direct-download link. That link is what advisers tap inside the calendar event.</p></div>'+
+  '<div class="pane-head"><h2>Resources</h2><p class="pane-sub">Upload each resource, attach it to a touchpoint (previous step), and use <strong>Edit</strong> to paste its signed/direct-download link (Azure SAS, S3/GCS pre-signed, or SharePoint). That link is what advisers tap inside the calendar event.</p></div>'+
   '<div class="section-head"><div></div>'+
   '<div class="actions"><button class="btn primary small" onclick="uploadFileAssets()">+ Upload resources</button><button class="btn ghost small" onclick="exportSettings()">Export setup</button><button class="btn ghost small" onclick="importSettings()">Import setup</button></div></div>'+
   (assets.length?'<div class="asset-grid">'+assets.map(assetCard).join("")+'</div>':'<div class="empty"><strong>No resources uploaded yet.</strong><br>Select <strong>Upload resources</strong> to add PDFs, PowerPoints, Word documents, charts or other workshop materials.</div>')+
@@ -985,7 +985,7 @@ function reselectAsset(id){
   input.onchange=function(){var file=input.files[0];if(!file)return;sessionFiles[id]=file;var a=getAsset(id);if(a){a.filename=file.name;a.mime=file.type||"application/octet-stream";a.type=assetType(file);a.size=file.size;a.name=a.name||displayNameFromFile(file);a.updatedAt=new Date().toISOString();saveAssets();renderAssets();toast("File reselected and ready");}};
   input.click();
 }
-function editAsset(id){var a=getAsset(id);if(!a)return;var name=prompt("Resource display name",a.name);if(name===null)return;var type=prompt("Resource type / category",a.type||"File");if(type===null)return;var description=prompt("Short description",a.description||"");if(description===null)return;var link=prompt("Hosted link for advisers — the SharePoint/OneDrive direct-download URL for this file. Leave blank until you've uploaded it.",a.url||"");if(link===null)return;a.name=name;a.type=type;a.description=description;a.url=link.trim();saveAssets();renderAssets();toast("Resource updated");}
+function editAsset(id){var a=getAsset(id);if(!a)return;var name=prompt("Resource display name",a.name);if(name===null)return;var type=prompt("Resource type / category",a.type||"File");if(type===null)return;var description=prompt("Short description",a.description||"");if(description===null)return;var link=prompt("Hosted link for advisers — the signed/direct-download URL for this file (Azure SAS, S3/GCS pre-signed, or SharePoint 'Anyone with the link'). Leave blank until you've uploaded it.",a.url||"");if(link===null)return;a.name=name;a.type=type;a.description=description;a.url=link.trim();saveAssets();renderAssets();toast("Resource updated");}
 /* Map of assetId -> hosted link, for events to reference (e.g. SharePoint). */
 function assetUrlMap(){var map={};assets.forEach(function(a){if(a.url)map[a.id]=a.url;});return map;}
 function deleteAsset(id){if(!confirm("Delete this resource and unlink it from all touchpoints?"))return;assets=assets.filter(function(a){return a.id!==id;});reminders.forEach(function(r){r.assetIds=(r.assetIds||[]).filter(function(x){return x!==id;});});delete sessionFiles[id];saveAssets();saveReminders();render();toast("Resource deleted");}
@@ -1155,8 +1155,8 @@ async function downloadICS(){
   downloadBlob(new Blob(built.parts,{type:"text/calendar;charset=utf-8"}),slug(client||"LTI")+"_LTI_Follow_Up_"+$("startDate").value+".ics");
   var noLink=[],seen={};
   scheduledReminders().forEach(function(r){(r.assetIds||[]).forEach(function(id){if(seen[id])return;seen[id]=true;var a=getAsset(id);if(a&&!a.url)noLink.push(a.name);});});
-  if(noLink.length)showStatus(noLink.length+" linked resource(s) have no hosted link yet, so advisers can’t open them. Add each one’s SharePoint link in Resources → Edit, then re-export: "+noLink.slice(0,3).join(", ")+(noLink.length>3?"…":""));
-  else showStatus("Calendar exported. Upload it to SharePoint as an “Anyone with the link” download, then paste that link below to make the QR.");
+  if(noLink.length)showStatus(noLink.length+" linked resource(s) have no hosted link yet, so advisers can’t open them. Add each one’s signed link in Resources → Edit, then re-export: "+noLink.slice(0,3).join(", ")+(noLink.length>3?"…":""));
+  else showStatus("Calendar exported. Upload it to your approved storage, copy its signed download link, then paste it below to make the QR.");
   if(!shareState.label)shareState.label=(client?client+" — ":"")+"Long-Term Investing Follow-Up";
   var progress=$("progress");setTimeout(function(){if(progress)progress.style.display="none";},1600);
   toast("Calendar exported");
@@ -1285,6 +1285,11 @@ function toRawDownloadUrl(raw){
     if(!/[?&]download=1/i.test(u2))u2+=(u2.indexOf("?")>=0?"&":"?")+"download=1";
     return{url:u2,converted:u2!==url,direct:true,sharepoint:true,note:"Set to direct download (download=1). This only opens for advisers if the file is shared as “Anyone with the link.”"};
   }
+  // Capability URLs on firm-controlled cloud storage (private, unguessable, expiring) —
+  // the recommended way to reach external advisers without a login.
+  if(/\.blob\.core\.windows\.net\//i.test(url)){return{url:url,converted:false,direct:true,privateHost:"Azure Blob (SAS link)",note:"Azure Blob SAS — a private, time-limited link. No login; reachable by external advisers."};}
+  if(/(^|\/\/)s3[.-][^\/]*\.amazonaws\.com\/|\.s3[.-][^\/]*\.amazonaws\.com\//i.test(url)){return{url:url,converted:false,direct:true,privateHost:"Amazon S3 (pre-signed link)",note:"S3 pre-signed URL — a private, expiring link. No login required."};}
+  if(/storage\.googleapis\.com\//i.test(url)){return{url:url,converted:false,direct:true,privateHost:"Google Cloud Storage (signed link)",note:"GCS signed URL — a private, expiring link. No login required."};}
   if(/\.ics(\?|$)/i.test(url)){return{url:url,converted:false,direct:true,note:"Looks like a direct .ics link."};}
   return{url:url,converted:false,direct:false,note:"Not a recognised direct-download link. Make sure it returns the raw .ics file, not a web page."};
 }
@@ -1297,13 +1302,24 @@ function onLinkInput(){
   var label=r.direct?(r.converted?"Will encode this download link":"Direct download link"):"Check this link";
   pv.classList.add("show");
   pv.classList.toggle("bad",!r.direct);
-  var checklist=r.sharepoint?('<span class="pv-tag" style="margin-top:9px">Before sharing the QR, confirm in SharePoint:</span>'+
+  var checklist="";
+  if(r.sharepoint){
+    checklist='<span class="pv-tag" style="margin-top:9px">Before sharing the QR, confirm in SharePoint:</span>'+
     '<div class="sp-check">'+
       '<div>① Sharing is set to <strong>“Anyone with the link”</strong> — not “People in your organisation” (external advisers can’t open org-only links).</div>'+
       '<div>② The link <strong>downloads</strong> the file (the <code>download=1</code> above) rather than opening the SharePoint preview page.</div>'+
       '<div>③ Each <strong>resource</strong> link inside the events is shared the same way.</div>'+
       '<div class="sp-warn">If your tenant blocks “Anyone with the link”, advisers will hit a login wall (HTTP 403). Check with IT first.</div>'+
-    '</div>'):'';
+    '</div>';
+  }else if(r.privateHost){
+    checklist='<span class="pv-tag" style="margin-top:9px">'+escapeHtml(r.privateHost)+' — confirm before sharing:</span>'+
+    '<div class="sp-check">'+
+      '<div>① It’s an <strong>unguessable, time-limited</strong> signed link — only people you give the QR to can open it, and access expires.</div>'+
+      '<div>② The link <strong>downloads</strong> the .ics (set the blob/object content settings so it serves as a download, not inline HTML).</div>'+
+      '<div>③ Each <strong>resource</strong> link inside the events is signed the same way.</div>'+
+      '<div class="sp-warn">Set the expiry to outlast the whole follow-up window (e.g. 3+ months) — otherwise advisers’ links stop working mid-journey.</div>'+
+    '</div>';
+  }
   pv.innerHTML='<span class="pv-tag">'+escapeHtml(label)+'</span>'+escapeHtml(r.url)+(r.note?'<span class="pv-tag" style="margin-top:6px;opacity:.85">'+escapeHtml(r.note)+'</span>':'')+checklist;
 }
 function renderLabel(){shareState.label=$("spName")?$("spName").value.trim():"";if($("qrLabel")&&lastQRCanvas)$("qrLabel").textContent=shareState.label||"";}
@@ -1348,27 +1364,28 @@ function printQR(){
 }
 function renderShare(){
   $("mainPanel").innerHTML=
-  '<div class="pane-head"><h2>Share &amp; QR</h2><p class="pane-sub">Host the calendar on your approved system (SharePoint / OneDrive), then make a QR advisers scan to add it to Outlook. Nothing is sent anywhere from this tool.</p></div>'+
+  '<div class="pane-head"><h2>Share &amp; QR</h2><p class="pane-sub">Host the calendar on your approved storage with a <strong>private, expiring link</strong>, then make a QR advisers scan to add it to Outlook. Nothing is sent anywhere from this tool.</p></div>'+
   '<div class="share-grid">'+
     '<div>'+
       '<div class="share-card">'+
-        '<h4 class="share-sec">Host on SharePoint &amp; make QR</h4>'+
-        '<ol class="qr-steps" style="margin-top:6px">'+
-          '<li><span class="n">1</span><span>Upload your resource files to SharePoint, then set each one\'s <strong>direct-download link</strong> in <strong>Resources → Edit</strong>.</span></li>'+
-          '<li><span class="n">2</span><span><strong>Download the .ics</strong> below — it embeds those resource links into the event notes.</span></li>'+
-          '<li><span class="n">3</span><span>Upload the .ics to SharePoint and share it as <strong>“Anyone with the link”</strong>, set to download.</span></li>'+
+        '<h4 class="share-sec">Host on a private link &amp; make QR</h4>'+
+        '<p class="share-sub">Use a <strong>signed / capability URL</strong> from firm-controlled storage — an Azure Blob <strong>SAS</strong> link, an S3 / GCS <strong>pre-signed</strong> URL, or a SharePoint “Anyone with the link.” These open on an adviser’s phone with no login, yet stay private (unguessable + time-limited).</p>'+
+        '<ol class="qr-steps" style="margin-top:8px">'+
+          '<li><span class="n">1</span><span>Upload your resource files to that storage, then paste each one\'s <strong>signed download link</strong> in <strong>Resources → Edit</strong>.</span></li>'+
+          '<li><span class="n">2</span><span><strong>Download the .ics</strong> below — it puts those resource links into the event notes.</span></li>'+
+          '<li><span class="n">3</span><span>Upload the .ics the same way and copy its <strong>signed download link</strong>.</span></li>'+
           '<li><span class="n">4</span><span>Paste that link below and generate the QR.</span></li>'+
         '</ol>'+
         '<button class="btn ghost full" style="margin-top:14px" onclick="downloadICS()"><span class="ico" aria-hidden="true">↓</span> Download the .ics file</button>'+
         '<label for="spName" style="margin-top:14px">Label under the QR (optional)</label>'+
         '<input id="spName" type="text" placeholder="e.g. LTI Follow-Up — June cohort" oninput="renderLabel()">'+
-        '<label for="spLink" style="margin-top:14px">SharePoint link to the .ics</label>'+
-        '<input id="spLink" type="url" placeholder="https://yourorg.sharepoint.com/:b:/s/Team/…?e=…" oninput="onLinkInput()">'+
+        '<label for="spLink" style="margin-top:14px">Signed link to the .ics</label>'+
+        '<input id="spLink" type="url" placeholder="https://acct.blob.core.windows.net/lti/followup.ics?sp=r&amp;sig=…" oninput="onLinkInput()">'+
         '<div id="linkPreview" class="link-preview"></div>'+
         '<button class="btn primary full" style="margin-top:12px" onclick="generateFromLink()"><span class="ico" aria-hidden="true">▦</span> Generate QR for this link</button>'+
       '</div>'+
 
-      '<div class="note" style="margin-top:16px"><strong>Resources reach advisers as tappable links</strong> in each event\'s notes — calendar apps never show files embedded in an event. So each resource needs its own SharePoint link (step 1). Keep everything to generic LTI material that\'s cleared for external sharing.</div>'+
+      '<div class="note" style="margin-top:16px"><strong>Resources reach advisers as tappable links</strong> in each event\'s notes — calendar apps never show files embedded in an event. So each resource needs its own signed link (step 1), with an expiry that outlasts the follow-up window. Keep everything to LTI material cleared for external sharing.</div>'+
 
       '<details class="opts"><summary>Advanced: auto-publish to GitHub</summary><div class="opts-body">'+
         '<div class="note warn-note"><strong>Public hosting.</strong> This commits the calendar and resources to a public GitHub repo — only use it if your organisation\'s policy permits public hosting of this material.</div>'+
@@ -1387,7 +1404,7 @@ function renderShare(){
     '<div>'+
       '<div class="qrcard">'+
         '<h3>Scan to add</h3><p class="qsub" id="qrSub">Your QR will appear here</p>'+
-        '<div class="qr-holder" id="qrHolder"><span class="qr-empty" id="qrEmpty">Paste your SharePoint link, then generate the QR.</span></div>'+
+        '<div class="qr-holder" id="qrHolder"><span class="qr-empty" id="qrEmpty">Paste your hosted link, then generate the QR.</span></div>'+
         '<p class="qr-label" id="qrLabel"></p>'+
         '<div class="qr-actions hide" id="qrActions"><button class="btn ghost small" onclick="downloadQR()">Download PNG</button><button class="btn ghost small" onclick="printQR()">Print</button></div>'+
       '</div>'+
