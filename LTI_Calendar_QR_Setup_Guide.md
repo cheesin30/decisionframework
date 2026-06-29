@@ -18,6 +18,21 @@ So the flow is always: **build → export the `.ics` → host it → QR.**
 
 ---
 
+## Recommended: the landing page (one scan = calendar + files)
+
+The simplest, most reliable result is the **landing page**. On **Share & QR → Download landing page (.html)**, the tool builds **one self-contained HTML file** that bundles:
+
+- an **"Add the calendar"** button (the `.ics` is embedded in the page), and
+- every resource, grouped under its touchpoint, as a **tap-to-open button**.
+
+You host that **single `.html`** on your approved storage (signed link, below) and point the QR at it. The adviser scans → sees the page → taps **Add the calendar** (events + talking points go into Outlook) → and opens any resource right there. Because the files live on the page, you don't have to host each resource separately for advisers to get them.
+
+> Want the calendar event itself to also carry a tap-to-open link to a file (not just the page)? Host that resource separately too and paste its signed link in **Resources → Edit** — then the touchpoint's notes link straight to it. (A file embedded *inside* a calendar event never displays on phones, so a link is the real-world equivalent.)
+
+The QR still points to a hosted link — so you host the **landing page** with the same signed-link method described next.
+
+---
+
 ## Private hosting with a signed link (the compliant path)
 
 ### Why a signed link

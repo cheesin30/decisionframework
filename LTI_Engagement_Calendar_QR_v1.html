@@ -1148,6 +1148,71 @@ async function assembleIcs(opts){
   return {parts:parts,client:client};
 }
 
+/* ---------- Landing page (one hosted file: calendar + resources) ---------- */
+var LANDING_CSS=
+"body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;color:#1c2833;background:#f6f9fb;-webkit-font-smoothing:antialiased}"+
+".wrap{max-width:680px;margin:0 auto;padding:0 16px 48px}"+
+"header{background:linear-gradient(135deg,#083469,#005E9D);color:#fff;margin:0 -16px 22px;padding:32px 22px 28px}"+
+".eb{font-size:11px;letter-spacing:.16em;text-transform:uppercase;opacity:.82;margin:0 0 10px;font-weight:700}"+
+"h1{font-family:Georgia,'Times New Roman',serif;margin:0;font-size:24px;line-height:1.16}"+
+".lede{opacity:.92;font-size:14px;line-height:1.55;margin:12px 0 20px;max-width:32em}"+
+".cal{display:inline-flex;align-items:center;gap:8px;background:#00D190;color:#083469;font-weight:800;text-decoration:none;padding:14px 22px;border-radius:11px;font-size:15px;border:none;cursor:pointer}"+
+".tp{background:#fff;border:1px solid #e3e9ef;border-radius:14px;padding:16px 18px;margin:0 0 14px;box-shadow:0 4px 14px rgba(8,52,105,.05)}"+
+".tp .d{font-size:12px;font-weight:800;color:#008074;letter-spacing:.02em}"+
+".tp h3{margin:5px 0 6px;font-size:16px;color:#083469}"+
+".tp p{margin:0 0 12px;font-size:13.5px;color:#3c5566;line-height:1.5;white-space:pre-wrap}"+
+".reslab{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#5d6b7a;margin:0 0 7px}"+
+".reslist{display:flex;flex-wrap:wrap;gap:8px}"+
+".res{display:inline-flex;align-items:center;gap:6px;background:#eef4f8;color:#083469;border:1px solid #b9cdda;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none}"+
+".res::before{content:'';width:6px;height:6px;border-radius:50%;background:#008074}"+
+"footer{text-align:center;color:#9fb0bf;font-size:11px;margin-top:24px;line-height:1.6}";
+var LANDING_JS=
+"function b64ToBlob(b,m){var s=atob(b),n=s.length,u=new Uint8Array(n);for(var i=0;i<n;i++)u[i]=s.charCodeAt(i);return new Blob([u],{type:m||'application/octet-stream'});}"+
+"document.querySelectorAll('button.res').forEach(function(btn){btn.addEventListener('click',function(){var url=URL.createObjectURL(b64ToBlob(btn.getAttribute('data-b64'),btn.getAttribute('data-mime')));var w=window.open(url,'_blank');if(!w){var a=document.createElement('a');a.href=url;a.download=btn.getAttribute('data-name');document.body.appendChild(a);a.click();a.remove();}setTimeout(function(){URL.revokeObjectURL(url);},60000);});});";
+/* Build one self-contained HTML page: an "Add the calendar" button (the .ics
+   embedded) plus every resource embedded, grouped by touchpoint. The operator
+   hosts this single file and the QR points to it. */
+async function buildLandingPage(){
+  var built=await assembleIcs({urlMap:assetUrlMap()});
+  if(!built)return;
+  var client=built.client;
+  var icsB64=bytesToBase64(new TextEncoder().encode(built.parts.join("")));
+  var rows=scheduledReminders();
+  var progress=$("progress"),bar=$("bar"),pt=$("progressText");
+  if(progress){progress.style.display="block";bar.style.width="55%";pt.textContent="Bundling resources into the page…";}
+  var blocks=[],embedded=0;
+  for(var i=0;i<rows.length;i++){
+    var r=rows[i],linked=(r.assetIds||[]).map(getAsset).filter(Boolean),res="";
+    for(var j=0;j<linked.length;j++){
+      var a=linked[j],f=sessionFiles[a.id];
+      if(f){
+        var b64=bytesToBase64(await readBlobPart(f,0,f.size));embedded++;
+        res+='<button class="res" data-mime="'+escapeHtml(a.mime||"application/octet-stream")+'" data-name="'+escapeHtml(a.filename||a.name)+'" data-b64="'+b64+'">'+escapeHtml(a.name)+'</button>';
+      }else if(a.url){
+        res+='<a class="res" href="'+escapeHtml(a.url)+'" target="_blank" rel="noopener">'+escapeHtml(a.name)+'</a>';
+      }
+      if(progress)bar.style.width=(55+Math.round(35*((i+1)/rows.length)))+"%";
+    }
+    blocks.push('<div class="tp"><div class="d">'+escapeHtml(r.date.toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short",year:"numeric"}))+'</div><h3>'+escapeHtml(r.title)+'</h3><p>'+escapeHtml(r.description)+'</p>'+(res?'<p class="reslab">Resources</p><div class="reslist">'+res+'</div>':'')+'</div>');
+  }
+  var pageTitle=(client?client+" — ":"")+"Long-Term Investing Follow-Up";
+  var icsName=slug(client||"LTI")+"_LTI_Follow_Up.ics";
+  var html='<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'+
+    '<title>'+escapeHtml(pageTitle)+'</title><style>'+LANDING_CSS+'</style></head><body><div class="wrap">'+
+    '<header><p class="eb">Capital Group · Capital Learning</p><h1>'+escapeHtml(pageTitle)+'</h1>'+
+    '<p class="lede">Tap below to add the follow-up calendar to your phone or Outlook, then open the resources for each touchpoint.</p>'+
+    '<a class="cal" download="'+escapeHtml(icsName)+'" href="data:text/calendar;base64,'+icsB64+'">＋ Add the calendar</a></header>'+
+    '<main>'+blocks.join("")+'</main>'+
+    '<footer>For Capital Group adviser engagement use. If “Add the calendar” doesn’t open your calendar, save the file and open it with Outlook.</footer>'+
+    '</div><script>'+LANDING_JS+'<\/script></body></html>';
+  if(progress)bar.style.width="100%";
+  downloadBlob(new Blob([html],{type:"text/html;charset=utf-8"}),slug(client||"LTI")+"_LTI_Follow_Up_Page.html");
+  showStatus("Landing page downloaded ("+embedded+" resource(s) bundled in). Host this one .html on your approved storage as a signed link, then paste that link below to make the QR.");
+  if(!shareState.label)shareState.label=(client?client+" — ":"")+"Long-Term Investing Follow-Up";
+  if(progress)setTimeout(function(){progress.style.display="none";},1200);
+  toast("Landing page ready — host it, then make the QR");
+}
+
 async function downloadICS(){
   var built=await assembleIcs({urlMap:assetUrlMap()});
   if(!built)return;
@@ -1364,28 +1429,28 @@ function printQR(){
 }
 function renderShare(){
   $("mainPanel").innerHTML=
-  '<div class="pane-head"><h2>Share &amp; QR</h2><p class="pane-sub">Host the calendar on your approved storage with a <strong>private, expiring link</strong>, then make a QR advisers scan to add it to Outlook. Nothing is sent anywhere from this tool.</p></div>'+
+  '<div class="pane-head"><h2>Share &amp; QR</h2><p class="pane-sub">Make a one-page landing page that holds the calendar <em>and</em> the resources, host it on your approved storage with a <strong>private link</strong>, and turn it into a QR. One scan gives advisers the calendar plus every file.</p></div>'+
   '<div class="share-grid">'+
     '<div>'+
       '<div class="share-card">'+
-        '<h4 class="share-sec">Host on a private link &amp; make QR</h4>'+
-        '<p class="share-sub">Use a <strong>signed / capability URL</strong> from firm-controlled storage — an Azure Blob <strong>SAS</strong> link, an S3 / GCS <strong>pre-signed</strong> URL, or a SharePoint “Anyone with the link.” These open on an adviser’s phone with no login, yet stay private (unguessable + time-limited).</p>'+
+        '<h4 class="share-sec">Build the landing page &amp; make QR</h4>'+
+        '<p class="share-sub">The page bundles the calendar and your resource files into one self-contained file. Advisers scan → tap <strong>Add the calendar</strong> (it lands in Outlook, with each resource linked inside its touchpoint) → and open any resource right on the page.</p>'+
         '<ol class="qr-steps" style="margin-top:8px">'+
-          '<li><span class="n">1</span><span>Upload your resource files to that storage, then paste each one\'s <strong>signed download link</strong> in <strong>Resources → Edit</strong>.</span></li>'+
-          '<li><span class="n">2</span><span><strong>Download the .ics</strong> below — it puts those resource links into the event notes.</span></li>'+
-          '<li><span class="n">3</span><span>Upload the .ics the same way and copy its <strong>signed download link</strong>.</span></li>'+
-          '<li><span class="n">4</span><span>Paste that link below and generate the QR.</span></li>'+
+          '<li><span class="n">1</span><span><strong>Download the landing page</strong> below — your resources are bundled into it automatically.</span></li>'+
+          '<li><span class="n">2</span><span>Upload that one <code>.html</code> to your approved storage and copy its <strong>signed download link</strong> (Azure SAS, S3/GCS pre-signed, or SharePoint “Anyone with the link”).</span></li>'+
+          '<li><span class="n">3</span><span>Paste that link below and generate the QR.</span></li>'+
         '</ol>'+
-        '<button class="btn ghost full" style="margin-top:14px" onclick="downloadICS()"><span class="ico" aria-hidden="true">↓</span> Download the .ics file</button>'+
+        '<button class="btn primary full" style="margin-top:14px" onclick="buildLandingPage()"><span class="ico" aria-hidden="true">▦</span> Download landing page (.html)</button>'+
+        '<details class="opts"><summary>Want each touchpoint to also link the file inside Outlook?</summary><div class="opts-body"><p class="share-sub">Optional: host each resource separately and paste its signed link in <strong>Resources → Edit</strong>. Then the calendar event itself carries a tap-to-open link to that file (the page already shows them regardless).</p><button class="btn ghost full" onclick="downloadICS()"><span class="ico" aria-hidden="true">↓</span> Download the .ics only</button></div></details>'+
         '<label for="spName" style="margin-top:14px">Label under the QR (optional)</label>'+
         '<input id="spName" type="text" placeholder="e.g. LTI Follow-Up — June cohort" oninput="renderLabel()">'+
-        '<label for="spLink" style="margin-top:14px">Signed link to the .ics</label>'+
-        '<input id="spLink" type="url" placeholder="https://acct.blob.core.windows.net/lti/followup.ics?sp=r&amp;sig=…" oninput="onLinkInput()">'+
+        '<label for="spLink" style="margin-top:14px">Signed link to the hosted page</label>'+
+        '<input id="spLink" type="url" placeholder="https://acct.blob.core.windows.net/lti/followup.html?sp=r&amp;sig=…" oninput="onLinkInput()">'+
         '<div id="linkPreview" class="link-preview"></div>'+
         '<button class="btn primary full" style="margin-top:12px" onclick="generateFromLink()"><span class="ico" aria-hidden="true">▦</span> Generate QR for this link</button>'+
       '</div>'+
 
-      '<div class="note" style="margin-top:16px"><strong>Resources reach advisers as tappable links</strong> in each event\'s notes — calendar apps never show files embedded in an event. So each resource needs its own signed link (step 1), with an expiry that outlasts the follow-up window. Keep everything to LTI material cleared for external sharing.</div>'+
+      '<div class="note" style="margin-top:16px"><strong>How the files reach advisers:</strong> the landing page carries the actual files; the calendar events carry the talking points (and, if you host resources separately, a tap-to-open link per touchpoint). Calendar apps never render a file embedded <em>inside</em> an event, so the page is what puts the real files one tap away. Keep everything to LTI material cleared for external sharing, and give signed links an expiry that outlasts the follow-up window.</div>'+
 
       '<details class="opts"><summary>Advanced: auto-publish to GitHub</summary><div class="opts-body">'+
         '<div class="note warn-note"><strong>Public hosting.</strong> This commits the calendar and resources to a public GitHub repo — only use it if your organisation\'s policy permits public hosting of this material.</div>'+
