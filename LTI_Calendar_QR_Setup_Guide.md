@@ -8,22 +8,41 @@ The tool is `LTI_Engagement_Calendar_QR_v1.html` — just open it in Chrome, Edg
 
 ## How it works (the 30-second version)
 
-A QR code is tiny (~3 KB max), so it **cannot** hold a calendar file that has PDFs embedded in it. Instead, the calendar file lives at a **public link**, and the QR points to that link. When an adviser scans it, their phone downloads the file and offers to add it to their calendar / Outlook.
+A QR code is tiny (~3 KB max), so it **cannot** hold a calendar file that has PDFs embedded in it. Instead, the calendar file lives at a link, and the QR points to that link. When an adviser scans it, their phone downloads the file and offers to add it to their calendar / Outlook.
 
-So the flow is always: **build → export the `.ics` → get it to a public link → QR.**
+So the flow is always: **build → export the `.ics` → host it → QR.**
 
-**About the resource files:** calendar apps (iOS, Outlook, Google) do **not** display files embedded inside a calendar event — they just ignore them. So resources can't travel *inside* the event. Instead, **Option 1 (Publish to GitHub) uploads each resource to your repo and puts a tappable link to it in the event's Notes**, which calendar apps *do* show. The adviser taps the link to open the PDF. (This is why the auto-publish option is recommended — it wires the resource links up for you.)
+**About the resource files:** calendar apps (iOS, Outlook, Google) do **not** display files embedded inside a calendar event — they just ignore them. So resources can't travel *inside* the event. Instead, each resource is hosted and a **tappable link to it goes in the event's Notes**, which calendar apps *do* show. The adviser taps the link to open the PDF.
 
-The tool gives you two ways to do the "get it to a public link" part:
-
-- **Option 1 — Publish to GitHub automatically** (recommended): the tool uploads the file and makes the QR for you.
-- **Option 2 — Paste a link you hosted yourself** (fallback): you upload the file, paste the link.
-
-The single biggest time-saver: **set up one fixed repo + filename once, and the QR never changes.** Print it once and reuse it for every cohort — you just re-publish to overwrite the file behind it.
+> **Compliance note:** the tool does not send anything anywhere. *You* choose where the calendar and resources are hosted. For Capital Group, host on your **approved SharePoint / OneDrive** — see below. (A public-GitHub auto-publish option also exists under *Advanced*, but only use it if your policy permits public hosting of this material.)
 
 ---
 
-## One-time setup (about 5 minutes)
+## SharePoint hosting (the compliant path)
+
+### What has to be true for an adviser to open it
+
+A QR ultimately points to a URL the adviser's phone fetches. For an **external** adviser to open a SharePoint file **without a Microsoft 365 login**, two things must hold:
+
+1. The file is shared as **"Anyone with the link"** (not "People in your organisation" — that's internal-only and external advisers get a login wall / **HTTP 403**).
+2. The link is a **direct download** of the file, not the SharePoint preview page. The tool appends `download=1` for you, but the share itself must allow anonymous access.
+
+If your tenant **blocks** "Anyone with the link" sharing (common at financial firms), external advisers cannot open it — confirm with IT before relying on this. ("Anyone with the link" also means anyone holding the QR can open it, so keep the content to generic LTI material cleared for external sharing.)
+
+### Each cohort
+
+1. **Upload your resource PDFs to SharePoint.** For each, get its "Anyone with the link" share URL and, in the tool, open **Resources → Edit** and paste it into the resource's **hosted link** field. The card will show **"Hosted link set."**
+2. On **Share & QR**, click **Download the .ics file.** The downloaded calendar already has each resource's SharePoint link in the event Notes (no files embedded — calendar apps ignore those).
+3. **Upload the `.ics` to SharePoint**, share it as **"Anyone with the link"**, and copy that URL.
+4. Back in the tool, paste it into **SharePoint link to the .ics** and click **Generate QR.** The tool converts it to a download link and shows a checklist to confirm before you share. **Download PNG / Print** the QR.
+
+Keep the same SharePoint folder and file names each cohort and the link — and the QR — stay the same, so you only print it once.
+
+---
+
+## Optional: public GitHub hosting (only if your policy allows)
+
+> Skip this entirely if public hosting is not permitted. Use SharePoint above instead.
 
 ### Step 1 — Create a public GitHub repository
 

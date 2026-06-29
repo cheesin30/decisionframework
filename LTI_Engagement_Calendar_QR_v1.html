@@ -208,6 +208,11 @@ footer.legal{font-family:"Helvetica Neue",Arial,sans-serif;margin-top:20px;text-
 .link-preview.show{display:block}
 .link-preview.bad{color:#9a5e00;background:#fff6ec;border-color:#f0d9b8}
 .link-preview .pv-tag{display:block;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;font-weight:700}
+.sp-check{display:grid;gap:7px;margin-top:4px;color:#1f5b54;font-size:12px;line-height:1.45;word-break:normal}
+.sp-check code{font-size:11px}
+.sp-check .sp-warn{color:#9a5e00;background:#fff6ec;border-radius:6px;padding:7px 9px;font-weight:600}
+.note.warn-note{background:#fff6ec;border-left-color:#d99019;color:#7a4a00}
+.note.warn-note strong{color:#7a4a00}
 .qrcard{position:sticky;top:16px;background:linear-gradient(160deg,#f3f8fb,#fff);border:1px solid var(--line);border-radius:var(--r-md);padding:20px;text-align:center;box-shadow:var(--shadow-sm);font-family:"Helvetica Neue",Arial,sans-serif}
 .qrcard h3{margin:0 0 4px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--teal)}
 .qrcard .qsub{margin:0 0 16px;font-size:11.5px;color:var(--muted)}
@@ -955,7 +960,7 @@ function clearReminderAssets(id){var r=findReminder(id);if(!r)return;r.assetIds=
 /* ---------- Resource library ---------- */
 function renderAssets(){
   $("mainPanel").innerHTML=
-  '<div class="pane-head"><h2>Resources</h2><p class="pane-sub">Upload the materials advisers receive, then attach them to touchpoints on the previous step. They publish as tappable links inside the events.</p></div>'+
+  '<div class="pane-head"><h2>Resources</h2><p class="pane-sub">Upload each resource, attach it to a touchpoint (previous step), and use <strong>Edit</strong> to paste its SharePoint direct-download link. That link is what advisers tap inside the calendar event.</p></div>'+
   '<div class="section-head"><div></div>'+
   '<div class="actions"><button class="btn primary small" onclick="uploadFileAssets()">+ Upload resources</button><button class="btn ghost small" onclick="exportSettings()">Export setup</button><button class="btn ghost small" onclick="importSettings()">Import setup</button></div></div>'+
   (assets.length?'<div class="asset-grid">'+assets.map(assetCard).join("")+'</div>':'<div class="empty"><strong>No resources uploaded yet.</strong><br>Select <strong>Upload resources</strong> to add PDFs, PowerPoints, Word documents, charts or other workshop materials.</div>')+
@@ -966,7 +971,8 @@ function assetCard(a){
   var ready=!!sessionFiles[a.id];
   return '<article class="asset-card"><div><h3>'+escapeHtml(a.name)+'</h3><p>'+escapeHtml(a.description||"Adviser resource.")+'</p></div>'+
     '<div class="meta"><span class="chip">'+escapeHtml(a.type||"File")+'</span><span class="chip">'+escapeHtml(a.filename||"")+'</span><span class="chip">'+formatBytes(a.size)+'</span>'+
-    '<span class="chip '+(ready?"ready":"warn")+'">'+(ready?"Ready":"Reselect file")+'</span><span class="chip">'+linkedCount+' touchpoint(s)</span></div>'+
+    '<span class="chip '+(ready?"ready":"warn")+'">'+(ready?"Ready":"Reselect file")+'</span><span class="chip">'+linkedCount+' touchpoint(s)</span>'+
+    '<span class="chip '+(a.url?"ready":"warn")+'">'+(a.url?"Hosted link set":"No hosted link")+'</span></div>'+
     '<div class="actions"><button class="btn secondary small" onclick="reselectAsset(\''+a.id+'\')">Reselect</button><button class="btn ghost small" onclick="editAsset(\''+a.id+'\')">Edit</button><button class="btn danger small" onclick="deleteAsset(\''+a.id+'\')">Delete</button></div></article>';
 }
 function uploadFileAssets(){
@@ -979,7 +985,9 @@ function reselectAsset(id){
   input.onchange=function(){var file=input.files[0];if(!file)return;sessionFiles[id]=file;var a=getAsset(id);if(a){a.filename=file.name;a.mime=file.type||"application/octet-stream";a.type=assetType(file);a.size=file.size;a.name=a.name||displayNameFromFile(file);a.updatedAt=new Date().toISOString();saveAssets();renderAssets();toast("File reselected and ready");}};
   input.click();
 }
-function editAsset(id){var a=getAsset(id);if(!a)return;var name=prompt("Resource display name",a.name);if(name===null)return;var type=prompt("Resource type / category",a.type||"File");if(type===null)return;var description=prompt("Short description",a.description||"");if(description===null)return;a.name=name;a.type=type;a.description=description;saveAssets();renderAssets();toast("Resource updated");}
+function editAsset(id){var a=getAsset(id);if(!a)return;var name=prompt("Resource display name",a.name);if(name===null)return;var type=prompt("Resource type / category",a.type||"File");if(type===null)return;var description=prompt("Short description",a.description||"");if(description===null)return;var link=prompt("Hosted link for advisers — the SharePoint/OneDrive direct-download URL for this file. Leave blank until you've uploaded it.",a.url||"");if(link===null)return;a.name=name;a.type=type;a.description=description;a.url=link.trim();saveAssets();renderAssets();toast("Resource updated");}
+/* Map of assetId -> hosted link, for events to reference (e.g. SharePoint). */
+function assetUrlMap(){var map={};assets.forEach(function(a){if(a.url)map[a.id]=a.url;});return map;}
 function deleteAsset(id){if(!confirm("Delete this resource and unlink it from all touchpoints?"))return;assets=assets.filter(function(a){return a.id!==id;});reminders.forEach(function(r){r.assetIds=(r.assetIds||[]).filter(function(x){return x!==id;});});delete sessionFiles[id];saveAssets();saveReminders();render();toast("Resource deleted");}
 
 /* ---------- Scheduling ---------- */
@@ -1141,14 +1149,17 @@ async function assembleIcs(opts){
 }
 
 async function downloadICS(){
-  var built=await assembleIcs();
+  var built=await assembleIcs({urlMap:assetUrlMap()});
   if(!built)return;
   var client=built.client;
   downloadBlob(new Blob(built.parts,{type:"text/calendar;charset=utf-8"}),slug(client||"LTI")+"_LTI_Follow_Up_"+$("startDate").value+".ics");
-  showStatus("Calendar exported. Next: publish it to GitHub (or host it yourself) and make a QR on the Share by QR tab.");
+  var noLink=[],seen={};
+  scheduledReminders().forEach(function(r){(r.assetIds||[]).forEach(function(id){if(seen[id])return;seen[id]=true;var a=getAsset(id);if(a&&!a.url)noLink.push(a.name);});});
+  if(noLink.length)showStatus(noLink.length+" linked resource(s) have no hosted link yet, so advisers can’t open them. Add each one’s SharePoint link in Resources → Edit, then re-export: "+noLink.slice(0,3).join(", ")+(noLink.length>3?"…":""));
+  else showStatus("Calendar exported. Upload it to SharePoint as an “Anyone with the link” download, then paste that link below to make the QR.");
   if(!shareState.label)shareState.label=(client?client+" — ":"")+"Long-Term Investing Follow-Up";
   var progress=$("progress");setTimeout(function(){if(progress)progress.style.display="none";},1600);
-  toast("Calendar exported — now publish & make a QR to share");
+  toast("Calendar exported");
   setTab("share");
 }
 
@@ -1269,10 +1280,10 @@ function toRawDownloadUrl(raw){
     if(!/[?&]dl=1/.test(u))u+=(u.indexOf("?")>=0?"&":"?")+"dl=1";
     return{url:u,converted:u!==url,direct:true,note:"Dropbox set to direct download (dl=1)."};
   }
-  if(/sharepoint\.com|1drv\.ms|onedrive\.live\.com/i.test(url)){
-    var u2=url;
+  if(/sharepoint\.com|1drv\.ms|onedrive\.live\.com|onedrive\.com/i.test(url)){
+    var u2=url.replace(/([?&])web=1/i,"$1download=1");           // viewer -> download
     if(!/[?&]download=1/i.test(u2))u2+=(u2.indexOf("?")>=0?"&":"?")+"download=1";
-    return{url:u2,converted:u2!==url,direct:false,note:"SharePoint/OneDrive may still prompt for login on external phones."};
+    return{url:u2,converted:u2!==url,direct:true,sharepoint:true,note:"Set to direct download (download=1). This only opens for advisers if the file is shared as “Anyone with the link.”"};
   }
   if(/\.ics(\?|$)/i.test(url)){return{url:url,converted:false,direct:true,note:"Looks like a direct .ics link."};}
   return{url:url,converted:false,direct:false,note:"Not a recognised direct-download link. Make sure it returns the raw .ics file, not a web page."};
@@ -1283,10 +1294,17 @@ function onLinkInput(){
   var pv=$("linkPreview");if(!pv)return;
   if(!raw){pv.classList.remove("show","bad");pv.innerHTML="";return;}
   var r=toRawDownloadUrl(raw);
-  var label=r.direct?(r.converted?"Will encode this raw link":"Direct download link"):"Check this link";
+  var label=r.direct?(r.converted?"Will encode this download link":"Direct download link"):"Check this link";
   pv.classList.add("show");
   pv.classList.toggle("bad",!r.direct);
-  pv.innerHTML='<span class="pv-tag">'+escapeHtml(label)+'</span>'+escapeHtml(r.url)+(r.note?'<span class="pv-tag" style="margin-top:6px;opacity:.85">'+escapeHtml(r.note)+'</span>':'');
+  var checklist=r.sharepoint?('<span class="pv-tag" style="margin-top:9px">Before sharing the QR, confirm in SharePoint:</span>'+
+    '<div class="sp-check">'+
+      '<div>① Sharing is set to <strong>“Anyone with the link”</strong> — not “People in your organisation” (external advisers can’t open org-only links).</div>'+
+      '<div>② The link <strong>downloads</strong> the file (the <code>download=1</code> above) rather than opening the SharePoint preview page.</div>'+
+      '<div>③ Each <strong>resource</strong> link inside the events is shared the same way.</div>'+
+      '<div class="sp-warn">If your tenant blocks “Anyone with the link”, advisers will hit a login wall (HTTP 403). Check with IT first.</div>'+
+    '</div>'):'';
+  pv.innerHTML='<span class="pv-tag">'+escapeHtml(label)+'</span>'+escapeHtml(r.url)+(r.note?'<span class="pv-tag" style="margin-top:6px;opacity:.85">'+escapeHtml(r.note)+'</span>':'')+checklist;
 }
 function renderLabel(){shareState.label=$("spName")?$("spName").value.trim():"";if($("qrLabel")&&lastQRCanvas)$("qrLabel").textContent=shareState.label||"";}
 function showQR(canvas,subText,labelText){
@@ -1329,51 +1347,47 @@ function printQR(){
   w.document.close();setTimeout(function(){w.print();},300);
 }
 function renderShare(){
-  var configured=!!((ghState.repo||"").trim() && (ghState.token||"").trim());
-  var repoLine=configured?('<p class="share-sub">Publishing to <strong>'+escapeHtml(ghState.repo)+'</strong> · '+escapeHtml(ghState.path||"lti-followup.ics")+'</p>'):'';
   $("mainPanel").innerHTML=
-  '<div class="pane-head"><h2>Share &amp; QR</h2><p class="pane-sub">Publish the calendar (with your resources) to a public link and make a QR advisers scan to add it to their phone or Outlook.</p></div>'+
+  '<div class="pane-head"><h2>Share &amp; QR</h2><p class="pane-sub">Host the calendar on your approved system (SharePoint / OneDrive), then make a QR advisers scan to add it to Outlook. Nothing is sent anywhere from this tool.</p></div>'+
   '<div class="share-grid">'+
     '<div>'+
       '<div class="share-card">'+
-        '<h4 class="share-sec">Publish to GitHub &amp; make QR</h4>'+
-        '<p class="share-sub">Uploads your resources and the calendar, links each resource inside the events, and generates the QR — one click. Your token stays in this browser only.</p>'+
-        repoLine+
-        '<details class="opts" id="ghSettings"'+(configured?'':' open')+'>'+
-          '<summary>GitHub settings</summary>'+
-          '<div class="opts-body">'+
-            '<label for="ghRepo">Repository (owner / name)</label>'+
-            '<input id="ghRepo" type="text" placeholder="yourname/lti-calendar" oninput="onGhInput()">'+
-            '<div class="two">'+
-              '<div><label for="ghBranch">Branch</label><input id="ghBranch" type="text" placeholder="main" oninput="onGhInput()"></div>'+
-              '<div><label for="ghPath">File path</label><input id="ghPath" type="text" placeholder="lti-followup.ics" oninput="onGhInput()"></div>'+
-            '</div>'+
-            '<label for="ghToken">GitHub access token</label>'+
-            '<input id="ghToken" type="password" autocomplete="off" placeholder="github_pat_… (Contents: Read and write)" oninput="onGhInput()">'+
-            '<label class="gh-remember"><input type="checkbox" id="ghRemember" onchange="onGhInput()"> Remember repo &amp; token on this device</label>'+
-            '<p class="share-sub" style="margin-top:10px">Fine-grained token scoped to this one repo with <strong>Contents: Read and write</strong>. Keep the same repo/branch/path each cohort and the QR never changes.</p>'+
-          '</div>'+
-        '</details>'+
+        '<h4 class="share-sec">Host on SharePoint &amp; make QR</h4>'+
+        '<ol class="qr-steps" style="margin-top:6px">'+
+          '<li><span class="n">1</span><span>Upload your resource files to SharePoint, then set each one\'s <strong>direct-download link</strong> in <strong>Resources → Edit</strong>.</span></li>'+
+          '<li><span class="n">2</span><span><strong>Download the .ics</strong> below — it embeds those resource links into the event notes.</span></li>'+
+          '<li><span class="n">3</span><span>Upload the .ics to SharePoint and share it as <strong>“Anyone with the link”</strong>, set to download.</span></li>'+
+          '<li><span class="n">4</span><span>Paste that link below and generate the QR.</span></li>'+
+        '</ol>'+
+        '<button class="btn ghost full" style="margin-top:14px" onclick="downloadICS()"><span class="ico" aria-hidden="true">↓</span> Download the .ics file</button>'+
         '<label for="spName" style="margin-top:14px">Label under the QR (optional)</label>'+
         '<input id="spName" type="text" placeholder="e.g. LTI Follow-Up — June cohort" oninput="renderLabel()">'+
-        '<button class="btn primary full" style="margin-top:14px" onclick="publishToGitHub()"><span class="ico" aria-hidden="true">▦</span> Publish &amp; make QR</button>'+
+        '<label for="spLink" style="margin-top:14px">SharePoint link to the .ics</label>'+
+        '<input id="spLink" type="url" placeholder="https://yourorg.sharepoint.com/:b:/s/Team/…?e=…" oninput="onLinkInput()">'+
+        '<div id="linkPreview" class="link-preview"></div>'+
+        '<button class="btn primary full" style="margin-top:12px" onclick="generateFromLink()"><span class="ico" aria-hidden="true">▦</span> Generate QR for this link</button>'+
       '</div>'+
 
-      '<details class="opts"><summary>Other ways to share</summary><div class="opts-body">'+
-        '<button class="btn ghost full" onclick="downloadICS()"><span class="ico" aria-hidden="true">↓</span> Download the .ics file</button>'+
-        '<label for="spLink" style="margin-top:14px">Already hosted it? Paste the public link</label>'+
-        '<input id="spLink" type="url" placeholder="https://raw.githubusercontent.com/user/repo/main/lti-followup.ics" oninput="onLinkInput()">'+
-        '<div id="linkPreview" class="link-preview"></div>'+
-        '<button class="btn secondary full" style="margin-top:12px" onclick="generateFromLink()"><span class="ico" aria-hidden="true">▦</span> Generate QR for this link</button>'+
-        '<p class="share-sub" style="margin-top:10px">Manual hosting won\'t auto-link your resources — use Publish to GitHub for that.</p>'+
-      '</div></details>'+
+      '<div class="note" style="margin-top:16px"><strong>Resources reach advisers as tappable links</strong> in each event\'s notes — calendar apps never show files embedded in an event. So each resource needs its own SharePoint link (step 1). Keep everything to generic LTI material that\'s cleared for external sharing.</div>'+
 
-      '<div class="note" style="margin-top:16px"><strong>Resources reach advisers as tappable links</strong> in each event\'s notes — calendar apps don\'t show files embedded in events. Anything you publish is <strong>public</strong>, so keep it to generic LTI material. After publishing, the link can take a few minutes to refresh.</div>'+
+      '<details class="opts"><summary>Advanced: auto-publish to GitHub</summary><div class="opts-body">'+
+        '<div class="note warn-note"><strong>Public hosting.</strong> This commits the calendar and resources to a public GitHub repo — only use it if your organisation\'s policy permits public hosting of this material.</div>'+
+        '<label for="ghRepo">Repository (owner / name)</label>'+
+        '<input id="ghRepo" type="text" placeholder="yourname/lti-calendar" oninput="onGhInput()">'+
+        '<div class="two">'+
+          '<div><label for="ghBranch">Branch</label><input id="ghBranch" type="text" placeholder="main" oninput="onGhInput()"></div>'+
+          '<div><label for="ghPath">File path</label><input id="ghPath" type="text" placeholder="lti-followup.ics" oninput="onGhInput()"></div>'+
+        '</div>'+
+        '<label for="ghToken">GitHub access token</label>'+
+        '<input id="ghToken" type="password" autocomplete="off" placeholder="github_pat_… (Contents: Read and write)" oninput="onGhInput()">'+
+        '<label class="gh-remember"><input type="checkbox" id="ghRemember" onchange="onGhInput()"> Remember repo &amp; token on this device</label>'+
+        '<button class="btn secondary full" style="margin-top:14px" onclick="publishToGitHub()"><span class="ico" aria-hidden="true">▦</span> Publish to GitHub &amp; make QR</button>'+
+      '</div></details>'+
     '</div>'+
     '<div>'+
       '<div class="qrcard">'+
         '<h3>Scan to add</h3><p class="qsub" id="qrSub">Your QR will appear here</p>'+
-        '<div class="qr-holder" id="qrHolder"><span class="qr-empty" id="qrEmpty">Publish (or paste a link) to see the QR.</span></div>'+
+        '<div class="qr-holder" id="qrHolder"><span class="qr-empty" id="qrEmpty">Paste your SharePoint link, then generate the QR.</span></div>'+
         '<p class="qr-label" id="qrLabel"></p>'+
         '<div class="qr-actions hide" id="qrActions"><button class="btn ghost small" onclick="downloadQR()">Download PNG</button><button class="btn ghost small" onclick="printQR()">Print</button></div>'+
       '</div>'+
