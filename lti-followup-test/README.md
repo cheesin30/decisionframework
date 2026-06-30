@@ -63,6 +63,7 @@ naming convention** section below — it is the most important thing in this rep
 | `flows/IMPORT.md` | How to import the package and fill in the three environment-specific values (Form ID, SharePoint site/path, question IDs). |
 | `flows/package/` | Unzipped sources of the package (`manifest.json` + flow `definition.json`) — what the `.zip` is built from. |
 | `form/form-spec.md` | Specification for the Microsoft Form: title, settings, the 2 visible + 2 hidden questions, thank-you message, and the question → dynamic-content mapping table. |
+| `form/form-build-sheet.md` | Copy-paste build sheet — every form field as a ready-to-paste block in build order (Forms has no import format). |
 | `form/prefill-url-guide.md` | How to build the per-session pre-fill URL that bakes `Firm` and `Date` into the QR, including how to get the real field IDs from Microsoft's "Get a link to pre-fill answers" feature. |
 | `sharepoint/structure.md` | The minimal SharePoint layout, the exact folder the `.ics` files live in, and a sample listing. |
 | `emails/advisor-pack-email.html` | The adviser-facing HTML email body, with Power Automate placeholders and inline (mobile-friendly) CSS. |
