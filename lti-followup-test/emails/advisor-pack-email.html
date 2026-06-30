@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Your LTI workshop follow-up</title>
+</head>
+<!--
+  ADVISER PACK EMAIL — body for Flow A → "Send an email (V2)".
+
+  How to use:
+  1. In the Send an email (V2) action, switch the Body editor to CODE VIEW (</>).
+  2. Paste everything between EMAIL BODY START and EMAIL BODY END below.
+  3. Keep the @{...} tokens exactly — they are Power Automate expressions:
+       @{body('Get_response_details')?['YourName']}   -> the adviser's name
+     Replace ['YourName'] with the real Form question ID (see form/form-spec.md).
+
+  Notes:
+  - Brand accent is Capital Group blue #003DA5.
+  - All CSS is inline and the layout is a 600px table, so it renders on phones
+    and in Outlook desktop. No external CSS, no web fonts, no remote images.
+  - Reply-to is set on the action itself (cheesin.foong@capitalgroup.com, test
+    phase); the body also tells the adviser they can just reply.
+-->
+<body style="margin:0;padding:0;">
+<!-- EMAIL BODY START -->
+<div style="margin:0;padding:0;background:#f4f6f8;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f8;font-family:Arial,Helvetica,sans-serif;">
+    <tr>
+      <td align="center" style="padding:24px 12px;">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #e3e8ee;">
+          <!-- Header -->
+          <tr>
+            <td style="background:#003DA5;padding:22px 28px;">
+              <span style="color:#ffffff;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;font-weight:bold;">Capital Group &middot; Capital Learning</span>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding:28px;color:#1c2833;font-size:16px;line-height:1.6;">
+              <p style="margin:0 0 16px;">Hi @{body('Get_response_details')?['YourName']},</p>
+
+              <p style="margin:0 0 16px;">Thanks for joining today's LTI workshop. Your follow-up pack is attached as a calendar file. Tap the .ics on your phone and the three client touchpoints &mdash; with talking points built into each event &mdash; will land in your calendar.</p>
+
+              <p style="margin:0 0 16px;padding:12px 16px;background:#eef4fb;border-left:4px solid #003DA5;border-radius:0 6px 6px 0;font-size:15px;">
+                <strong style="color:#003DA5;">How to use it:</strong> Tap the .ics on your phone, or open it in Outlook on desktop.
+              </p>
+
+              <p style="margin:0 0 16px;">If you have any questions, just reply to this email and the Capital Learning team will help.</p>
+
+              <p style="margin:24px 0 4px;">Warm regards,</p>
+              <p style="margin:0;font-weight:bold;color:#003DA5;">Capital Learning Team</p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f4f6f8;padding:16px 28px;color:#5d6b78;font-size:12px;line-height:1.5;border-top:1px solid #e3e8ee;">
+              Capital Group &middot; Sent following your Long-Term Investing workshop.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<!-- EMAIL BODY END -->
+</body>
+</html>

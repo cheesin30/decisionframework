@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LTI Follow-up delivery FAILED</title>
+</head>
+<!--
+  ERROR ALERT EMAIL — body for Flow A → Catch scope → "Send an email (V2)"
+  (diagnostic to the operator).
+
+  How to use:
+  1. In the Catch scope's Send an email (V2), switch the Body editor to CODE VIEW.
+  2. Paste everything between EMAIL BODY START and EMAIL BODY END below.
+  3. Keep the @{...} tokens exactly — they resolve to the failing run's context:
+       @{outputs('Compose_filename')}                          constructed filename
+       @{body('Get_response_details')?['Firm']}                Firm value
+       @{body('Get_response_details')?['WorkshopDate']}        Workshop date value
+       @{body('Get_response_details')?['YourEmail']}           adviser email
+       @{convertFromUtc(utcNow(),'Singapore Standard Time','yyyy-MM-dd HH:mm:ss')}  timestamp (SGT)
+       @{outputs('Compose_error')}                             error message
+     Replace the ['Firm'] / ['WorkshopDate'] / ['YourEmail'] keys with the real
+     Form question IDs (see form/form-spec.md).
+
+  Sent To: cheesin.foong@capitalgroup.com (test phase operator).
+-->
+<body style="margin:0;padding:0;">
+<!-- EMAIL BODY START -->
+<div style="margin:0;padding:0;background:#f4f6f8;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f8;font-family:Arial,Helvetica,sans-serif;">
+    <tr>
+      <td align="center" style="padding:24px 12px;">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #e3e8ee;">
+          <!-- Header -->
+          <tr>
+            <td style="background:#b42318;padding:20px 28px;">
+              <span style="color:#ffffff;font-size:14px;font-weight:bold;">LTI Follow-up delivery FAILED</span>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding:24px 28px;color:#1c2833;font-size:14px;line-height:1.6;">
+              <p style="margin:0 0 16px;">Flow A could not deliver a follow-up pack. Debug context:</p>
+
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:13px;border-collapse:collapse;">
+                <tr>
+                  <td style="padding:8px 10px;background:#f4f6f8;border:1px solid #e3e8ee;font-weight:bold;width:160px;">Constructed filename</td>
+                  <td style="padding:8px 10px;border:1px solid #e3e8ee;">@{outputs('Compose_filename')}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 10px;background:#f4f6f8;border:1px solid #e3e8ee;font-weight:bold;">Firm</td>
+                  <td style="padding:8px 10px;border:1px solid #e3e8ee;">@{body('Get_response_details')?['Firm']}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 10px;background:#f4f6f8;border:1px solid #e3e8ee;font-weight:bold;">Workshop date</td>
+                  <td style="padding:8px 10px;border:1px solid #e3e8ee;">@{body('Get_response_details')?['WorkshopDate']}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 10px;background:#f4f6f8;border:1px solid #e3e8ee;font-weight:bold;">Adviser email</td>
+                  <td style="padding:8px 10px;border:1px solid #e3e8ee;">@{body('Get_response_details')?['YourEmail']}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 10px;background:#f4f6f8;border:1px solid #e3e8ee;font-weight:bold;">Timestamp (SGT)</td>
+                  <td style="padding:8px 10px;border:1px solid #e3e8ee;">@{convertFromUtc(utcNow(), 'Singapore Standard Time', 'yyyy-MM-dd HH:mm:ss')}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 10px;background:#fdeeed;border:1px solid #f0bcb6;font-weight:bold;color:#b42318;">Error message</td>
+                  <td style="padding:8px 10px;border:1px solid #f0bcb6;color:#b42318;">@{outputs('Compose_error')}</td>
+                </tr>
+              </table>
+
+              <p style="margin:18px 0 0;color:#5d6b78;font-size:12px;">
+                First check: does <strong>@{outputs('Compose_filename')}</strong> exist in
+                /Capital Learning Hub/LTI/Generated ICS/ with that exact name
+                (case-sensitive Firm, yyyy-MM-dd date)? See docs/RUNBOOK.md.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<!-- EMAIL BODY END -->
+</body>
+</html>
