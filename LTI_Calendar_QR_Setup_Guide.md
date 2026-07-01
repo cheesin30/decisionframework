@@ -47,6 +47,118 @@ Adviser scans → the Form opens already filled for their firm → they submit �
 
 ---
 
+## Removing the desktop "download & import" step (native calendar invites)
+
+**The problem:** in **Outlook on the web / "new Outlook,"** an emailed `.ics` is treated as a plain file attachment, not a calendar invite. Opening it does nothing visible — the adviser has to manually go **Calendar → Add calendar → Upload from file → Browse → Import**. This is a limitation of that client with *any* attached `.ics` file; it can't be fixed by changing the file's contents.
+
+**The fix:** change Flow A so it **parses** the `.ics` it already fetches and calls the Outlook connector's **Create event (V4)** action directly — three times, once per touchpoint — with the adviser as a **Required attendee**. Exchange then sends a genuine meeting invite, which shows the standard **Accept / Tentative / Decline** card right in the message on *any* client (new Outlook, classic desktop, mobile, web). Zero extra navigation, because it's no longer a file the adviser has to import — it's a real invite, the same experience they already know.
+
+This is a change to **Flow A only** — the calendar tool and the exported `.ics` stay exactly as they are; the `.ics` simply becomes the *data source* Flow A reads instead of the *file* it emails. As a bonus, resource files relayed as native event attachments (see step 4 below) display correctly on phones too, unlike the current embedded `ATTACH` property, which most calendar apps silently ignore.
+
+### Updated Flow A
+
+```
+Trigger: When a new response is submitted (Microsoft Forms)
+  → Get response details → read Firm, Workshop date, Adviser email
+  → SharePoint: Get file content (path built from Firm + date, e.g. DBS_LTI_Follow_Up_2026-06-26.ics)
+  → Compose "ICS Text": base64ToString(body('Get_file_content'))
+  → Execute JavaScript Code: parse "ICS Text" into an array of {subject, start, end, timeZone, description, attachments}
+  → Parse JSON on that output
+  → Apply to each event:
+      → Office 365 Outlook: Create event (V4)
+          Subject:            item()?['subject']
+          Start time:         item()?['start']
+          End time:           item()?['end']
+          Time zone:          item()?['timeZone']
+          Body:               item()?['description']
+          Required attendees: <adviser email from the form response>
+          Attachments:        item()?['attachments'] (Name / ContentBytes — see note below)
+```
+
+### 1–3. Get the `.ics` as text
+
+Same SharePoint lookup as today (`Get file content` on the path built from firm + date), then add one **Compose** action, e.g. named `ICS Text`, with the expression:
+
+```
+base64ToString(body('Get_file_content'))
+```
+
+### 4. Parse it — "Execute JavaScript Code" action
+
+Add Power Automate's premium **Execute JavaScript Code** action (no external Azure resource needed) with this script. It's written specifically for this tool's output — it unfolds RFC 5545 continuation lines, un-escapes text fields, and pulls out each embedded resource — so paste it as-is:
+
+```javascript
+function parseLtiIcs(icsText) {
+  // RFC 5545 unfolding: a continuation line starts with a single space.
+  var unfolded = icsText.replace(/\r\n /g, "");
+  var lines = unfolded.split(/\r\n/);
+
+  // Reverse of the tool's escIcs(), applied in the opposite order it was encoded.
+  function unescapeText(v) {
+    return v.replace(/\\;/g, ";").replace(/\\,/g, ",").replace(/\\n/g, "\n").replace(/\\\\/g, "\\");
+  }
+  // Split "NAME;PARAM=x;PARAM2=y:value" into its parts.
+  function splitLine(line) {
+    var colon = line.indexOf(":");
+    var head = line.slice(0, colon);
+    var value = line.slice(colon + 1);
+    var semi = head.indexOf(";");
+    var name = semi === -1 ? head : head.slice(0, semi);
+    var paramsRaw = semi === -1 ? "" : head.slice(semi + 1);
+    var params = {};
+    paramsRaw.split(";").forEach(function (p) {
+      var eq = p.indexOf("=");
+      if (eq > -1) params[p.slice(0, eq)] = p.slice(eq + 1);
+    });
+    return { name: name, params: params, value: value };
+  }
+
+  var events = [];
+  var current = null;
+  lines.forEach(function (line) {
+    if (line === "BEGIN:VEVENT") { current = { attachments: [] }; return; }
+    if (line === "END:VEVENT") { if (current) events.push(current); current = null; return; }
+    if (!current) return;
+    var p = splitLine(line);
+    if (p.name === "SUMMARY") current.subject = unescapeText(p.value);
+    else if (p.name === "DESCRIPTION") current.description = unescapeText(p.value);
+    else if (p.name === "DTSTART") { current.startRaw = p.value; current.timeZone = p.params.TZID || "UTC"; }
+    else if (p.name === "DTEND") { current.endRaw = p.value; }
+    else if (p.name === "ATTACH") {
+      current.attachments.push({
+        mime: p.params.FMTTYPE || "application/octet-stream",
+        name: p.params["X-FILENAME"] || "resource",
+        base64: p.value
+      });
+    }
+  });
+
+  // "20260626T090000" -> "2026-06-26T09:00:00" (a local/floating time; paired with the Time Zone field, Create Event interprets it correctly).
+  function toIso(raw) {
+    return raw.slice(0,4)+"-"+raw.slice(4,6)+"-"+raw.slice(6,8)+"T"+raw.slice(9,11)+":"+raw.slice(11,13)+":"+raw.slice(13,15);
+  }
+  events.forEach(function (e) { e.start = toIso(e.startRaw); e.end = toIso(e.endRaw); delete e.startRaw; delete e.endRaw; });
+  return events;
+}
+
+// Reference the Compose action from step 3 above (rename to match your action's name).
+var icsText = workflowContext.actions['ICS_Text'].outputs;
+return parseLtiIcs(icsText);
+```
+
+> **Verified:** this parser was tested directly against a real file exported by the tool — 3 events extracted with correct subjects, start/end times, time zone, and an embedded resource (including a filename with spaces/parentheses and description text containing semicolons, commas and line breaks) decoded back byte-for-byte correctly.
+
+### 5. Create the events
+
+Add **Parse JSON** on the script's output (sample from a test run), then **Apply to each** → **Office 365 Outlook: Create event (V4)**, mapping the fields as shown in the flow outline above. For **Required attendees**, use the adviser's email from the Form response (add an email question to the Form if it doesn't collect one already). For **Attachments**, map each item in `attachments[]` to the action's Name / ContentBytes attachment fields (`base64` is already base64-encoded, ready to pass straight through).
+
+**Caveats**
+- Keep resources modest in size — attaching files to a created event has a lower size ceiling (a few MB) than emailing a raw file, so the tool's existing "keep files compact" guidance matters even more here.
+- If an uploaded resource's filename contains a semicolon, it will arrive escaped (`\;`) in the parsed `X-FILENAME` — rename the file first if that happens; it's a rare edge case.
+- This replaces the "email the `.ics`" action in Flow A entirely — the adviser no longer receives the file at all, only the native invite.
+
+---
+
 ## Recommended: the landing page (one scan = calendar + files)
 
 The simplest, most reliable result is the **landing page**. On **Share & QR → Download landing page (.html)**, the tool builds **one self-contained HTML file** that bundles:
