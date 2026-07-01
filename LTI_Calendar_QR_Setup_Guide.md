@@ -40,7 +40,7 @@ Calendar tool  --drops .ics-->  SharePoint /Capital Learning Hub/LTI/Generated I
 
 **Each cohort**
 1. In **Step 1**, enter the **firm name** and **workshop completion date**.
-2. On **Share & QR**: **Download the .ics** and drop it into the SharePoint `Generated ICS` folder, named by firm + date so Flow A can find it.
+2. On **Share & QR**: **Download the .ics** (the tool names it `<Firm>_<YYYY-MM-DD>.ics`, e.g. `DBS_Private_Bank_2026-06-26.ics`, and shows the exact name under the button) and drop it into the SharePoint `Generated ICS` folder **keeping that name**. In Flow A, build the same filename from the submitted firm + date (replace non-alphanumeric characters with `_`) to look it up.
 3. Click **Generate Form QR** — the QR encodes the Form URL with this firm + date pre-filled (it updates live as Step 1 changes). **Download PNG / Print** it. One unique QR per firm-per-session.
 
 Adviser scans → the Form opens already filled for their firm → they submit → Flow A emails them the calendar.

@@ -834,6 +834,8 @@ function uid(prefix){return (prefix||"id")+"-"+Date.now().toString(36)+"-"+Math.
 function escapeHtml(s){s=String(s==null?"":s);return s.replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function pad(n){return String(n).padStart(2,"0");}
 function slug(s){return String(s||"").trim().replace(/[^a-zA-Z0-9]+/g,"_").replace(/^_|_$/g,"")||"LTI";}
+/* Deterministic SharePoint filename Flow A looks up: <Firm>_<YYYY-MM-DD>.ics */
+function icsFileName(){var firm=$("clientName")?$("clientName").value.trim():"";var date=$("startDate")?$("startDate").value:"";return slug(firm||"LTI")+"_"+(date||"date")+".ics";}
 function toast(msg){var t=$("toast");t.textContent=msg;t.style.display="block";clearTimeout(t._t);t._t=setTimeout(function(){t.style.display="none";},2300);}
 function saveReminders(){try{localStorage.setItem(LS_REMINDERS,JSON.stringify(reminders));}catch(e){}}
 function saveAssets(){try{localStorage.setItem(LS_ASSETS,JSON.stringify(assets));}catch(e){}}
@@ -1218,11 +1220,11 @@ async function downloadICS(){
   var built=await assembleIcs({urlMap:assetUrlMap()});
   if(!built)return;
   var client=built.client;
-  downloadBlob(new Blob(built.parts,{type:"text/calendar;charset=utf-8"}),slug(client||"LTI")+"_LTI_Follow_Up_"+$("startDate").value+".ics");
+  downloadBlob(new Blob(built.parts,{type:"text/calendar;charset=utf-8"}),icsFileName());
   var noLink=[],seen={};
   scheduledReminders().forEach(function(r){(r.assetIds||[]).forEach(function(id){if(seen[id])return;seen[id]=true;var a=getAsset(id);if(a&&!a.url)noLink.push(a.name);});});
   if(noLink.length)showStatus(noLink.length+" linked resource(s) have no hosted link yet, so advisers can’t open them. Add each one’s signed link in Resources → Edit, then re-export: "+noLink.slice(0,3).join(", ")+(noLink.length>3?"…":""));
-  else showStatus("Calendar exported. Upload it to your approved storage, copy its signed download link, then paste it below to make the QR.");
+  else showStatus("Exported "+icsFileName()+". Keep this name and drop it in SharePoint /Capital Learning Hub/LTI/Generated ICS/ so Flow A finds it (or, for the hosting flow, upload it and paste its link below).");
   if(!shareState.label)shareState.label=(client?client+" — ":"")+"Long-Term Investing Follow-Up";
   var progress=$("progress");setTimeout(function(){if(progress)progress.style.display="none";},1600);
   toast("Calendar exported");
@@ -1455,6 +1457,7 @@ function buildFormUrl(){
   return u.toString().replace(/\+/g,"%20");
 }
 function refreshFormUI(){
+  if($("icsName"))$("icsName").textContent=icsFileName();
   var ps=formPrefillParams(formState.template),keys=ps.map(function(p){return p.k;});
   if(keys.length&&(keys.indexOf(formState.firmParam)<0||keys.indexOf(formState.dateParam)<0))autoMapForm();
   ["Firm","Date"].forEach(function(w){
@@ -1510,6 +1513,7 @@ function renderShare(){
           '<li><span class="n">3</span><span>Generate the QR. Change firm/date in Step 1 and the QR follows.</span></li>'+
         '</ol>'+
         '<button class="btn ghost full" style="margin-top:12px" onclick="downloadICS()"><span class="ico" aria-hidden="true">↓</span> Download the .ics (for SharePoint)</button>'+
+        '<p class="share-sub" style="margin-top:8px">Saves as <code id="icsName">…</code> — keep this exact name in the <code>Generated ICS</code> folder so Flow A can find it by firm + date.</p>'+
         '<label for="formTpl" style="margin-top:14px">Microsoft Forms pre-fill link</label>'+
         '<textarea id="formTpl" style="min-height:72px;font-family:\'SF Mono\',Menlo,monospace;font-size:12px" placeholder="https://forms.office.com/Pages/ResponsePage.aspx?id=…&amp;r…=DBS&amp;r…=2026-06-26" oninput="onFormInput()"></textarea>'+
         '<div class="two" style="margin-top:6px">'+
