@@ -1,0 +1,171 @@
+{
+  "schemaVersion": "1.0.0.0",
+  "properties": {
+    "connectionReferences": {
+      "shared_microsoftforms": {
+        "connectionName": "shared_microsoftforms",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_microsoftforms",
+        "tier": "NotSpecified"
+      },
+      "shared_sharepointonline": {
+        "connectionName": "shared_sharepointonline",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+        "tier": "NotSpecified"
+      },
+      "shared_office365": {
+        "connectionName": "shared_office365",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_office365",
+        "tier": "NotSpecified"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$connections": { "defaultValue": {}, "type": "Object" }
+      },
+      "triggers": {
+        "When_a_new_response_is_submitted": {
+          "type": "ApiConnection",
+          "inputs": {
+            "host": {
+              "connection": { "referenceName": "shared_microsoftforms" }
+            },
+            "path": "/formapi/api/forms/@{encodeURIComponent('REPLACE_WITH_YOUR_FORM_ID')}/webhook"
+          },
+          "splitOn": "@triggerBody()?['resourceData']?['responseId']"
+        }
+      },
+      "actions": {
+        "Get_response_details": {
+          "type": "ApiConnection",
+          "runAfter": {},
+          "inputs": {
+            "host": {
+              "connection": { "referenceName": "shared_microsoftforms" }
+            },
+            "path": "/formapi/api/forms/@{encodeURIComponent('REPLACE_WITH_YOUR_FORM_ID')}/responses/@{encodeURIComponent(triggerBody()?['resourceData']?['responseId'])}"
+          }
+        },
+        "Compose_filename": {
+          "type": "Compose",
+          "runAfter": { "Get_response_details": ["Succeeded"] },
+          "inputs": "@{concat(replace(trim(body('Get_response_details')?['REPLACE_WITH_FIRM_QUESTION_ID']), ' ', '_'), '_LTI_Follow_Up_', body('Get_response_details')?['REPLACE_WITH_DATE_QUESTION_ID'], '.json')}",
+          "description": "Reuses your existing flow's Firm/Date question IDs (see README) but ends in .json instead of .ics."
+        },
+        "Try": {
+          "type": "Scope",
+          "runAfter": { "Compose_filename": ["Succeeded"] },
+          "actions": {
+            "Get_file_content_using_path": {
+              "type": "ApiConnection",
+              "runAfter": {},
+              "inputs": {
+                "host": {
+                  "connection": { "referenceName": "shared_sharepointonline" }
+                },
+                "method": "get",
+                "path": "/datasets/@{encodeURIComponent(encodeURIComponent('REPLACE_WITH_YOUR_SHAREPOINT_SITE_URL'))}/GetFileContentByPath",
+                "queries": {
+                  "path": "/Capital Learning Hub/LTI/Generated ICS/@{outputs('Compose_filename')}"
+                }
+              }
+            },
+            "Compose_Flow_JSON_Text": {
+              "type": "Compose",
+              "runAfter": { "Get_file_content_using_path": ["Succeeded"] },
+              "inputs": "@base64ToString(body('Get_file_content_using_path'))"
+            },
+            "Parse_JSON": {
+              "type": "ParseJson",
+              "runAfter": { "Compose_Flow_JSON_Text": ["Succeeded"] },
+              "inputs": {
+                "content": "@outputs('Compose_Flow_JSON_Text')",
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "subject": { "type": "string" },
+                      "start": { "type": "string" },
+                      "end": { "type": "string" },
+                      "timeZone": { "type": "string" },
+                      "description": { "type": "string" },
+                      "attachments": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "@odata.type": { "type": "string" },
+                            "name": { "type": "string" },
+                            "contentType": { "type": "string" },
+                            "contentBytes": { "type": "string" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "Apply_to_each": {
+              "type": "Foreach",
+              "runAfter": { "Parse_JSON": ["Succeeded"] },
+              "foreach": "@body('Parse_JSON')",
+              "actions": {
+                "Create_event_V4": {
+                  "type": "ApiConnection",
+                  "runAfter": {},
+                  "inputs": {
+                    "host": {
+                      "connection": { "referenceName": "shared_office365" }
+                    },
+                    "method": "post",
+                    "path": "/codeless/v1.0/me/events",
+                    "body": {
+                      "Subject": "@item()?['subject']",
+                      "Start": "@item()?['start']",
+                      "End": "@item()?['end']",
+                      "TimeZone": "@item()?['timeZone']",
+                      "Body": "@item()?['description']",
+                      "IsHtml": false,
+                      "RequiredAttendees": "@body('Get_response_details')?['REPLACE_WITH_ADVISER_EMAIL_QUESTION_ID']",
+                      "Attachments": "@item()?['attachments']"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "Catch": {
+          "type": "Scope",
+          "runAfter": { "Try": ["Failed", "Skipped", "TimedOut"] },
+          "actions": {
+            "Send_failure_notification": {
+              "type": "ApiConnection",
+              "runAfter": {},
+              "inputs": {
+                "host": {
+                  "connection": { "referenceName": "shared_office365" }
+                },
+                "method": "post",
+                "path": "/v2/Mail",
+                "body": {
+                  "To": "REPLACE_WITH_YOUR_TEAM_EMAIL",
+                  "Subject": "LTI Follow-up Sender (No-Premium) failed for a submission",
+                  "Body": "The flow failed inside the Try scope. Open this run in Power Automate to see which action failed and why."
+                }
+              },
+              "description": "Placeholder failure handler — replace with your own logic/recipients, or copy your existing flow's 4 Catch actions here instead."
+            }
+          }
+        }
+      },
+      "outputs": {}
+    }
+  }
+}
