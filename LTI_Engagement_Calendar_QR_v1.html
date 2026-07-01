@@ -834,8 +834,8 @@ function uid(prefix){return (prefix||"id")+"-"+Date.now().toString(36)+"-"+Math.
 function escapeHtml(s){s=String(s==null?"":s);return s.replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function pad(n){return String(n).padStart(2,"0");}
 function slug(s){return String(s||"").trim().replace(/[^a-zA-Z0-9]+/g,"_").replace(/^_|_$/g,"")||"LTI";}
-/* Deterministic SharePoint filename Flow A looks up: <Firm>_<YYYY-MM-DD>.ics */
-function icsFileName(){var firm=$("clientName")?$("clientName").value.trim():"";var date=$("startDate")?$("startDate").value:"";return slug(firm||"LTI")+"_"+(date||"date")+".ics";}
+/* Deterministic SharePoint filename Flow A looks up: <Firm>_LTI_Follow_Up_<YYYY-MM-DD>.ics */
+function icsFileName(){var firm=$("clientName")?$("clientName").value.trim():"";var date=$("startDate")?$("startDate").value:"";return slug(firm||"LTI")+"_LTI_Follow_Up_"+(date||"date")+".ics";}
 function toast(msg){var t=$("toast");t.textContent=msg;t.style.display="block";clearTimeout(t._t);t._t=setTimeout(function(){t.style.display="none";},2300);}
 function saveReminders(){try{localStorage.setItem(LS_REMINDERS,JSON.stringify(reminders));}catch(e){}}
 function saveAssets(){try{localStorage.setItem(LS_ASSETS,JSON.stringify(assets));}catch(e){}}
