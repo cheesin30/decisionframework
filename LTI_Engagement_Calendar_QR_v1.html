@@ -1432,8 +1432,10 @@ function printQR(){
   w.document.close();setTimeout(function(){w.print();},300);
 }
 /* ---------- QR to a pre-filled Microsoft Form ---------- */
-var formState={template:"",firmParam:"",dateParam:""};
-function loadForm(){try{var s=JSON.parse(localStorage.getItem(LS_FORM));if(s&&typeof s==="object"){for(var k in s){if(s.hasOwnProperty(k))formState[k]=s[k];}}}catch(e){}}
+/* The live LTI Follow-Up form. Firm param = r2382…, date param = r31037…. */
+var FORM_DEFAULT_TEMPLATE="https://forms.office.com/Pages/ResponsePage.aspx?id=VsC4QcMtjUOZ7mHgAoet_u7GC5WcZ6hKmg8zmnXOKQ1UODc1TlMyOFVPV1pKVVRVOVgyTFg4NUg1Wi4u&r2382d0904b5247209e1fd738071b1c48=DBS&r31037180f3664cbfab502d4633d5bdc4=2026-06-26";
+var formState={template:FORM_DEFAULT_TEMPLATE,firmParam:"r2382d0904b5247209e1fd738071b1c48",dateParam:"r31037180f3664cbfab502d4633d5bdc4"};
+function loadForm(){try{var s=JSON.parse(localStorage.getItem(LS_FORM));if(s&&typeof s==="object"){for(var k in s){if(s.hasOwnProperty(k)&&s[k]!=="")formState[k]=s[k];}}}catch(e){}}
 function saveForm(){try{localStorage.setItem(LS_FORM,JSON.stringify(formState));}catch(e){}}
 /* Pull the Microsoft Forms pre-fill answer params (r<hex>=value) from a template URL. */
 function formPrefillParams(tpl){var out=[];try{var u=new URL(String(tpl||"").trim());u.searchParams.forEach(function(v,k){if(/^r[0-9a-fA-F]{16,}$/.test(k))out.push({k:k,v:v});});}catch(e){}return out;}
@@ -1506,23 +1508,24 @@ function renderShare(){
       '<input id="spName" type="text" placeholder="e.g. DBS — June cohort" oninput="renderLabel()">'+
       '<div class="share-card" style="margin-top:14px">'+
         '<h4 class="share-sec">QR → pre-filled Microsoft Form</h4>'+
-        '<p class="share-sub">The QR encodes your Form URL with <strong>firm + workshop date</strong> from Step 1 substituted into the pre-fill fields. It updates automatically when those change.</p>'+
+        '<p class="share-sub">Built from the LTI follow-up Form with the <strong>firm + workshop date from Step 1</strong> pre-filled. The QR is generated automatically — no pasting, and it updates whenever Step 1 changes.</p>'+
         '<ol class="qr-steps" style="margin-top:8px">'+
-          '<li><span class="n">1</span><span><strong>Download the .ics</strong> and drop it in SharePoint <code>/Capital Learning Hub/LTI/Generated ICS/</code> (name it by firm + date) so Flow A can fetch it.</span></li>'+
-          '<li><span class="n">2</span><span>Paste your <strong>Form pre-fill link</strong> below (once) — the tool maps the firm and date fields for you.</span></li>'+
-          '<li><span class="n">3</span><span>Generate the QR. Change firm/date in Step 1 and the QR follows.</span></li>'+
+          '<li><span class="n">1</span><span><strong>Download the .ics</strong> and drop it in SharePoint <code>/Capital Learning Hub/LTI/Generated ICS/</code>, keeping the name shown, so Flow A can fetch it.</span></li>'+
+          '<li><span class="n">2</span><span>The QR on the right is ready for this firm + date — <strong>Download PNG</strong> or <strong>Print</strong> it.</span></li>'+
         '</ol>'+
         '<button class="btn ghost full" style="margin-top:12px" onclick="downloadICS()"><span class="ico" aria-hidden="true">↓</span> Download the .ics (for SharePoint)</button>'+
-        '<p class="share-sub" style="margin-top:8px">Saves as <code id="icsName">…</code> — keep this exact name in the <code>Generated ICS</code> folder so Flow A can find it by firm + date.</p>'+
-        '<label for="formTpl" style="margin-top:14px">Microsoft Forms pre-fill link</label>'+
-        '<textarea id="formTpl" style="min-height:72px;font-family:\'SF Mono\',Menlo,monospace;font-size:12px" placeholder="https://forms.office.com/Pages/ResponsePage.aspx?id=…&amp;r…=DBS&amp;r…=2026-06-26" oninput="onFormInput()"></textarea>'+
-        '<div class="two" style="margin-top:6px">'+
-          '<div><label for="formFirm">Firm field</label><select id="formFirm" onchange="onFormInput()"></select></div>'+
-          '<div><label for="formDate">Workshop-date field</label><select id="formDate" onchange="onFormInput()"></select></div>'+
-        '</div>'+
+        '<p class="share-sub" style="margin-top:8px">Saves as <code id="icsName">…</code> — keep this exact name in the <code>Generated ICS</code> folder.</p>'+
         '<div id="formPreview" class="link-preview"></div>'+
-        '<button class="btn primary full" style="margin-top:12px" onclick="generateFormQR()"><span class="ico" aria-hidden="true">▦</span> Generate Form QR</button>'+
-        '<p class="share-sub" style="margin-top:10px">Get the link from Microsoft Forms → <strong>Collect responses → Get pre-filled results</strong>: type a sample firm and date, copy the URL, paste it here once. Mark those two questions as hidden in your flow.</p>'+
+        '<details class="opts"><summary>Form settings (pre-configured)</summary><div class="opts-body">'+
+          '<p class="share-sub">The follow-up Form link is already set and its firm/date fields mapped. Only change this if the Form itself changes.</p>'+
+          '<label for="formTpl">Microsoft Forms pre-fill link</label>'+
+          '<textarea id="formTpl" style="min-height:72px;font-family:\'SF Mono\',Menlo,monospace;font-size:12px" oninput="onFormInput()"></textarea>'+
+          '<div class="two" style="margin-top:6px">'+
+            '<div><label for="formFirm">Firm field</label><select id="formFirm" onchange="onFormInput()"></select></div>'+
+            '<div><label for="formDate">Workshop-date field</label><select id="formDate" onchange="onFormInput()"></select></div>'+
+          '</div>'+
+          '<button class="btn ghost small" style="margin-top:12px" onclick="generateFormQR()"><span class="ico" aria-hidden="true">▦</span> Regenerate QR</button>'+
+        '</div></details>'+
       '</div>'+
       '<details class="opts"><summary>Other ways to share (host a file instead)</summary><div class="opts-body">'+
       '<div class="share-card" style="margin-top:2px">'+
