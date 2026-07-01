@@ -1,4 +1,8 @@
-# Importing the Flow A package
+# Importing the Flow A package (legacy)
+
+> **Having trouble with this legacy package?** Use the **solution** import
+> instead — see [`IMPORT-SOLUTION.md`](./IMPORT-SOLUTION.md). It's the modern,
+> more robust path and is the recommended option.
 
 This folder ships the flow as an **importable Power Automate package** so you
 don't have to rebuild every action by hand. The package is built from the

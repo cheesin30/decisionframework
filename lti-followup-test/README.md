@@ -59,9 +59,12 @@ naming convention** section below — it is the most important thing in this rep
 | `README.md` | This file. |
 | `flows/flow-a-sender.md` | Human-readable spec for the Power Automate flow (**Flow A — LTI Follow-up Sender**): trigger, every step, and the exact WDL expressions. |
 | `flows/flow-a-sender.json` | A realistic Logic Apps / Power Automate workflow-definition JSON for the same flow, to read alongside the `.md` when building it in the portal. |
-| `flows/LTI_Follow_up_Sender.zip` | **Importable Power Automate package** — import this to get the flow without rebuilding it by hand. |
-| `flows/IMPORT.md` | How to import the package and fill in the three environment-specific values (Form ID, SharePoint site/path, question IDs). |
-| `flows/package/` | Unzipped sources of the package (`manifest.json` + flow `definition.json`) — what the `.zip` is built from. |
+| `flows/LTI_Follow_up_Sender_solution.zip` | **Importable Power Platform solution (recommended)** — the modern, more robust import path (handles connections via connection references). |
+| `flows/IMPORT-SOLUTION.md` | How to import the solution, map connections, and fill in the three environment-specific values. |
+| `flows/solution-package/` | Unzipped sources of the solution (`solution.xml`, `customizations.xml`, `[Content_Types].xml`, flow clientdata). |
+| `flows/LTI_Follow_up_Sender.zip` | Importable Power Automate **legacy package** (alternative to the solution). |
+| `flows/IMPORT.md` | How to import the legacy package and fill in the three environment-specific values. |
+| `flows/package/` | Unzipped sources of the legacy package (`manifest.json` + flow `definition.json`). |
 | `form/form-spec.md` | Specification for the Microsoft Form: title, settings, the 2 visible + 2 hidden questions, thank-you message, and the question → dynamic-content mapping table. |
 | `form/form-build-sheet.md` | Copy-paste build sheet — every form field as a ready-to-paste block in build order (Forms has no import format). |
 | `form/prefill-url-guide.md` | How to build the per-session pre-fill URL that bakes `Firm` and `Date` into the QR, including how to get the real field IDs from Microsoft's "Get a link to pre-fill answers" feature. |
