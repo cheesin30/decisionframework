@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Long-term Investing — Warm-up Gut Check</title>
+<style>
+  /* ===============================================================
+     Capital Group–inspired brand palette
+     =============================================================== */
+  :root{
+    --navy:#002B49;
+    --blue:#00558C;
+    --bright:#009CDE;
+    --teal:#00A499;
+    --magenta:#A6228E;
+    --ink:#1c2733;
+    --grey:#5b6b7a;
+    --line:#e3e8ee;
+    --bg:#ffffff;
+    --soft:#f4f7fa;
+    --font: "Inter","Segoe UI","Helvetica Neue",Arial,system-ui,sans-serif;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    font-family:var(--font);
+    color:var(--ink);
+    background:#0a1420;
+    overflow:hidden;
+  }
+
+  /* ---------- Deck / slide scaffolding ---------- */
+  #deck{position:fixed;inset:0;}
+  .slide{
+    position:absolute;inset:0;
+    display:none;
+    padding:4.2vh 6vw 8vh;
+    background:var(--bg);
+    flex-direction:column;
+    animation:fade .5s ease both;
+    overflow:hidden;
+  }
+  .slide.active{display:flex;}
+  @keyframes fade{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* Brand chrome */
+  .logo{position:absolute;top:3.4vh;left:6vw;display:flex;align-items:center;gap:.6rem;z-index:5;}
+  .logo .mark{position:relative;width:34px;height:34px;flex:none;}
+  .logo .mark i{position:absolute;width:16px;height:16px;display:block;}
+  .logo .mark i:nth-child(1){left:0;top:0;background:var(--blue);}
+  .logo .mark i:nth-child(2){right:0;top:2px;background:var(--bright);}
+  .logo .mark i:nth-child(3){left:4px;bottom:0;background:var(--teal);opacity:.9;}
+  .logo b{font-weight:800;letter-spacing:.06em;font-size:.8rem;line-height:1;color:var(--navy);}
+  .logo b span{display:block;font-weight:600;color:var(--grey);}
+  .tag{position:absolute;top:3.9vh;right:6vw;font-size:.66rem;font-weight:700;letter-spacing:.14em;color:var(--blue);z-index:5;}
+  .foot{position:absolute;bottom:2.4vh;left:6vw;font-size:.6rem;color:#9aa7b4;}
+  .pagenum{position:absolute;bottom:2.4vh;right:6vw;font-size:.6rem;color:#9aa7b4;}
+
+  /* Progress + nav */
+  #bar{position:fixed;top:0;left:0;height:4px;background:var(--bright);width:0;z-index:40;transition:width .4s ease;}
+  .nav{position:fixed;bottom:2vh;left:50%;transform:translateX(-50%);display:flex;gap:.5rem;z-index:40;}
+  .nav button{
+    border:none;background:rgba(0,43,73,.08);color:var(--navy);
+    width:38px;height:38px;border-radius:50%;font-size:1rem;cursor:pointer;
+    display:grid;place-items:center;transition:.2s;
+  }
+  .nav button:hover{background:var(--bright);color:#fff;}
+  .kbd-hint{position:fixed;bottom:2.4vh;right:1.5vw;font-size:.6rem;color:#6b7a89;z-index:40;}
+
+  /* ---------- Typography helpers ---------- */
+  .eyebrow{font-size:.8rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--bright);margin-bottom:1.1rem;}
+  h1{font-size:clamp(2.2rem,5vw,4rem);font-weight:800;line-height:1.02;letter-spacing:-.02em;color:var(--navy);}
+  h2{font-size:clamp(1.7rem,3.6vw,2.7rem);font-weight:800;line-height:1.08;letter-spacing:-.015em;color:var(--navy);}
+  .lead{font-size:clamp(1rem,1.6vw,1.35rem);color:var(--grey);line-height:1.5;max-width:60ch;}
+  .center{align-items:center;justify-content:center;text-align:center;}
+  .qbody{margin-top:auto;margin-bottom:auto;}
+
+  /* ---------- Cover ---------- */
+  .cover{background:linear-gradient(120deg,#002B49 0%,#003a63 55%,#00558C 100%);color:#fff;}
+  .cover .logo b,.cover .logo b span{color:#fff;}
+  .cover .tag{color:#7fd3f2;}
+  .cover h1{color:#fff;}
+  .cover .clock{
+    position:absolute;right:-4vw;top:50%;transform:translateY(-50%);
+    width:52vh;height:52vh;border-radius:50%;border:2px solid rgba(255,255,255,.16);
+    display:grid;place-items:center;opacity:.5;
+  }
+  .cover .clock:before{content:"";position:absolute;width:2px;height:38%;background:rgba(255,255,255,.4);top:12%;left:50%;transform-origin:bottom;animation:tick 8s linear infinite;}
+  .cover .clock:after{content:"";position:absolute;width:2px;height:26%;background:var(--bright);top:24%;left:50%;transform-origin:bottom;animation:tick 32s linear infinite;}
+  @keyframes tick{to{transform:rotate(360deg);}}
+  .cover .accent{position:absolute;left:0;top:20%;bottom:20%;width:10px;background:var(--bright);}
+
+  .pill{display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.12);
+    padding:.5rem 1rem;border-radius:999px;font-size:.85rem;font-weight:600;margin-top:2rem;width:fit-content;}
+  .pill.dark{background:var(--soft);color:var(--blue);}
+
+  .startbtn{
+    margin-top:2.4rem;background:var(--bright);color:#fff;border:none;cursor:pointer;
+    font-family:var(--font);font-weight:700;font-size:1.05rem;padding:1rem 2.2rem;border-radius:10px;
+    box-shadow:0 12px 30px rgba(0,156,222,.35);transition:.2s;width:fit-content;
+  }
+  .startbtn:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(0,156,222,.5);}
+
+  /* ---------- "How it works" cards ---------- */
+  .infogrid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem;margin-top:2.6rem;}
+  .infocard{background:var(--soft);border-radius:16px;padding:1.8rem 1.6rem;border:1px solid var(--line);}
+  .infocard .ic{width:52px;height:52px;border-radius:13px;display:grid;place-items:center;font-size:1.5rem;margin-bottom:1rem;color:#fff;}
+  .infocard h3{font-size:1.15rem;color:var(--navy);margin-bottom:.4rem;}
+  .infocard p{font-size:.92rem;color:var(--grey);line-height:1.5;}
+
+  /* ---------- Poll layout ---------- */
+  .qhead{display:flex;align-items:baseline;gap:1rem;margin-bottom:.4rem;}
+  .qnum{font-size:2.4rem;font-weight:800;color:var(--bright);line-height:1;flex:none;}
+  .qmeta{font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);margin-bottom:.8rem;}
+  .options{display:grid;gap:.9rem;margin-top:1.4rem;}
+  .options.two{grid-template-columns:1fr 1fr;}
+  .opt{
+    position:relative;display:flex;align-items:center;gap:1rem;
+    background:#fff;border:2px solid var(--line);border-radius:14px;
+    padding:1.05rem 1.3rem;cursor:pointer;overflow:hidden;transition:.18s;
+    font-size:1.02rem;font-weight:500;color:var(--ink);
+  }
+  .opt .fill{position:absolute;inset:0;width:0;background:var(--soft);z-index:0;transition:width .6s cubic-bezier(.2,.8,.2,1);}
+  .opt > *{position:relative;z-index:1;}
+  .opt:hover{border-color:var(--bright);transform:translateY(-1px);}
+  .opt.picked{border-color:var(--blue);box-shadow:0 8px 22px rgba(0,85,140,.12);}
+  .opt.picked .dot{background:var(--blue);border-color:var(--blue);}
+  .opt .dot{width:22px;height:22px;border-radius:50%;border:2px solid #c3ced9;flex:none;display:grid;place-items:center;transition:.18s;}
+  .opt.multi .dot{border-radius:6px;}
+  .opt .dot:after{content:"";width:9px;height:9px;border-radius:inherit;background:#fff;transform:scale(0);transition:.18s;}
+  .opt.picked .dot:after{transform:scale(1);}
+  .opt .quote{font-weight:600;}
+  .opt .quote small{display:block;font-weight:500;color:var(--grey);font-size:.82rem;margin-top:.15rem;}
+  .opt .pct{margin-left:auto;font-weight:800;color:var(--blue);font-variant-numeric:tabular-nums;opacity:0;transition:.3s;flex:none;}
+  .revealed .opt .pct{opacity:1;}
+  .opt .crown{margin-left:.4rem;opacity:0;transition:.3s;}
+  .opt.leader .crown{opacity:1;}
+
+  .qfoot{display:flex;align-items:center;gap:1rem;margin-top:1.5rem;flex-wrap:wrap;}
+  .revealbtn{background:var(--navy);color:#fff;border:none;cursor:pointer;font-family:var(--font);
+    font-weight:700;font-size:.92rem;padding:.7rem 1.4rem;border-radius:9px;transition:.2s;}
+  .revealbtn:hover{background:var(--blue);}
+  .hint{font-size:.9rem;color:var(--grey);}
+  .hint b{color:var(--navy);}
+  .insight{
+    display:none;margin-top:1.1rem;padding:1rem 1.2rem;border-left:4px solid var(--teal);
+    background:var(--soft);border-radius:0 12px 12px 0;font-size:.95rem;color:var(--ink);line-height:1.5;max-width:70ch;
+  }
+  .revealed .insight{display:block;animation:fade .4s both;}
+  .insight b{color:var(--blue);}
+
+  /* ---------- Confidence dials (Q4) ---------- */
+  .dials{display:grid;gap:1.4rem;margin-top:1.6rem;}
+  .dial{display:grid;grid-template-columns:1.3fr 2fr;gap:1.4rem;align-items:center;
+    background:#fff;border:1px solid var(--line);border-radius:16px;padding:1.2rem 1.5rem;}
+  .dial .stmt{font-size:1.02rem;font-weight:600;color:var(--navy);line-height:1.35;}
+  .scale{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;}
+  .lvl{border:2px solid var(--line);border-radius:10px;padding:.7rem .3rem;text-align:center;cursor:pointer;
+    font-size:.8rem;font-weight:600;color:var(--grey);transition:.16s;line-height:1.15;}
+  .lvl:hover{border-color:var(--bright);}
+  .lvl.on{color:#fff;border-color:transparent;}
+  .lvl[data-v="1"].on{background:#c94b4b;}
+  .lvl[data-v="2"].on{background:#e08a2b;}
+  .lvl[data-v="3"].on{background:var(--bright);}
+  .lvl[data-v="4"].on{background:var(--teal);}
+  .temp{margin-top:1.8rem;font-size:1.05rem;color:var(--grey);}
+  .temp b{color:var(--navy);font-size:1.3rem;}
+
+  /* ---------- Four-box recap ---------- */
+  .fourbox{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1.6rem;max-width:760px;}
+  .box{border-radius:14px;padding:1.4rem 1.5rem;color:#fff;min-height:120px;}
+  .box h4{font-size:1.15rem;margin-bottom:.3rem;}
+  .box p{font-size:.9rem;opacity:.92;line-height:1.4;}
+  .box.b1{background:var(--blue);}
+  .box.b2{background:var(--bright);}
+  .box.b3{background:var(--teal);}
+  .box.b4{background:var(--magenta);}
+
+  .split{display:grid;grid-template-columns:1.1fr .9fr;gap:3vw;flex:1;align-items:center;}
+
+  .reset{position:fixed;bottom:6vh;right:1.5vw;font-size:.6rem;color:#5b6b7a;background:rgba(255,255,255,.85);border:1px solid #dfe6ee;
+    padding:.35rem .6rem;border-radius:6px;cursor:pointer;z-index:40;}
+  .reset:hover{color:var(--magenta);border-color:var(--magenta);}
+
+  @media(max-width:820px){
+    .infogrid{grid-template-columns:1fr;}
+    .dial{grid-template-columns:1fr;}
+    .split,.fourbox{grid-template-columns:1fr;}
+    .options.two{grid-template-columns:1fr;}
+    .cover .clock{display:none;}
+  }
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div id="deck">
+
+  <!-- ============ SLIDE 1 — COVER ============ -->
+  <section class="slide cover center active">
+    <div class="accent"></div>
+    <div class="logo"><span class="mark"><i></i><i></i><i></i></span><b>CAPITAL<span>GROUP&trade;</span></b></div>
+    <div class="tag">FOR PROFESSIONAL INVESTORS ONLY</div>
+    <div class="clock"></div>
+    <div style="text-align:left;max-width:60ch;">
+      <div class="eyebrow" style="color:#7fd3f2;">Long-term Investing · Workshop warm-up</div>
+      <h1>The 2-minute<br>gut check</h1>
+      <p class="lead" style="color:#d5e4f0;margin-top:1.2rem;">
+        Before we dig in — a quick, honest read on the client conversations you're
+        <em>actually</em> having. No prep. No right answers. Just tap.
+      </p>
+      <div class="pill">🔒 Anonymous &nbsp;·&nbsp; ⏱ ~2 minutes &nbsp;·&nbsp; 👆 Tap to vote</div><br>
+      <button class="startbtn" onclick="go(1)">Let's go →</button>
+    </div>
+    <div class="foot">© 2026 Capital Group. All rights reserved.</div>
+  </section>
+
+  <!-- ============ SLIDE 2 — HOW IT WORKS ============ -->
+  <section class="slide">
+    <div class="logo"><span class="mark"><i></i><i></i><i></i></span><b>CAPITAL<span>GROUP&trade;</span></b></div>
+    <div class="tag">FOR PROFESSIONAL INVESTORS ONLY</div>
+    <div class="qbody">
+      <div class="eyebrow">Why we're doing this</div>
+      <h2>This isn't a test — it's the room's<br>tuning fork 🎵</h2>
+      <p class="lead" style="margin-top:1rem;">
+        Your answers reshape today's session on the fly, so we spend our time on the
+        objections <b>you</b> hear and the moments <b>you</b> get stuck — not generic theory.
+      </p>
+      <div class="infogrid">
+        <div class="infocard">
+          <div class="ic" style="background:var(--blue);">🔒</div>
+          <h3>Totally anonymous</h3>
+          <p>Nothing is tied to your name. Be as honest as you'd be in your own head.</p>
+        </div>
+        <div class="infocard">
+          <div class="ic" style="background:var(--bright);">👆</div>
+          <h3>Tap, don't type</h3>
+          <p>Four quick questions. Pick the answer closest to your real client conversations.</p>
+        </div>
+        <div class="infocard">
+          <div class="ic" style="background:var(--teal);">📊</div>
+          <h3>See the room live</h3>
+          <p>Watch the results build in real time — then we react to what they say.</p>
+        </div>
+      </div>
+    </div>
+    <div class="foot">© 2026 Capital Group. All rights reserved.</div>
+    <div class="pagenum">01</div>
+  </section>
+
+  <!-- ============ SLIDE 3 — Q1 (multi-select) ============ -->
+  <section class="slide">
+    <div class="logo"><span class="mark"><i></i><i></i><i></i></span><b>CAPITAL<span>GROUP&trade;</span></b></div>
+    <div class="tag">FOR PROFESSIONAL INVESTORS ONLY</div>
+    <div class="qbody">
+      <div class="qmeta">Question 1 · Tap all you've actually heard</div>
+      <div class="qhead"><div class="qnum">01</div>
+        <h2>Picture your last few reluctant clients.<br>Which lines have really come out of their mouths?</h2></div>
+      <div class="options" data-poll="q1" data-multi="1">
+        <div class="opt multi" data-k="a"><span class="dot"></span>
+          <span class="quote">"Cash feels safer — I don't really need to invest."</span>
+          <span class="crown">👑</span><span class="pct"></span></div>
+        <div class="opt multi" data-k="b"><span class="dot"></span>
+          <span class="quote">"The markets are too risky right now."</span>
+          <span class="crown">👑</span><span class="pct"></span></div>
+        <div class="opt multi" data-k="c"><span class="dot"></span>
+          <span class="quote">"I'll wait until the timing is better."</span>
+          <span class="crown">👑</span><span class="pct"></span></div>
+        <div class="opt multi" data-k="d"><span class="dot"></span>
+          <span class="quote">"Honestly… investing feels too complicated."</span>
+          <span class="crown">👑</span><span class="pct"></span></div>
+      </div>
+      <div class="qfoot">
+        <button class="revealbtn" onclick="reveal(this)">Show the room 📊</button>
+        <span class="hint">👑 marks the <b>most-heard objection</b> in the room.</span>
+      </div>
+      <div class="insight">Every one of these is a <b>surface line</b>, not the real reason. Today we'll learn to hear
+        what's <b>underneath</b> it — and answer that instead.</div>
+    </div>
+    <div class="foot">© 2026 Capital Group. All rights reserved.</div>
+    <div class="pagenum">02</div>
+  </section>
+
+  <!-- ============ SLIDE 4 — Q2 (single) ============ -->
+  <section class="slide">
+    <div class="logo"><span class="mark"><i></i><i></i><i></i></span><b>CAPITAL<span>GROUP&trade;</span></b></div>
+    <div class="tag">FOR PROFESSIONAL INVESTORS ONLY</div>
+    <div class="qbody">
+      <div class="qmeta">Question 2 · Gut instinct · Pick one</div>
+      <div class="qhead"><div class="qnum">02</div>
+        <h2>A client just said one of those.<br>Be honest — what do you do <em>first?</em></h2></div>
+      <div class="options" data-poll="q2">
+        <div class="opt" data-k="a"><span class="dot"></span>Pull up market data or performance charts<span class="pct"></span></div>
+        <div class="opt" data-k="b"><span class="dot"></span>Walk them through the product or fund features<span class="pct"></span></div>
+        <div class="opt" data-k="c"><span class="dot"></span>Tackle the concern head-on with an explanation<span class="pct"></span></div>
+        <div class="opt" data-k="d"><span class="dot"></span>Ask what's <em>really</em> driving the concern first<span class="pct"></span></div>
+      </div>
+      <div class="qfoot">
+        <button class="revealbtn" onclick="reveal(this)">Show the room 📊</button>
+        <span class="hint">No judgement — just noticing our defaults.</span>
+      </div>
+      <div class="insight">Most of us reach for <b>data or explanation</b> — it feels productive. But the framework we'll
+        practise today opens with <b>Acknowledge</b>: ask first, answer second. Small switch, big difference.</div>
+    </div>
+    <div class="foot">© 2026 Capital Group. All rights reserved.</div>
+    <div class="pagenum">03</div>
+  </section>
+
+  <!-- ============ SLIDE 5 — Q3 (single) ============ -->
+  <section class="slide">
+    <div class="logo"><span class="mark"><i></i><i></i><i></i></span><b>CAPITAL<span>GROUP&trade;</span></b></div>
+    <div class="tag">FOR PROFESSIONAL INVESTORS ONLY</div>
+    <div class="qbody">
+      <div class="qmeta">Question 3 · Where does it stall for you? · Pick one</div>
+      <div class="qhead"><div class="qnum">03</div>
+        <h2>Every conversation has a sticking point.<br>Where's <em>yours?</em></h2></div>
+      <div class="options" data-poll="q3">
+        <div class="opt" data-k="a"><span class="dot"></span>Reading what's <em>really</em> behind the client's concern<span class="pct"></span></div>
+        <div class="opt" data-k="b"><span class="dot"></span>Explaining why long-term investing actually wins<span class="pct"></span></div>
+        <div class="opt" data-k="c"><span class="dot"></span>Answering "too risky / bad timing / cash is safer"<span class="pct"></span></div>
+        <div class="opt" data-k="d"><span class="dot"></span>Turning the talk into an actual next step<span class="pct"></span></div>
+      </div>
+      <div class="qfoot">
+        <button class="revealbtn" onclick="reveal(this)">Show the room 📊</button>
+        <span class="hint">Wherever the room clusters — <b>that's where we'll spend our energy.</b></span>
+      </div>
+      <div class="insight">Each of these is a box in today's <b>four-box framework</b> — Acknowledge, Perspective,
+        Confidence, Opportunity. You just told us which box to drill hardest.</div>
+    </div>
+    <div class="foot">© 2026 Capital Group. All rights reserved.</div>
+    <div class="pagenum">04</div>
+  </section>
+
+  <!-- ============ SLIDE 6 — Q4 (confidence dials) ============ -->
+  <section class="slide">
+    <div class="logo"><span class="mark"><i></i><i></i><i></i></span><b>CAPITAL<span>GROUP&trade;</span></b></div>
+    <div class="tag">FOR PROFESSIONAL INVESTORS ONLY</div>
+    <div class="qbody">
+      <div class="qmeta">Question 4 · Confidence check · Tap your level on each</div>
+      <div class="qhead"><div class="qnum">04</div>
+        <h2>How confident do you feel <em>today?</em></h2></div>
+      <div class="dials" id="dials">
+        <div class="dial" data-d="s1">
+          <div class="stmt">Explaining why sitting in cash can be its own long-term risk.</div>
+          <div class="scale">
+            <div class="lvl" data-v="1">Not<br>confident</div>
+            <div class="lvl" data-v="2">Somewhat</div>
+            <div class="lvl" data-v="3">Confident</div>
+            <div class="lvl" data-v="4">Very<br>confident</div>
+          </div>
+        </div>
+        <div class="dial" data-d="s2">
+          <div class="stmt">Responding in the moment when clients raise risk or timing concerns.</div>
+          <div class="scale">
+            <div class="lvl" data-v="1">Not<br>confident</div>
+            <div class="lvl" data-v="2">Somewhat</div>
+            <div class="lvl" data-v="3">Confident</div>
+            <div class="lvl" data-v="4">Very<br>confident</div>
+          </div>
+        </div>
+        <div class="dial" data-d="s3">
+          <div class="stmt">Moving from a client's concern to one clear, practical next step.</div>
+          <div class="scale">
+            <div class="lvl" data-v="1">Not<br>confident</div>
+            <div class="lvl" data-v="2">Somewhat</div>
+            <div class="lvl" data-v="3">Confident</div>
+            <div class="lvl" data-v="4">Very<br>confident</div>
+          </div>
+        </div>
+      </div>
+      <div class="temp">Your confidence temperature: <b id="tempval">—</b>
+        <span style="font-size:.9rem;">&nbsp; (we'll take it again at the end 🌡️)</span></div>
+    </div>
+    <div class="foot">© 2026 Capital Group. All rights reserved.</div>
+    <div class="pagenum">05</div>
+  </section>
+
+  <!-- ============ SLIDE 7 — PAYOFF / BRIDGE ============ -->
+  <section class="slide">
+    <div class="logo"><span class="mark"><i></i><i></i><i></i></span><b>CAPITAL<span>GROUP&trade;</span></b></div>
+    <div class="tag">FOR PROFESSIONAL INVESTORS ONLY</div>
+    <div class="split">
+      <div>
+        <div class="eyebrow">You're warmed up</div>
+        <h2>You just built today's agenda<br>— in about two minutes.</h2>
+        <p class="lead" style="margin-top:1rem;">
+          The objections you hear, the instinct you lead with, the point you get stuck,
+          and how confident you feel. Now watch us turn every one of them into a
+          repeatable move using the <b style="color:var(--blue)">four-box conversation framework.</b>
+        </p>
+        <button class="startbtn" style="background:var(--navy);box-shadow:0 12px 30px rgba(0,43,73,.3);"
+          onclick="go(0)">Restart warm-up ↺</button>
+      </div>
+      <div class="fourbox">
+        <div class="box b1"><h4>Acknowledge</h4><p>Empathise, listen and identify what's really going on.</p></div>
+        <div class="box b2"><h4>Perspective</h4><p>Share and educate — the data and stories that reframe.</p></div>
+        <div class="box b3"><h4>Confidence</h4><p>Prioritise goals and steady the decision.</p></div>
+        <div class="box b4"><h4>Opportunity</h4><p>Give a clear, practical next step.</p></div>
+      </div>
+    </div>
+    <div class="foot">© 2026 Capital Group. All rights reserved.</div>
+    <div class="pagenum">06</div>
+  </section>
+
+</div>
+
+<div class="nav">
+  <button onclick="go(cur-1)" aria-label="Previous">‹</button>
+  <button onclick="go(cur+1)" aria-label="Next">›</button>
+</div>
+<button class="reset" onclick="resetAll()">↺ Reset votes</button>
+
+<script>
+/* ================= Deck navigation ================= */
+const slides=[...document.querySelectorAll('.slide')];
+let cur=0;
+function go(i){
+  if(i<0)i=0; if(i>=slides.length)i=slides.length-1;
+  slides[cur].classList.remove('active');
+  cur=i; slides[cur].classList.add('active');
+  document.getElementById('bar').style.width=((cur)/(slides.length-1)*100)+'%';
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' ')go(cur+1);
+  if(e.key==='ArrowLeft'||e.key==='PageUp')go(cur-1);
+});
+
+/* ================= Live poll engine ================= */
+const KEY='lti_warmup_votes';
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};}}
+function save(d){localStorage.setItem(KEY,JSON.stringify(d));}
+
+document.querySelectorAll('.options[data-poll]').forEach(poll=>{
+  const id=poll.dataset.poll, multi=poll.dataset.multi==='1';
+  poll.querySelectorAll('.opt').forEach(opt=>{
+    opt.addEventListener('click',()=>{
+      const data=load(); data[id]=data[id]||{};
+      const k=opt.dataset.k;
+      if(multi){
+        // toggle a personal pick; each fresh pick adds a room vote
+        if(opt.classList.contains('picked')){opt.classList.remove('picked');}
+        else{opt.classList.add('picked'); data[id][k]=(data[id][k]||0)+1;}
+      }else{
+        poll.querySelectorAll('.opt').forEach(o=>o.classList.remove('picked'));
+        opt.classList.add('picked');
+        data[id][k]=(data[id][k]||0)+1;
+      }
+      save(data); paint(poll,false);
+    });
+  });
+  paint(poll,false);
+});
+
+function paint(poll,forceReveal){
+  const id=poll.dataset.poll; const data=load()[id]||{};
+  const opts=[...poll.querySelectorAll('.opt')];
+  const total=Object.values(data).reduce((a,b)=>a+b,0)||0;
+  const max=Math.max(0,...Object.values(data));
+  const revealed=poll.classList.contains('revealed')||forceReveal;
+  opts.forEach(o=>{
+    const v=data[o.dataset.k]||0;
+    const pct=total?Math.round(v/total*100):0;
+    let fill=o.querySelector('.fill');
+    if(!fill){fill=document.createElement('span');fill.className='fill';o.prepend(fill);}
+    fill.style.width=revealed?pct+'%':'0';
+    o.querySelector('.pct').textContent=revealed?pct+'%':'';
+    o.classList.toggle('leader',revealed&&v>0&&v===max);
+  });
+}
+function reveal(btn){
+  const poll=btn.closest('.slide').querySelector('.options');
+  poll.classList.add('revealed');
+  paint(poll,true);
+  btn.closest('.slide').querySelector('.insight')?.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+/* ================= Confidence dials (Q4) ================= */
+const dialState={};
+document.querySelectorAll('#dials .dial').forEach(d=>{
+  d.querySelectorAll('.lvl').forEach(l=>{
+    l.addEventListener('click',()=>{
+      d.querySelectorAll('.lvl').forEach(x=>x.classList.remove('on'));
+      l.classList.add('on');
+      dialState[d.dataset.d]=+l.dataset.v;
+      updateTemp();
+    });
+  });
+});
+function updateTemp(){
+  const vals=Object.values(dialState);
+  if(!vals.length){document.getElementById('tempval').textContent='—';return;}
+  const avg=vals.reduce((a,b)=>a+b,0)/vals.length;
+  const labels={1:'Cold 🥶',2:'Warming up 🌤️',3:'Warm 🔥',4:'Red hot 🚀'};
+  const nearest=Math.round(avg);
+  document.getElementById('tempval').textContent=avg.toFixed(1)+' / 4 · '+labels[nearest];
+}
+
+function resetAll(){
+  if(!confirm('Clear all room votes and picks?'))return;
+  localStorage.removeItem(KEY);
+  document.querySelectorAll('.opt').forEach(o=>o.classList.remove('picked','leader'));
+  document.querySelectorAll('.options').forEach(p=>{p.classList.remove('revealed');paint(p,false);});
+  document.querySelectorAll('.lvl').forEach(l=>l.classList.remove('on'));
+  for(const k in dialState)delete dialState[k];
+  updateTemp();
+}
+</script>
+</body>
+</html>
