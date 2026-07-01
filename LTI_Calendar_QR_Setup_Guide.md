@@ -125,10 +125,13 @@ function parseLtiIcs(icsText) {
     else if (p.name === "DTSTART") { current.startRaw = p.value; current.timeZone = p.params.TZID || "UTC"; }
     else if (p.name === "DTEND") { current.endRaw = p.value; }
     else if (p.name === "ATTACH") {
+      // Shaped exactly as Microsoft Graph / Create event (V4) expects, so it
+      // can be passed straight into the Attachments field with no transform.
       current.attachments.push({
-        mime: p.params.FMTTYPE || "application/octet-stream",
+        "@odata.type": "#microsoft.graph.fileAttachment",
         name: p.params["X-FILENAME"] || "resource",
-        base64: p.value
+        contentType: p.params.FMTTYPE || "application/octet-stream",
+        contentBytes: p.value
       });
     }
   });
@@ -146,11 +149,40 @@ var icsText = workflowContext.actions['ICS_Text'].outputs;
 return parseLtiIcs(icsText);
 ```
 
-> **Verified:** this parser was tested directly against a real file exported by the tool — 3 events extracted with correct subjects, start/end times, time zone, and an embedded resource (including a filename with spaces/parentheses and description text containing semicolons, commas and line breaks) decoded back byte-for-byte correctly.
+> **Verified:** this parser was tested directly against a real file exported by the tool — 3 events extracted with correct subjects, start/end times, time zone, and an embedded resource (including a filename with spaces/parentheses and description text containing semicolons, commas and line breaks) decoded back byte-for-byte correctly. The attachment objects come out already shaped as `{"@odata.type": "#microsoft.graph.fileAttachment", name, contentType, contentBytes}` — Microsoft Graph's own attachment schema — so they can go straight into the Attachments field with no extra transform step.
 
 ### 5. Create the events
 
-Add **Parse JSON** on the script's output (sample from a test run), then **Apply to each** → **Office 365 Outlook: Create event (V4)**, mapping the fields as shown in the flow outline above. For **Required attendees**, use the adviser's email from the Form response (add an email question to the Form if it doesn't collect one already). For **Attachments**, map each item in `attachments[]` to the action's Name / ContentBytes attachment fields (`base64` is already base64-encoded, ready to pass straight through).
+Add **Parse JSON** on the script's output (sample schema below), then **Apply to each** → **Office 365 Outlook: Create event (V4)**, mapping the fields as shown in the flow outline above. For **Required attendees**, use the adviser's email from the Form response (add an email question to the Form if it doesn't collect one already). For **Attachments**, switch that field to *"Enter raw value"* / *"Edit in advanced mode"* and enter `item()?['attachments']` directly — the array is already in the shape the action expects.
+
+**Parse JSON schema** (generate from sample, or paste this):
+```json
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "subject": { "type": "string" },
+      "start": { "type": "string" },
+      "end": { "type": "string" },
+      "timeZone": { "type": "string" },
+      "description": { "type": "string" },
+      "attachments": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "@odata.type": { "type": "string" },
+            "name": { "type": "string" },
+            "contentType": { "type": "string" },
+            "contentBytes": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}
+```
 
 **Caveats**
 - Keep resources modest in size — attaching files to a created event has a lower size ceiling (a few MB) than emailing a raw file, so the tool's existing "keep files compact" guidance matters even more here.
