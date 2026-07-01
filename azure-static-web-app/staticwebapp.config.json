@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/staticwebapp.config.json",
+  "mimeTypes": {
+    ".ics": "text/calendar",
+    ".html": "text/html; charset=utf-8"
+  },
+  "routes": [
+    { "route": "/", "rewrite": "/index.html" }
+  ],
+  "globalHeaders": {
+    "cache-control": "no-cache"
+  },
+  "responseOverrides": {
+    "404": { "rewrite": "/index.html", "statusCode": 200 }
+  }
+}
