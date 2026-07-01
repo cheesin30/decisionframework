@@ -1217,17 +1217,16 @@ async function buildLandingPage(){
 }
 
 async function downloadICS(){
-  var built=await assembleIcs({urlMap:assetUrlMap()});
+  var built=await assembleIcs();                       /* embed the selected files into each event */
   if(!built)return;
   var client=built.client;
   downloadBlob(new Blob(built.parts,{type:"text/calendar;charset=utf-8"}),icsFileName());
-  var noLink=[],seen={};
-  scheduledReminders().forEach(function(r){(r.assetIds||[]).forEach(function(id){if(seen[id])return;seen[id]=true;var a=getAsset(id);if(a&&!a.url)noLink.push(a.name);});});
-  if(noLink.length)showStatus(noLink.length+" linked resource(s) have no hosted link yet, so advisers can’t open them. Add each one’s signed link in Resources → Edit, then re-export: "+noLink.slice(0,3).join(", ")+(noLink.length>3?"…":""));
-  else showStatus("Exported "+icsFileName()+". Keep this name and drop it in SharePoint /Capital Learning Hub/LTI/Generated ICS/ so Flow A finds it (or, for the hosting flow, upload it and paste its link below).");
+  var embedded=0,seen={};
+  scheduledReminders().forEach(function(r){(r.assetIds||[]).forEach(function(id){if(seen[id])return;seen[id]=true;if(sessionFiles[id])embedded++;});});
+  showStatus("Exported "+icsFileName()+" with "+embedded+" embedded resource(s). Keep this name and drop it in SharePoint /Capital Learning Hub/LTI/Generated ICS/ so Flow A can email it.");
   if(!shareState.label)shareState.label=(client?client+" — ":"")+"Long-Term Investing Follow-Up";
   var progress=$("progress");setTimeout(function(){if(progress)progress.style.display="none";},1600);
-  toast("Calendar exported");
+  toast("Calendar exported with resources");
   setTab("share");
 }
 
