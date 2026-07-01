@@ -18,6 +18,35 @@ So the flow is always: **build → export the `.ics` → host it → QR.**
 
 ---
 
+## Microsoft Form + Power Automate flow (QR → form → emailed calendar)
+
+The most Capital-Group-native option: the QR opens a **Microsoft Form pre-filled with the firm + workshop date**, and a **Power Automate flow emails the adviser the matching calendar**. Nothing is hosted publicly.
+
+**The flow**
+
+```
+Calendar tool  --drops .ics-->  SharePoint /Capital Learning Hub/LTI/Generated ICS/
+      |                                        ^
+      | firm + date                            | fetches (by firm + date)
+      v                                         |
+  one unique QR  -->  Microsoft Form  --submit-->  Power Automate (Flow A)  --emails-->  Adviser
+  (pre-filled, per firm-per-session)
+```
+
+**One-time (in Microsoft 365)**
+1. Build a Form with (at least) two questions: **Firm** and **Workshop date** (you can hide/pre-fill them). Add an email question if the flow needs where to send.
+2. In the tool, on **Share & QR**, paste the Form's pre-fill URL once (Forms → *Collect responses → Get pre-filled results* → type a sample firm + date → copy the URL). The tool auto-detects which field is the firm and which is the date.
+3. Build **Flow A** in Power Automate: trigger *When a new response is submitted* → read Firm + Date → fetch the matching `.ics` from `/Capital Learning Hub/LTI/Generated ICS/` → email it to the adviser.
+
+**Each cohort**
+1. In **Step 1**, enter the **firm name** and **workshop completion date**.
+2. On **Share & QR**: **Download the .ics** and drop it into the SharePoint `Generated ICS` folder, named by firm + date so Flow A can find it.
+3. Click **Generate Form QR** — the QR encodes the Form URL with this firm + date pre-filled (it updates live as Step 1 changes). **Download PNG / Print** it. One unique QR per firm-per-session.
+
+Adviser scans → the Form opens already filled for their firm → they submit → Flow A emails them the calendar.
+
+---
+
 ## Recommended: the landing page (one scan = calendar + files)
 
 The simplest, most reliable result is the **landing page**. On **Share & QR → Download landing page (.html)**, the tool builds **one self-contained HTML file** that bundles:

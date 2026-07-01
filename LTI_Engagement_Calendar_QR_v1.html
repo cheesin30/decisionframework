@@ -822,6 +822,7 @@ var DEFAULT_REMINDERS=[
 var LS_REMINDERS=BUILD_ID+"-reminders";
 var LS_ASSETS=BUILD_ID+"-assets";
 var LS_GH=BUILD_ID+"-gh";
+var LS_FORM=BUILD_ID+"-form";
 var activeStep="details";
 var reminders=loadReminders();
 var assets=loadAssets();
@@ -1396,6 +1397,7 @@ function showQR(canvas,subText,labelText){
   if($("qrActions"))$("qrActions").classList.remove("hide");
 }
 function generateFromLink(){
+  lastQRIsForm=false;
   var raw=$("spLink")?$("spLink").value.trim():"";
   if(!raw){toast("Paste the public file link first");return;}
   if(!/^https?:\/\//i.test(raw)){toast("That doesn't look like a valid link");return;}
@@ -1427,12 +1429,99 @@ function printQR(){
   w.document.write('<html><head><title>LTI Calendar QR</title><style>body{font-family:Arial,sans-serif;text-align:center;padding:50px;color:#083469}h1{font-size:20px;margin:0 0 6px}p{color:#5d6b7a;margin:0 0 28px;font-size:13px}img{width:300px;height:300px;border:1px solid #e3e9ef;border-radius:10px;padding:14px}.lab{margin-top:18px;font-size:15px;font-weight:bold}</style></head><body><h1>Long-Term Investing — Follow-Up</h1><p>Scan to add the calendar to your phone or Outlook</p><img src="'+url+'"><div class="lab">'+escapeHtml(name||"")+'</div></body></html>');
   w.document.close();setTimeout(function(){w.print();},300);
 }
+/* ---------- QR to a pre-filled Microsoft Form ---------- */
+var formState={template:"",firmParam:"",dateParam:""};
+function loadForm(){try{var s=JSON.parse(localStorage.getItem(LS_FORM));if(s&&typeof s==="object"){for(var k in s){if(s.hasOwnProperty(k))formState[k]=s[k];}}}catch(e){}}
+function saveForm(){try{localStorage.setItem(LS_FORM,JSON.stringify(formState));}catch(e){}}
+/* Pull the Microsoft Forms pre-fill answer params (r<hex>=value) from a template URL. */
+function formPrefillParams(tpl){var out=[];try{var u=new URL(String(tpl||"").trim());u.searchParams.forEach(function(v,k){if(/^r[0-9a-fA-F]{16,}$/.test(k))out.push({k:k,v:v});});}catch(e){}return out;}
+/* Guess which param is the date (looks like YYYY-MM-DD) and which is the firm. */
+function autoMapForm(){
+  var ps=formPrefillParams(formState.template);
+  if(!ps.length){formState.firmParam="";formState.dateParam="";return;}
+  var dateP=null;for(var i=0;i<ps.length;i++){if(/^\d{4}-\d{2}-\d{2}$/.test(ps[i].v)){dateP=ps[i];break;}}
+  var firmP=null;for(var j=0;j<ps.length;j++){if(ps[j]!==dateP){firmP=ps[j];break;}}
+  formState.dateParam=(dateP||ps[ps.length>1?1:0]).k;
+  formState.firmParam=(firmP||ps[0]).k;
+}
+/* Build the live Form URL with Step 1's firm + date substituted in. */
+function buildFormUrl(){
+  var tpl=(formState.template||"").trim();if(!tpl)return null;
+  var u;try{u=new URL(tpl);}catch(e){return null;}
+  var firm=$("clientName")?$("clientName").value.trim():"";
+  var date=$("startDate")?$("startDate").value:"";
+  if(formState.firmParam)u.searchParams.set(formState.firmParam,firm);
+  if(formState.dateParam)u.searchParams.set(formState.dateParam,date);
+  return u.toString().replace(/\+/g,"%20");
+}
+function refreshFormUI(){
+  var ps=formPrefillParams(formState.template),keys=ps.map(function(p){return p.k;});
+  if(keys.length&&(keys.indexOf(formState.firmParam)<0||keys.indexOf(formState.dateParam)<0))autoMapForm();
+  ["Firm","Date"].forEach(function(w){
+    var sel=$("form"+w);if(!sel)return;
+    var cur=w==="Firm"?formState.firmParam:formState.dateParam;
+    sel.innerHTML=ps.length?ps.map(function(p){return '<option value="'+escapeHtml(p.k)+'"'+(p.k===cur?" selected":"")+'>'+escapeHtml(p.v+"  ("+p.k.slice(0,9)+"…)")+'</option>';}).join(""):'<option value="">paste a valid link first</option>';
+  });
+  var pv=$("formPreview");if(pv){
+    var url=buildFormUrl(),firm=$("clientName")?$("clientName").value.trim():"";
+    if(!url){pv.classList.remove("show","bad");pv.innerHTML="";}
+    else{pv.classList.add("show");pv.classList.toggle("bad",!firm);
+      pv.innerHTML='<span class="pv-tag">QR encodes this (firm + date from Step 1)</span>'+escapeHtml(url)+(!firm?'<span class="pv-tag" style="margin-top:6px;color:#9a5e00">Set the firm name in Step 1 (Details) — it’s blank.</span>':'');}
+  }
+}
+function onFormInput(){
+  if($("formTpl"))formState.template=$("formTpl").value;
+  if($("formFirm")&&$("formFirm").value)formState.firmParam=$("formFirm").value;
+  if($("formDate")&&$("formDate").value)formState.dateParam=$("formDate").value;
+  var keys=formPrefillParams(formState.template).map(function(p){return p.k;});
+  if(keys.length&&(keys.indexOf(formState.firmParam)<0||keys.indexOf(formState.dateParam)<0))autoMapForm();
+  saveForm();refreshFormUI();
+  if(lastQRIsForm)generateFormQR(true); /* keep the QR live as the link changes */
+}
+var lastQRIsForm=false;
+function generateFormQR(silent){
+  var url=buildFormUrl();
+  if(!url){if(!silent)toast("Paste your Microsoft Forms pre-fill link first");return;}
+  var firm=$("clientName")?$("clientName").value.trim():"";
+  if(!silent&&!firm&&!confirm("No firm name is set in Step 1 — the Form will pre-fill an empty firm. Generate anyway?"))return;
+  try{
+    var name=$("spName")?$("spName").value.trim():"";
+    showQR(drawQR(url),"Scan to open the pre-filled form",name);
+    lastQRIsForm=true;
+    if(!silent)toast("Form QR generated");
+  }catch(e){
+    if(/overflow/i.test(e.message)){if(!silent)toast("That link is too long for a QR. Shorten the form URL.");}
+    else if(!silent)toast("Could not generate the QR");
+  }
+}
 function renderShare(){
   $("mainPanel").innerHTML=
-  '<div class="pane-head"><h2>Share &amp; QR</h2><p class="pane-sub">Make a one-page landing page that holds the calendar <em>and</em> the resources, host it on your approved storage with a <strong>private link</strong>, and turn it into a QR. One scan gives advisers the calendar plus every file.</p></div>'+
+  '<div class="pane-head"><h2>Share &amp; QR</h2><p class="pane-sub">Generate a QR that opens your Microsoft Form <strong>pre-filled with the firm and workshop date from Step 1</strong>. When the adviser submits, your Power Automate flow emails them the calendar. One unique QR per firm-per-session.</p></div>'+
   '<div class="share-grid">'+
     '<div>'+
-      '<div class="share-card">'+
+      '<label for="spName">Label under the QR (optional)</label>'+
+      '<input id="spName" type="text" placeholder="e.g. DBS — June cohort" oninput="renderLabel()">'+
+      '<div class="share-card" style="margin-top:14px">'+
+        '<h4 class="share-sec">QR → pre-filled Microsoft Form</h4>'+
+        '<p class="share-sub">The QR encodes your Form URL with <strong>firm + workshop date</strong> from Step 1 substituted into the pre-fill fields. It updates automatically when those change.</p>'+
+        '<ol class="qr-steps" style="margin-top:8px">'+
+          '<li><span class="n">1</span><span><strong>Download the .ics</strong> and drop it in SharePoint <code>/Capital Learning Hub/LTI/Generated ICS/</code> (name it by firm + date) so Flow A can fetch it.</span></li>'+
+          '<li><span class="n">2</span><span>Paste your <strong>Form pre-fill link</strong> below (once) — the tool maps the firm and date fields for you.</span></li>'+
+          '<li><span class="n">3</span><span>Generate the QR. Change firm/date in Step 1 and the QR follows.</span></li>'+
+        '</ol>'+
+        '<button class="btn ghost full" style="margin-top:12px" onclick="downloadICS()"><span class="ico" aria-hidden="true">↓</span> Download the .ics (for SharePoint)</button>'+
+        '<label for="formTpl" style="margin-top:14px">Microsoft Forms pre-fill link</label>'+
+        '<textarea id="formTpl" style="min-height:72px;font-family:\'SF Mono\',Menlo,monospace;font-size:12px" placeholder="https://forms.office.com/Pages/ResponsePage.aspx?id=…&amp;r…=DBS&amp;r…=2026-06-26" oninput="onFormInput()"></textarea>'+
+        '<div class="two" style="margin-top:6px">'+
+          '<div><label for="formFirm">Firm field</label><select id="formFirm" onchange="onFormInput()"></select></div>'+
+          '<div><label for="formDate">Workshop-date field</label><select id="formDate" onchange="onFormInput()"></select></div>'+
+        '</div>'+
+        '<div id="formPreview" class="link-preview"></div>'+
+        '<button class="btn primary full" style="margin-top:12px" onclick="generateFormQR()"><span class="ico" aria-hidden="true">▦</span> Generate Form QR</button>'+
+        '<p class="share-sub" style="margin-top:10px">Get the link from Microsoft Forms → <strong>Collect responses → Get pre-filled results</strong>: type a sample firm and date, copy the URL, paste it here once. Mark those two questions as hidden in your flow.</p>'+
+      '</div>'+
+      '<details class="opts"><summary>Other ways to share (host a file instead)</summary><div class="opts-body">'+
+      '<div class="share-card" style="margin-top:2px">'+
         '<h4 class="share-sec">Build the landing page &amp; make QR</h4>'+
         '<p class="share-sub">The page bundles the calendar and your resource files into one self-contained file. Advisers scan → tap <strong>Add the calendar</strong> (it lands in Outlook, with each resource linked inside its touchpoint) → and open any resource right on the page.</p>'+
         '<ol class="qr-steps" style="margin-top:8px">'+
@@ -1441,9 +1530,6 @@ function renderShare(){
           '<li><span class="n">3</span><span>Paste that link below and generate the QR.</span></li>'+
         '</ol>'+
         '<button class="btn primary full" style="margin-top:14px" onclick="buildLandingPage()"><span class="ico" aria-hidden="true">▦</span> Download landing page (.html)</button>'+
-        '<details class="opts"><summary>Want each touchpoint to also link the file inside Outlook?</summary><div class="opts-body"><p class="share-sub">Optional: host each resource separately and paste its signed link in <strong>Resources → Edit</strong>. Then the calendar event itself carries a tap-to-open link to that file (the page already shows them regardless).</p><button class="btn ghost full" onclick="downloadICS()"><span class="ico" aria-hidden="true">↓</span> Download the .ics only</button></div></details>'+
-        '<label for="spName" style="margin-top:14px">Label under the QR (optional)</label>'+
-        '<input id="spName" type="text" placeholder="e.g. LTI Follow-Up — June cohort" oninput="renderLabel()">'+
         '<label for="spLink" style="margin-top:14px">Signed link to the hosted page</label>'+
         '<input id="spLink" type="url" placeholder="https://acct.blob.core.windows.net/lti/followup.html?sp=r&amp;sig=…" oninput="onLinkInput()">'+
         '<div id="linkPreview" class="link-preview"></div>'+
@@ -1465,6 +1551,7 @@ function renderShare(){
         '<label class="gh-remember"><input type="checkbox" id="ghRemember" onchange="onGhInput()"> Remember repo &amp; token on this device</label>'+
         '<button class="btn secondary full" style="margin-top:14px" onclick="publishToGitHub()"><span class="ico" aria-hidden="true">▦</span> Publish to GitHub &amp; make QR</button>'+
       '</div></details>'+
+      '</div></details>'+
     '</div>'+
     '<div>'+
       '<div class="qrcard">'+
@@ -1481,13 +1568,16 @@ function renderShare(){
   $("ghToken").value=ghState.token||"";
   $("ghRemember").checked=!!ghState.remember;
   if(shareState.label)$("spName").value=shareState.label;
+  $("formTpl").value=formState.template||"";
+  refreshFormUI();
   if(shareState.link){$("spLink").value=shareState.link;onLinkInput();}
-  if(lastQRCanvas){showQR(lastQRCanvas,lastQRSub||"Scan to add",shareState.label||"");}
+  if(buildFormUrl())generateFormQR(true);            /* show the live Form QR for this firm+date */
+  else if(lastQRCanvas)showQR(lastQRCanvas,lastQRSub||"Scan to add",shareState.label||"");
 }
 
 /* ---------- Init ---------- */
 function init(){
-  loadGh();
+  loadGh();loadForm();
   var today=new Date();
   $("startDate").value=today.getFullYear()+"-"+pad(today.getMonth()+1)+"-"+pad(today.getDate());
   document.addEventListener("keydown",function(e){if(e.key==="Escape"){var open=document.querySelector(".reminder-card.open");if(open){open.classList.remove("open");}}});
