@@ -75,6 +75,122 @@ Trigger: When a new response is submitted (Microsoft Forms)
           Attachments:        item()?['attachments'] (Name / ContentBytes — see note below)
 ```
 
+### Before you touch anything: two things to confirm
+
+1. **Licensing.** *Execute JavaScript Code* (used in step 2 below) is a **premium** built-in action — it needs a Power Automate per-user or per-flow premium plan, not the tier bundled free with Microsoft 365. If it doesn't appear when you search for it, your environment isn't licensed for it; stop and tell me, and I'll give you an Azure Function version of the same script instead (same code, hosted differently — nothing else changes).
+2. **An adviser email field.** *Create event*'s "Required attendees" needs a real email address, not just the firm name. Open your Form and confirm a question captures the adviser's email; if not, add one now — everything below assumes **Get response details** already exposes it.
+
+### Detailed click-by-click walkthrough
+
+This expands the outline above into every click, for the flow shown in your screenshot (`When a new response is submitted → Get response details → Compose filename → Try [Get file content using path → Send advisor email] → Catch`). You're inserting new steps **inside the Try scope**, between `Get file content using path` and `Send advisor email`, so the existing `Catch` keeps handling file-lookup failures exactly as it does today.
+
+**Part A — Compose "ICS Text" (decode the file to readable text)**
+
+1. Inside the **Try** scope, hover directly under the **"Get file content using path"** card until a small **+** appears on the connecting line. Click it, then choose **Add an action**.
+2. Search **`Compose`**. Under **Data Operation** (sometimes just listed under "Built-in"), click **Compose** to insert it.
+3. Click the action's title text ("Compose") and rename it to exactly **`ICS Text`** — the exact spelling matters, you'll reference it by name in Part B.
+4. Click into the **Input** box → click the **Expression** tab (next to "Dynamic content") → type:
+   ```
+   base64ToString(
+   ```
+   → switch to the **Dynamic content** tab → find **Get file content using path** → pick its **File Content** field (this auto-inserts a reference like `body('Get_file_content_using_path')`) → close the parenthesis. The finished expression should read:
+   ```
+   base64ToString(body('Get_file_content_using_path'))
+   ```
+5. Click **Add/OK** to confirm.
+
+> Always let the picker insert the reference rather than typing an action name by hand — whatever it inserts *is* the correct name, even if it looks slightly different from the label on the card.
+
+**Part B — Execute JavaScript Code (the parser)**
+
+1. Click **+** below "ICS Text" → **Add an action** → search **`Execute JavaScript Code`**. If it doesn't show up, see the licensing note above and stop here.
+2. Paste the full script from the **"4. Parse it"** section below into the code editor, replacing any placeholder text.
+3. Find the last two lines of the script:
+   ```javascript
+   var icsText = workflowContext.actions['ICS_Text'].outputs;
+   return parseLtiIcs(icsText);
+   ```
+   This assumes your Compose action's internal name became `ICS_Text` (its display name "ICS Text" with the space turned into an underscore — this is how Power Automate names actions internally; it is **not** prefixed with the connector type, so it's `ICS_Text`, *not* `Compose_ICS_Text`).
+4. **Don't just trust that guess** — confirm it: click the flow's **"…" menu** (top toolbar, near Save/Test/Publish) → **Peek code**. This shows the flow's raw JSON. Press Ctrl+F and search for `ICS Text`; the key that JSON uses for that action (inside the `"actions": { ... }` block) is the exact string to put inside the quotes in step 3. Update the script if it differs from `ICS_Text`.
+
+**Part C — Parse JSON**
+
+1. Click **+** below the Execute JavaScript Code action → search **`Parse JSON`** (Data Operation) → add it.
+2. **Content**: Dynamic content → the Execute JavaScript Code action's output (labelled "Output" or "Result").
+3. **Schema**: click **Generate from sample** and paste:
+   ```json
+   [
+     {
+       "subject": "DBS: Prepare, then capture one real client concern",
+       "start": "2026-06-26T09:00:00",
+       "end": "2026-06-26T09:15:00",
+       "timeZone": "Asia/Singapore",
+       "description": "Review one resource and decide which client concern it helps you address.",
+       "attachments": [
+         {
+           "@odata.type": "#microsoft.graph.fileAttachment",
+           "name": "Inflation One-Pager.pdf",
+           "contentType": "application/pdf",
+           "contentBytes": "JVBERi0xLjQK"
+         }
+       ]
+     }
+   ]
+   ```
+   Click **Done** (or paste the schema from the "Parse JSON schema" block further below directly, if your designer offers a raw-schema paste option — same result either way).
+
+**Part D — Apply to each → Create event (V4)**
+
+1. Click **+** below Parse JSON → search **`Apply to each`** → add it.
+2. Its **"Select an output from previous steps"** field → Dynamic content → pick the **Body** of **Parse JSON** (the array of 3 events).
+3. Inside the now-expanded loop container, click **Add an action** → search **`Create event`** → choose **Office 365 Outlook → Create event (V4)**.
+4. Fill every field using **Dynamic content** (this inserts the correct `item()?['…']` expression for you — don't type these by hand):
+
+   | Field | Pick from Dynamic content |
+   |---|---|
+   | Calendar id | leave default, unless Flow A should book on a shared/service mailbox |
+   | Subject | `subject` (from the current Apply-to-each item) |
+   | Start time | `start` |
+   | End time | `end` |
+   | Time zone | `timeZone` |
+   | Body | `description` |
+   | Required attendees | the adviser-email field from **Get response details** (further up the flow — not from this loop) |
+
+5. **Attachments** needs one extra step because the default UI only exposes single Name/Content fields, not an array. Look for a small icon at the right edge of the Attachments field (varies by designer version: "Switch to input entire array", or open the action's **"…" → Peek code** for just that action) and switch it to raw/array input. Then enter:
+   ```
+   item()?['attachments']
+   ```
+   The array is already shaped exactly as this field expects, so nothing further is needed.
+
+**Part E — Retire "Send advisor email"**
+
+- Click its **"…" menu → Delete**. `Create event (V4)` triggers Exchange's own invite automatically once an attendee is set, so this step is no longer needed.
+- If you'd rather keep a courtesy note instead of deleting it outright, edit it: remove the `.ics` attachment and change the wording to something like *"Your calendar invites for the 3 follow-up touchpoints have been sent separately — check your Outlook calendar."*
+
+**Part F — Save, test, then publish**
+
+1. **Save draft** (not Publish yet).
+2. Click **Test** → **Manually** → submit a real *test* response on the Form (use your own email as the "adviser") so the whole chain runs end to end.
+3. Open the completed run and click into each new action to check its Inputs/Outputs:
+   - "ICS Text" output starts with `BEGIN:VCALENDAR`.
+   - Execute JavaScript Code output is a JSON array of **3** objects.
+   - Parse JSON shows no red error.
+   - Three "Create event (V4)" iterations inside Apply to each each show a green check with a returned event ID.
+4. Check the test inbox — you should get **3 normal meeting invites** (not a file to import), each with Accept/Tentative/Decline, and the resource attached as a real file on the invite that shows one you attached it to.
+5. Only once that looks right, click **Publish**.
+
+**Troubleshooting**
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| *Execute JavaScript Code* missing from search results | Premium action not licensed in this environment | Ask your Power Platform admin to enable premium, or switch to the Azure Function version |
+| Parse JSON shows a red schema error | The sample used to generate the schema didn't include an `attachments` array, or a touchpoint has no resource so the field is genuinely empty | Regenerate the schema from a run that includes at least one attachment, or make `attachments`/`description` optional (remove from the schema's `"required"` list if present) |
+| `workflowContext.actions['ICS_Text']` errors with "Cannot read properties of undefined" | The Compose action's real internal name differs from `ICS_Text` | Use **Peek code** (Part B, step 4) to find the exact key and update the script |
+| Create event fails with an attachment/size-related error | The embedded resource is too large for a direct attachment (a few MB ceiling via Graph) | Keep resources compact (the tool already warns about this on export), or host that resource as a link instead of embedding it |
+| Invite arrives but with no attachment | Attachments field wasn't switched to raw/array input | Redo Part D, step 5 |
+
+---
+
 ### 1–3. Get the `.ics` as text
 
 Same SharePoint lookup as today (`Get file content` on the path built from firm + date), then add one **Compose** action, e.g. named `ICS Text`, with the expression:
