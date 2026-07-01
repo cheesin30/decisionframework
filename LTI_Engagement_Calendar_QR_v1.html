@@ -836,6 +836,7 @@ function pad(n){return String(n).padStart(2,"0");}
 function slug(s){return String(s||"").trim().replace(/[^a-zA-Z0-9]+/g,"_").replace(/^_|_$/g,"")||"LTI";}
 /* Deterministic SharePoint filename Flow A looks up: <Firm>_LTI_Follow_Up_<YYYY-MM-DD>.ics */
 function icsFileName(){var firm=$("clientName")?$("clientName").value.trim():"";var date=$("startDate")?$("startDate").value:"";return slug(firm||"LTI")+"_LTI_Follow_Up_"+(date||"date")+".ics";}
+function flowJsonFileName(){return icsFileName().replace(/\.ics$/,".json");}
 function toast(msg){var t=$("toast");t.textContent=msg;t.style.display="block";clearTimeout(t._t);t._t=setTimeout(function(){t.style.display="none";},2300);}
 function saveReminders(){try{localStorage.setItem(LS_REMINDERS,JSON.stringify(reminders));}catch(e){}}
 function saveAssets(){try{localStorage.setItem(LS_ASSETS,JSON.stringify(assets));}catch(e){}}
@@ -1230,6 +1231,66 @@ async function downloadICS(){
   setTab("share");
 }
 
+/* Build a plain JSON array Flow A can consume directly with Parse JSON —
+   no custom .ics parsing and no premium Power Automate actions required.
+   Shape: [{subject,start,end,timeZone,description,attachments:[{@odata.type,name,contentType,contentBytes}]}] */
+async function buildFlowJson(){
+  if(!$("startDate").value){alert("Select the workshop completion date first.");setTab("preview");return null;}
+  var rows=scheduledReminders();
+  if(!rows.length){alert("No active touchpoints to export. Enable at least one in the Touchpoint sequence.");return null;}
+  var missing=[],seen={};
+  rows.forEach(function(r){(r.assetIds||[]).forEach(function(id){var a=getAsset(id);if(a&&!sessionFiles[a.id]&&!seen[a.id]){seen[a.id]=true;missing.push(a);}});});
+  if(missing.length){
+    alert("Reselect these files before exporting:\n\n"+missing.map(function(a){return "• "+a.name;}).join("\n"));
+    setTab("assets");
+    return null;
+  }
+
+  var progress=$("progress"),bar=$("bar"),pt=$("progressText");
+  if(progress){progress.style.display="block";bar.style.width="10%";pt.textContent="Building flow data…";}
+  var client=$("clientName").value.trim(),time=$("reminderTime").value||"09:00",tz=$("timezone").value,duration=Number($("duration").value)||15;
+  var hm=time.split(":").map(Number);
+  function toLocalIso(d,hh,mm){var h=(hh!=null)?hh:d.getHours(),m=(mm!=null)?mm:d.getMinutes();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+"T"+pad(h)+":"+pad(m)+":00";}
+
+  var events=[];
+  for(var i=0;i<rows.length;i++){
+    var r=rows[i];
+    var endDate=new Date(r.date);endDate.setHours(hm[0],hm[1]+duration,0,0);
+    var linked=(r.assetIds||[]).map(getAsset).filter(Boolean);
+    var attachments=[];
+    for(var j=0;j<linked.length;j++){
+      var a=linked[j],file=sessionFiles[a.id];
+      if(file){
+        var bytes=await readBlobPart(file,0,file.size);
+        attachments.push({"@odata.type":"#microsoft.graph.fileAttachment",name:a.filename||a.name,contentType:a.mime||file.type||"application/octet-stream",contentBytes:bytesToBase64(bytes)});
+      }
+    }
+    events.push({
+      subject:(client?client+": ":"")+r.title,
+      start:toLocalIso(r.date,hm[0],hm[1]),
+      end:toLocalIso(endDate),
+      timeZone:tz,
+      description:r.description,
+      attachments:attachments
+    });
+    if(progress)bar.style.width=(10+Math.round(85*((i+1)/rows.length)))+"%";
+  }
+  if(progress)bar.style.width="100%";
+  return {events:events,client:client};
+}
+
+async function downloadFlowJson(){
+  var built=await buildFlowJson();
+  if(!built)return;
+  downloadBlob(new Blob([JSON.stringify(built.events,null,2)],{type:"application/json"}),flowJsonFileName());
+  var embedded=0;built.events.forEach(function(e){embedded+=e.attachments.length;});
+  showStatus("Exported "+flowJsonFileName()+" with "+embedded+" embedded resource(s). Drop it next to the .ics in SharePoint — Flow A can Parse JSON on it directly, no custom code or premium actions needed.");
+  if(!shareState.label)shareState.label=(built.client?built.client+" — ":"")+"Long-Term Investing Follow-Up";
+  var progress=$("progress");setTimeout(function(){if(progress)progress.style.display="none";},1600);
+  toast("Flow data exported — no premium needed");
+  setTab("share");
+}
+
 /* ---------- Setup backup ---------- */
 function base64ToBytes(b64){var binary=atob(b64),len=binary.length,bytes=new Uint8Array(len);for(var i=0;i<len;i++){bytes[i]=binary.charCodeAt(i);}return bytes;}
 async function exportSettings(){var files={};var missing=[];for(var i=0;i<assets.length;i++){var a=assets[i],f=sessionFiles[a.id];if(f){try{var bytes=await readBlobPart(f,0,f.size);files[a.id]={filename:f.name,mime:f.type||a.mime||"application/octet-stream",data:bytesToBase64(bytes)};}catch(e){missing.push(a.name);}}else{missing.push(a.name);}}var backup={version:BUILD_ID,exportedAt:new Date().toISOString(),reminders:reminders,assets:assets,files:files};downloadBlob(new Blob([JSON.stringify(backup,null,2)],{type:"application/json"}),"LTI_Calendar_Setup.json");if(missing.length){toast("Setup exported. "+missing.length+" resource(s) had no file loaded and were saved as metadata only.");}else{toast("Setup exported with resource files included");}}
@@ -1459,6 +1520,7 @@ function buildFormUrl(){
 }
 function refreshFormUI(){
   if($("icsName"))$("icsName").textContent=icsFileName();
+  if($("flowJsonName"))$("flowJsonName").textContent=flowJsonFileName();
   var ps=formPrefillParams(formState.template),keys=ps.map(function(p){return p.k;});
   if(keys.length&&(keys.indexOf(formState.firmParam)<0||keys.indexOf(formState.dateParam)<0))autoMapForm();
   ["Firm","Date"].forEach(function(w){
@@ -1514,6 +1576,8 @@ function renderShare(){
         '</ol>'+
         '<button class="btn ghost full" style="margin-top:12px" onclick="downloadICS()"><span class="ico" aria-hidden="true">↓</span> Download the .ics (for SharePoint)</button>'+
         '<p class="share-sub" style="margin-top:8px">Saves as <code id="icsName">…</code> — keep this exact name in the <code>Generated ICS</code> folder.</p>'+
+        '<button class="btn ghost full" style="margin-top:10px" onclick="downloadFlowJson()"><span class="ico" aria-hidden="true">↓</span> Download flow data (.json) — no Power Automate premium needed</button>'+
+        '<p class="share-sub" style="margin-top:8px">Saves as <code id="flowJsonName">…</code>. If Flow A doesn\'t have <strong>Execute JavaScript Code</strong> (a premium action) available, drop this alongside the <code>.ics</code> instead — it\'s already-parsed JSON, so Flow A just needs the standard, free <strong>Parse JSON</strong> action, no custom parsing or premium licensing.</p>'+
         '<div id="formPreview" class="link-preview"></div>'+
         '<details class="opts"><summary>Form settings (pre-configured)</summary><div class="opts-body">'+
           '<p class="share-sub">The follow-up Form link is already set and its firm/date fields mapped. Only change this if the Form itself changes.</p>'+

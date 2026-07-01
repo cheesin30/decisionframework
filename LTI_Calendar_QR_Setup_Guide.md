@@ -75,10 +75,92 @@ Trigger: When a new response is submitted (Microsoft Forms)
           Attachments:        item()?['attachments'] (Name / ContentBytes — see note below)
 ```
 
-### Before you touch anything: two things to confirm
+### An adviser email field (needed either way)
 
-1. **Licensing.** *Execute JavaScript Code* (used in step 2 below) is a **premium** built-in action — it needs a Power Automate per-user or per-flow premium plan, not the tier bundled free with Microsoft 365. If it doesn't appear when you search for it, your environment isn't licensed for it; stop and tell me, and I'll give you an Azure Function version of the same script instead (same code, hosted differently — nothing else changes).
-2. **An adviser email field.** *Create event*'s "Required attendees" needs a real email address, not just the firm name. Open your Form and confirm a question captures the adviser's email; if not, add one now — everything below assumes **Get response details** already exposes it.
+*Create event*'s "Required attendees" needs a real email address, not just the firm name. Open your Form and confirm a question captures the adviser's email; if not, add one now — everything below assumes **Get response details** already exposes it.
+
+---
+
+## Recommended: use the tool's JSON export (no Power Automate premium needed)
+
+`Execute JavaScript Code` — used in the walkthrough further below — is a **premium** Power Automate action. If your environment doesn't have Power Automate premium licensing, or you'd simply rather not parse the `.ics` yourself, the tool can do that parsing for you and export the result as **plain JSON** instead:
+
+On **Share & QR**, next to **Download the .ics**, click **Download flow data (.json)**. It's the same 3 touchpoints, already broken out into exactly the shape `Create event (V4)` needs — subject, start, end, time zone, description, and any attached resource pre-shaped as a Microsoft Graph `fileAttachment` object — as one clean array. Flow A then needs only **standard, free** actions: no custom code, no unfolding, no escaping, no premium licensing.
+
+```
+Trigger: When a new response is submitted (Microsoft Forms)
+  → Get response details → read Firm, Workshop date, Adviser email
+  → Compose filename → change its extension from .ics to .json (same firm+date convention)
+  → SharePoint: Get file content using path (now fetches the .json)
+  → Compose "Flow JSON Text": base64ToString(body('Get_file_content_using_path'))
+  → Parse JSON on "Flow JSON Text"          ← standard action, no premium needed
+  → Apply to each event:
+      → Office 365 Outlook: Create event (V4)
+          Subject / Start time / End time / Time zone / Body — from the current item
+          Required attendees: adviser email from Get response details
+          Attachments: item()?['attachments'] (already Graph-shaped, paste as raw value)
+```
+
+### Click-by-click (for your flow: `When a new response is submitted → Get response details → Compose filename → Try [Get file content using path → Send advisor email] → Catch`)
+
+1. **Open "Compose filename"** and find the expression that builds the file name (it should end in `.ics`, matching the tool's `<Firm>_LTI_Follow_Up_<date>.ics` convention). Change just the trailing `.ics` to **`.json`**. Nothing else in that expression needs to change — the tool's JSON export uses the exact same naming convention, just with a different extension, so this one edit is enough for "Get file content using path" to now fetch the right file.
+   > If "Get file content using path" has the `.ics` extension hardcoded separately rather than reading it from "Compose filename", update it there too.
+2. Each cohort, drop **both** files the tool exports (`…ics` and `…json`) into the same SharePoint folder with matching names — Flow A now only reads the `.json` one, but keeping the `.ics` alongside costs nothing and keeps you future-proof if you ever want the parser-based route below.
+3. Inside the **Try** scope, click **+** below "Get file content using path" → **Add an action** → search **`Compose`** → rename it **`Flow JSON Text`**. Set its Input (via the Expression tab) to:
+   ```
+   base64ToString(body('Get_file_content_using_path'))
+   ```
+4. Click **+** below it → search **`Parse JSON`** (Data Operation — standard, no licensing required) → add it.
+   - **Content**: Dynamic content → the "Flow JSON Text" output.
+   - **Schema**: click **Generate from sample** and paste:
+     ```json
+     [
+       {
+         "subject": "DBS: Prepare, then capture one real client concern",
+         "start": "2026-06-26T09:00:00",
+         "end": "2026-06-26T09:15:00",
+         "timeZone": "Asia/Singapore",
+         "description": "Review one resource and decide which client concern it helps you address.",
+         "attachments": [
+           {
+             "@odata.type": "#microsoft.graph.fileAttachment",
+             "name": "Inflation One-Pager.pdf",
+             "contentType": "application/pdf",
+             "contentBytes": "JVBERi0xLjQK"
+           }
+         ]
+       }
+     ]
+     ```
+5. Click **+** below Parse JSON → search **`Apply to each`** → its input = Dynamic content → the **Body** of Parse JSON.
+6. Inside the loop, **Add an action** → search **`Create event`** → **Office 365 Outlook: Create event (V4)** → fill every field via Dynamic content (never type these by hand):
+
+   | Field | Pick from Dynamic content |
+   |---|---|
+   | Subject | `subject` |
+   | Start time | `start` |
+   | End time | `end` |
+   | Time zone | `timeZone` |
+   | Body | `description` |
+   | Required attendees | the adviser-email field from **Get response details** (not from this loop) |
+   | Attachments | switch to raw/array input (small icon at the field's edge, or via "…" → Peek code for that action) and enter `item()?['attachments']` |
+
+7. **Delete "Send advisor email"** (Create event's own invite replaces it), or edit it into a plain courtesy note with the `.ics` attachment removed.
+8. **Save draft** → **Test** with a real test Form submission → open the run, confirm "Flow JSON Text" starts with `[` (a JSON array), Parse JSON shows no red error, and 3 "Create event (V4)" iterations each return success → check your test inbox for 3 real invites with the resource attached → **Publish**.
+
+**Troubleshooting**
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| "Get file content using path" fails / file not found | "Compose filename" still builds `.ics`, or the path is hardcoded elsewhere | Recheck step 1 — the composed name must end in `.json` and match exactly what the tool exported |
+| Parse JSON shows a red schema error | Sample schema didn't include `attachments`, or a touchpoint has none (empty array is fine — that's valid, not an error, so this usually means the schema itself is off) | Regenerate the schema from a real run's output, or paste the schema block above directly |
+| Invite arrives with no attachment | Attachments field wasn't switched to raw/array input | Redo step 6 with `item()?['attachments']` in raw mode |
+
+---
+
+## Alternative: parse the `.ics` directly (requires Power Automate premium)
+
+If you *do* have Power Automate premium and would rather avoid an extra exported file, `Execute JavaScript Code` can parse the `.ics` itself — same end result, one file instead of two. This is more work to set up; skip it unless you have a specific reason to prefer it over the JSON export above.
 
 ### Detailed click-by-click walkthrough
 
