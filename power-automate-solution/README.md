@@ -2,7 +2,7 @@
 
 A standalone, importable Dataverse Solution containing a **test copy** of the LTI follow-up flow, built around the tool's JSON export (see `LTI_Calendar_QR_Setup_Guide.md`, "Recommended: use the tool's JSON export"). It does **not** touch your existing "LTI Follow-up Sender" flow — import it into a sandbox/test environment and use it to validate the no-premium approach before changing production.
 
-**File:** `LTIFollowupSenderNoPremium_1_0_0_0.zip` (built from `src/` via `build-zip.sh`)
+**File:** `LTIFollowupSenderNoPremium_1_0_0_0.zip` (built from `src/` via `build-zip.py`)
 
 ---
 
@@ -16,9 +16,14 @@ This package was **hand-authored to match Dataverse's documented solution schema
 
 **If import fails or an action shows an error after import:** paste me the exact error text (or a screenshot) and I'll fix that specific line — these packages are normally an iterate-once-or-twice process even for experienced makers, not a first-try-perfect thing.
 
-### v1.1 fix (import attempt #1 failed with "Object reference not set to an instance of an object")
+### Version history (both attempts hit the same generic error — read this before retrying)
 
-That generic error pointed at `solution.xml`'s `Publisher` block — two fields were marked `xsi:nil="true"` (a common trigger for exactly this .NET null-reference error) and an `Addresses` block was only partially filled in. Both are now removed; `solution.xml` and `customizations.xml` are trimmed down to the small set of elements I have the highest confidence are correct. If the next attempt fails differently, send the new error text — it'll point at a different, more specific line.
+- **v1.1**: fixed `solution.xml`'s `Publisher` block (removed `xsi:nil="true"` fields and a partial `Addresses` block — a classic null-ref trigger). **Result: identical error, unchanged.** That ruled the Publisher block out as the cause.
+- **v1.2 (current)**: since content changes didn't move the needle, the more likely culprit is the **zip's structure itself**, not its XML content:
+  - Removed `[Content_Types].xml` entirely — on reflection this is an Office/OPC-package convention (used by `.docx`/`.xlsx`), not something genuine Dataverse solution exports include. Its unexpected presence may have been what the importer choked on.
+  - Rebuilt the zip with Python's `zipfile` directly (`build-zip.py`, replacing `build-zip.sh`) instead of the `zip` CLI, so it contains **only the 3 real files** (`solution.xml`, `customizations.xml`, the flow's `.json`) — no explicit empty `Workflows/` directory entry, which some strict .NET zip readers handle poorly.
+
+If v1.2 still produces the exact same error, that's useful information too: it would mean the cause is neither the Publisher block nor the zip's physical structure, and points at something more fundamental (e.g., the target environment's Dataverse capability, or a required top-level element still missing from `solution.xml`/`customizations.xml`) — tell me and we'll dig into that instead of continuing to guess at the same files.
 
 The flow imports **turned off** on purpose (Draft/Off state) — don't turn it on until you've fixed the placeholders below.
 
@@ -40,7 +45,7 @@ Everything below is marked `REPLACE_WITH_...` in `src/Workflows/new_LTIFollowupS
 | `REPLACE_WITH_YOUR_TEAM_EMAIL` | Whoever should be notified if the flow fails (in the placeholder `Catch` scope — see below). |
 
 **After import**, open the new flow in the designer and fix these either by:
-- Editing `src/Workflows/new_LTIFollowupSenderNoPremium-*.json` directly and re-running `build-zip.sh` before importing (faster if you're comfortable editing JSON), **or**
+- Editing `src/Workflows/new_LTIFollowupSenderNoPremium-*.json` directly and re-running `build-zip.py` before importing (faster if you're comfortable editing JSON), **or**
 - Re-importing once, then fixing each flagged action directly in the Power Automate designer (it will visibly show which actions need attention).
 
 ## About the placeholder "Catch" scope
