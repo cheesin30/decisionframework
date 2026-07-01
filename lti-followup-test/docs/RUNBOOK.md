@@ -61,6 +61,21 @@ the QR's pre-fill URL parameters for *both* Firm and Date, and regenerate the QR
 from the correct filename. Remember: **one unique QR per firm-per-workshop
 session** — a reused QR carries the previous session's firm/date.
 
+### 3b. Form opens with Firm / Workshop Date blank (nothing pre-filled)
+
+**Symptom:** Scanning the QR opens the Form, but Firm and Workshop Date are
+empty, so the adviser sees fields they shouldn't and Flow A can't build the
+filename.
+
+**Cause:** The QR was made from the **short share link**
+(`forms.office.com/r/<code>`), which ignores pre-fill parameters.
+
+**Fix:** Rebuild the QR from the **long** pre-fill URL that Forms generates via
+**Get a link to pre-fill answers** (`…/Pages/ResponsePage.aspx?id=…&r…=…`). Open
+that URL in a browser to confirm it pre-fills *before* making the QR. See
+[`../form/prefill-url-guide.md`](../form/prefill-url-guide.md) and
+[`../qr/qr-setup.md`](../qr/qr-setup.md).
+
 ---
 
 ## How to add a new workshop session

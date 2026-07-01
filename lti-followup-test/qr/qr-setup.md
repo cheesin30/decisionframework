@@ -8,6 +8,13 @@ through three worked examples.
 Build the pre-fill URL first using [`../form/prefill-url-guide.md`](../form/prefill-url-guide.md);
 this guide assumes you have that URL ready.
 
+> ⚠️ **Use the long pre-fill URL, not the short `/r/` share link.** The QR must
+> encode the full `…/Pages/ResponsePage.aspx?id=…&r…=DBS&r…=2026-06-30` link that
+> Forms generates from **Get a link to pre-fill answers**. A QR made from the
+> short `forms.office.com/r/<code>` link (even with parameters appended) opens
+> the Form **blank** — the parameters are ignored. Always open your pre-fill URL
+> in a browser and confirm it pre-fills *before* turning it into a QR.
+
 ---
 
 ## 1. From URL to QR
@@ -64,8 +71,11 @@ AIA_LTI_Follow_Up_2026-07-15.ics
 HSBC_LTI_Follow_Up_2026-07-22.ics
 ```
 
-For each, copy the **Firm segment** (before `_LTI_Follow_Up_`) and the **date
-segment** straight off the filename into the URL, then make the QR.
+For each, start from the long pre-fill link Forms generated for you (base
+`…/Pages/ResponsePage.aspx?id=<LONG_FORM_ID>` with your two `r<fieldId>=`
+parameters), copy the **Firm segment** (before `_LTI_Follow_Up_`) and the **date
+segment** straight off the filename into the two values, then make the QR. Below,
+`r<FirmId>` / `r<DateId>` stand for your real parameter names.
 
 ### Example 1 — DBS, 30 June 2026
 
@@ -73,11 +83,11 @@ segment** straight off the filename into the URL, then make the QR.
 - Firm = `DBS`, Date = `2026-06-30`
 - Pre-fill URL:
   ```
-  https://forms.office.com/r/[FormID]?[FirmFieldId]=DBS&[DateFieldId]=2026-06-30
+  https://forms.office.com/Pages/ResponsePage.aspx?id=<LONG_FORM_ID>&r<FirmId>=DBS&r<DateId>=2026-06-30
   ```
-- QR:
+- QR (URL-encode the whole pre-fill URL into `data=`):
   ```
-  https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=https%3A%2F%2Fforms.office.com%2Fr%2F[FormID]%3F[FirmFieldId]%3DDBS%26[DateFieldId]%3D2026-06-30
+  https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=https%3A%2F%2Fforms.office.com%2FPages%2FResponsePage.aspx%3Fid%3D<LONG_FORM_ID>%26r<FirmId>%3DDBS%26r<DateId>%3D2026-06-30
   ```
 
 ### Example 2 — AIA, 15 July 2026
@@ -86,7 +96,7 @@ segment** straight off the filename into the URL, then make the QR.
 - Firm = `AIA`, Date = `2026-07-15`
 - Pre-fill URL:
   ```
-  https://forms.office.com/r/[FormID]?[FirmFieldId]=AIA&[DateFieldId]=2026-07-15
+  https://forms.office.com/Pages/ResponsePage.aspx?id=<LONG_FORM_ID>&r<FirmId>=AIA&r<DateId>=2026-07-15
   ```
 
 ### Example 3 — HSBC, 22 July 2026
@@ -95,7 +105,7 @@ segment** straight off the filename into the URL, then make the QR.
 - Firm = `HSBC`, Date = `2026-07-22`
 - Pre-fill URL:
   ```
-  https://forms.office.com/r/[FormID]?[FirmFieldId]=HSBC&[DateFieldId]=2026-07-22
+  https://forms.office.com/Pages/ResponsePage.aspx?id=<LONG_FORM_ID>&r<FirmId>=HSBC&r<DateId>=2026-07-22
   ```
 
 > If a firm name in the calendar tool was longer — say `DBS Private Bank`, which
@@ -103,5 +113,6 @@ segment** straight off the filename into the URL, then make the QR.
 > `DBS_Private_Bank` (URL-encoded, the underscores are safe as-is). Always copy
 > from the actual filename; see `../form/prefill-url-guide.md`.
 
-Replace `[FormID]`, `[FirmFieldId]` and `[DateFieldId]` with your real values
-(from the pre-fill guide) before generating any QR.
+`<LONG_FORM_ID>`, `r<FirmId>` and `r<DateId>` all come straight from the pre-fill
+link Forms generated (section 2 of the pre-fill guide) — don't hand-build them,
+and don't substitute the short `/r/` share link.
