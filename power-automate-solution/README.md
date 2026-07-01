@@ -16,6 +16,10 @@ This package was **hand-authored to match Dataverse's documented solution schema
 
 **If import fails or an action shows an error after import:** paste me the exact error text (or a screenshot) and I'll fix that specific line — these packages are normally an iterate-once-or-twice process even for experienced makers, not a first-try-perfect thing.
 
+### v1.1 fix (import attempt #1 failed with "Object reference not set to an instance of an object")
+
+That generic error pointed at `solution.xml`'s `Publisher` block — two fields were marked `xsi:nil="true"` (a common trigger for exactly this .NET null-reference error) and an `Addresses` block was only partially filled in. Both are now removed; `solution.xml` and `customizations.xml` are trimmed down to the small set of elements I have the highest confidence are correct. If the next attempt fails differently, send the new error text — it'll point at a different, more specific line.
+
 The flow imports **turned off** on purpose (Draft/Off state) — don't turn it on until you've fixed the placeholders below.
 
 ---

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ImportExportXml version="9.2.24101.00157" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="LTIEngagementCalendarTool" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<ImportExportXml version="9.2.24101.00157" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="LTIEngagementCalendarTool">
   <Entities />
   <Roles />
   <Workflows>
@@ -37,9 +37,6 @@
   <EntityMaps />
   <EntityRelationships />
   <OrganizationSettings />
-  <optionsets />
-  <CustomControls />
-  <EntityDataProviders />
   <Languages>
     <Language>1033</Language>
   </Languages>

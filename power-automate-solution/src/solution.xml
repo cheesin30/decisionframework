@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ImportExportXml version="9.2.24101.00157" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="LTIEngagementCalendarTool" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<ImportExportXml version="9.2.24101.00157" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="LTIEngagementCalendarTool">
   <SolutionManifest>
     <UniqueName>LTIFollowupSenderNoPremium</UniqueName>
     <LocalizedNames>
@@ -18,19 +18,11 @@
       <Descriptions>
         <Description description="Publisher for the LTI Engagement Calendar tool's Power Automate artifacts." languagecode="1033" />
       </Descriptions>
-      <EMailAddress xsi:nil="true" />
-      <SupportingWebsiteUrl xsi:nil="true" />
       <CustomizationPrefix>ltitool</CustomizationPrefix>
       <CustomizationOptionValuePrefix>10000</CustomizationOptionValuePrefix>
-      <Addresses>
-        <Address>
-          <AddressNumber>1</AddressNumber>
-        </Address>
-      </Addresses>
     </Publisher>
     <RootComponents>
       <RootComponent type="29" id="{aaa34424-2a00-4306-a7b4-9666f4fc86b9}" behavior="0" />
     </RootComponents>
-    <MissingDependencies />
   </SolutionManifest>
 </ImportExportXml>
