@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<!--
+  ═══════════════════════════════════════════════════════════════════════════
+  LONG-TERM INVESTING GAME — "Time in the market beats timing the market"
+  ═══════════════════════════════════════════════════════════════════════════
+
+  A single-file, gamified educational prototype for retail investors and
+  financial advisors demoing to clients. No build step. Runs by opening this
+  file in any modern browser. External dependencies (CDN only): Chart.js v4
+  and html2canvas.
+
+  ARCHITECTURE (for handoff)
+  ──────────────────────────
+  The file is organized top-to-bottom as:
+
+    1. <style>            All CSS. Design tokens (navy/gold palette) live in
+                          :root custom properties.
+    2. <body> markup      One <section> per phase; JS toggles the .active
+                          class to move between phases with a fade/slide
+                          transition. Phases:
+                            #phase-welcome   → intro screen
+                            #phase-scenario  → tutorial + the 5 life events
+                                               (same card, re-populated)
+                            #phase-outcome   → "what the market did next"
+                                               interstitial after each choice
+                            #phase-reveal    → chart, slider, summary, share
+    3. <script> DATA      MSCI_WORLD: hardcoded synthetic monthly closes,
+                          2005-01 … 2025-12 ({date, value}). Major events are
+                          shaped to match reality: 2008 GFC ≈ -50% drawdown,
+                          2020 COVID ≈ -30%, 2022 ≈ -20%, strong 2013-2019
+                          and 2023-2025 rallies.
+                          SCENARIOS: pool of 18 personal life events, each
+                          {title, story, marketTieIn, marketMoveNextPeriod,
+                          emotionalPull}. TUTORIAL is a standalone practice
+                          scenario (never counts toward the game).
+    4. <script> LOGIC     • simulatePortfolio() — the transparent, pure
+                            function that replays a list of 5 buy/hold/sell
+                            decisions over ANY 5-year window of MSCI_WORLD.
+                            All comparison lines derive from it or its two
+                            pure siblings (buyAndHoldSeries, allCashSeries).
+                          • Game-state object + phase-flow functions.
+                          • Reveal: Chart.js line chart + window slider that
+                            re-runs simulatePortfolio live on input.
+                          • Share: html2canvas → PNG download.
+
+  GAME MECHANICS
+  ──────────────
+  The player starts with $50,000: $40,000 in a global index fund and $10,000
+  in savings (cash). Starting with some cash makes "Buy" a real option while
+  keeping every comparison fair — the buy-and-hold and all-cash benchmarks
+  start from the same $50,000 total.
+    • Buy 25%  → moves 25% of current TOTAL portfolio value from cash into
+                 equity (clamped to available cash).
+    • Sell 25% → moves 25% of current total value from equity into cash
+                 (clamped to available equity).
+    • Hold     → no change.
+  Each scenario represents one year. During the game, equity moves by the
+  scenario's marketMoveNextPeriod and cash earns 2%/yr. In the reveal, the
+  SAME 5 recorded decisions are replayed against real monthly index history
+  (decision k applied at month k*12 of the chosen window), so the player can
+  drag the window anywhere in 2005-2025 and watch the outcome change.
+
+  OUT OF SCOPE: accounts, backend, analytics, real API calls, i18n.
+  ═══════════════════════════════════════════════════════════════════════════
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Long Game — can you beat time in the market?</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+  :root {
+    --navy: #003865;
+    --navy-soft: #1c4f7c;
+    --gold: #C9A961;
+    --gold-soft: #e6d5ae;
+    --ink: #1d2733;
+    --gray: #667487;
+    --gray-light: #eef1f5;
+    --line: #dde3ea;
+    --bg: #ffffff;
+    --green: #2e7d4f;
+    --red: #b3402e;
+    --radius: 16px;
+    --shadow: 0 10px 30px rgba(0, 40, 80, .10), 0 2px 8px rgba(0, 40, 80, .06);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: linear-gradient(175deg, #f7f9fb 0%, #eef2f6 100%);
+    color: var(--ink);
+    min-height: 100vh;
+    line-height: 1.55;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 24px 16px 64px; }
+
+  /* ── Phase transitions ─────────────────────────────────────────────── */
+  .phase { display: none; opacity: 0; transform: translateY(14px); }
+  .phase.active { display: block; animation: rise .45s ease forwards; }
+  @keyframes rise { to { opacity: 1; transform: translateY(0); } }
+
+  /* ── Header ────────────────────────────────────────────────────────── */
+  .brandbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 2px 18px;
+  }
+  .brandbar .logo {
+    font-weight: 700; color: var(--navy); letter-spacing: .02em; font-size: 15px;
+  }
+  .brandbar .logo span { color: var(--gold); }
+  .tracker {
+    background: var(--navy); color: #fff; border-radius: 999px;
+    padding: 7px 16px; font-size: 13px; font-weight: 600;
+    box-shadow: var(--shadow); display: none; align-items: baseline; gap: 7px;
+  }
+  .tracker.show { display: inline-flex; }
+  .tracker small { font-weight: 400; opacity: .75; font-size: 11px; }
+
+  /* ── Cards ─────────────────────────────────────────────────────────── */
+  .card {
+    background: var(--bg); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 32px 28px;
+    border-top: 4px solid var(--gold);
+  }
+  @media (max-width: 480px) { .card { padding: 24px 18px; } }
+
+  h1 { color: var(--navy); font-size: clamp(26px, 5.5vw, 36px); line-height: 1.18; margin-bottom: 14px; }
+  h2 { color: var(--navy); font-size: clamp(21px, 4.5vw, 27px); line-height: 1.25; margin-bottom: 12px; }
+  .lede { font-size: 17px; color: var(--ink); margin-bottom: 10px; }
+  .muted { color: var(--gray); font-size: 14px; }
+
+  /* ── Welcome ───────────────────────────────────────────────────────── */
+  .stat-row { display: flex; gap: 12px; margin: 22px 0; flex-wrap: wrap; }
+  .stat {
+    flex: 1 1 130px; background: var(--gray-light); border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .stat b { display: block; color: var(--navy); font-size: 22px; }
+  .stat span { font-size: 12.5px; color: var(--gray); }
+
+  /* ── Buttons ───────────────────────────────────────────────────────── */
+  .btn {
+    appearance: none; border: 0; cursor: pointer; font: inherit;
+    border-radius: 12px; padding: 14px 22px; font-weight: 700; font-size: 16px;
+    transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+    width: 100%;
+  }
+  .btn:active { transform: scale(.98); }
+  .btn-primary { background: var(--navy); color: #fff; box-shadow: 0 6px 16px rgba(0,56,101,.28); }
+  .btn-primary:hover { background: var(--navy-soft); }
+  .btn-gold { background: var(--gold); color: #fff; box-shadow: 0 6px 16px rgba(201,169,97,.35); }
+  .btn-gold:hover { filter: brightness(1.05); }
+  .btn-ghost { background: var(--gray-light); color: var(--navy); }
+  .btn-ghost:hover { background: var(--line); }
+
+  .decision-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 22px; }
+  @media (max-width: 480px) { .decision-grid { grid-template-columns: 1fr; } }
+  .decision-grid .btn { padding: 16px 10px; font-size: 15px; }
+  .decision-grid .btn small { display: block; font-weight: 400; font-size: 11.5px; opacity: .8; margin-top: 3px; }
+  .btn-buy  { background: var(--navy); color: #fff; }
+  .btn-buy:hover { background: var(--navy-soft); }
+  .btn-hold { background: var(--gold); color: #fff; }
+  .btn-hold:hover { filter: brightness(1.05); }
+  .btn-sell { background: #fff; color: var(--navy); border: 2px solid var(--line); }
+  .btn-sell:hover { border-color: var(--navy); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  /* ── Scenario story card ───────────────────────────────────────────── */
+  .progress { display: flex; gap: 7px; margin-bottom: 18px; align-items: center; }
+  .progress .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--line); transition: background .3s; }
+  .progress .dot.done { background: var(--gold); }
+  .progress .dot.now { background: var(--navy); transform: scale(1.25); }
+  .progress .label { margin-left: auto; font-size: 12px; color: var(--gray); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+
+  .badge-practice {
+    display: inline-block; background: var(--gold-soft); color: #7a5f22;
+    font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    border-radius: 999px; padding: 4px 12px; margin-bottom: 12px;
+  }
+  .pull-chip {
+    display: inline-block; background: var(--gray-light); color: var(--gray);
+    font-size: 11.5px; font-weight: 600; border-radius: 999px; padding: 3px 11px;
+    margin-bottom: 12px; letter-spacing: .03em;
+  }
+  .story { font-size: 19px; line-height: 1.6; color: var(--ink); margin-bottom: 18px; }
+  @media (max-width: 480px) { .story { font-size: 17.5px; } }
+  .tie-in {
+    background: var(--gray-light); border-left: 3px solid var(--gold);
+    border-radius: 0 10px 10px 0; padding: 11px 14px; font-size: 14px; color: var(--gray);
+  }
+  .tie-in b { color: var(--navy); display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 2px; }
+
+  /* Tutorial hint tooltip */
+  .hint {
+    position: relative; margin-top: 14px; background: #fdf8ec;
+    border: 1px solid var(--gold-soft); border-radius: 10px;
+    padding: 11px 14px; font-size: 13.5px; color: #6b5a2b;
+  }
+  .hint b { color: #7a5f22; }
+
+  /* ── Outcome interstitial ──────────────────────────────────────────── */
+  .outcome-emoji { font-size: 40px; margin-bottom: 8px; }
+  .outcome-market { font-size: 19px; color: var(--navy); font-weight: 700; margin-bottom: 8px; }
+  .outcome-you { font-size: 15px; color: var(--gray); margin-bottom: 22px; }
+
+  /* ── Reveal ────────────────────────────────────────────────────────── */
+  .chart-box { position: relative; height: 320px; margin: 18px 0 8px; }
+  @media (max-width: 480px) { .chart-box { height: 250px; } }
+
+  .slider-block { margin: 14px 0 22px; }
+  .slider-block label { font-size: 13px; font-weight: 700; color: var(--navy); display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .slider-block label output { color: var(--gold); }
+  input[type=range] {
+    width: 100%; appearance: none; -webkit-appearance: none; height: 8px; border-radius: 99px;
+    background: linear-gradient(90deg, var(--navy) 0%, var(--gold) 100%); outline: none; cursor: grab;
+  }
+  input[type=range]:active { cursor: grabbing; }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none; width: 26px; height: 26px; border-radius: 50%;
+    background: #fff; border: 4px solid var(--navy); box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: #fff; border: 4px solid var(--navy); box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  }
+  .slider-hint { font-size: 12.5px; color: var(--gray); text-align: center; margin-top: 7px; }
+
+  .summary {
+    background: linear-gradient(160deg, var(--navy) 0%, #06416f 60%, #0a4a7a 100%);
+    color: #fff; border-radius: var(--radius); padding: 26px 24px; margin-top: 20px;
+  }
+  .summary h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .1em; color: var(--gold); margin-bottom: 14px; }
+  .final-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+  @media (max-width: 480px) { .final-grid { grid-template-columns: 1fr; } }
+  .final-cell { background: rgba(255,255,255,.08); border-radius: 12px; padding: 12px 12px 10px; }
+  .final-cell.win { outline: 2px solid var(--gold); }
+  .final-cell span { display: block; font-size: 11.5px; opacity: .75; margin-bottom: 3px; }
+  .final-cell b { font-size: 19px; letter-spacing: .01em; }
+  .gap-line { font-size: 15px; margin-bottom: 14px; }
+  .gap-line b { color: var(--gold); }
+  .takeaway { font-size: 16.5px; line-height: 1.55; font-style: italic; border-top: 1px solid rgba(255,255,255,.18); padding-top: 14px; }
+  .principle { margin-top: 12px; font-size: 12.5px; opacity: .78; }
+  .principle b { color: var(--gold); font-weight: 600; }
+
+  .reveal-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+  .reveal-actions .btn { flex: 1 1 200px; width: auto; }
+
+  .legend-note { font-size: 12.5px; color: var(--gray); text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brandbar">
+    <div class="logo">THE LONG <span>GAME</span></div>
+    <div class="tracker" id="tracker" aria-live="polite">
+      <span id="trackerValue">$50,000</span><small id="trackerSplit"></small>
+    </div>
+  </div>
+
+  <!-- ═══ PHASE 1 · WELCOME ═══ -->
+  <section class="phase active" id="phase-welcome">
+    <div class="card">
+      <h1>You have $50,000 invested.<br>Over the next 5 years, life is going to test you.</h1>
+      <p class="lede">Not with charts. With phone calls from your dad. With your neighbor's new Tesla. With a baby, a layoff, a wedding.</p>
+      <div class="stat-row">
+        <div class="stat"><b>$40,000</b><span>in a global index fund</span></div>
+        <div class="stat"><b>$10,000</b><span>in savings (earning 2%)</span></div>
+        <div class="stat"><b>5</b><span>decisions ahead of you</span></div>
+      </div>
+      <p class="muted" style="margin-bottom:22px">Each time life knocks, you choose: <b>Buy</b>, <b>Hold</b>, or <b>Sell</b>. Buying or selling moves 25% of your portfolio between savings and the market. At the end, you'll see how your instincts compare to simply staying invested. Takes about 4 minutes.</p>
+      <button class="btn btn-primary" id="btnStart">Start with a practice round →</button>
+    </div>
+  </section>
+
+  <!-- ═══ PHASE 2 · SCENARIO STORY CARD (tutorial + 5 events) ═══ -->
+  <section class="phase" id="phase-scenario">
+    <div class="card">
+      <div class="progress" id="progressBar"></div>
+      <div id="practiceBadge" class="badge-practice" hidden>Practice round — doesn't count</div>
+      <div class="pull-chip" id="pullChip" hidden></div>
+      <h2 id="scTitle"></h2>
+      <p class="story" id="scStory"></p>
+      <div class="tie-in"><b>Meanwhile, in the markets</b><span id="scTieIn"></span></div>
+      <div class="decision-grid">
+        <button class="btn btn-buy"  id="btnBuy">Buy 25% more<small id="buyNote"></small></button>
+        <button class="btn btn-hold" id="btnHold">Hold<small>change nothing</small></button>
+        <button class="btn btn-sell" id="btnSell">Sell 25%<small id="sellNote"></small></button>
+      </div>
+      <div class="hint" id="tutorialHint" hidden>
+        💡 <b>How it works:</b> <b>Buy</b> moves 25% of your portfolio's value from savings into the market. <b>Sell</b> moves 25% out of the market into savings. <b>Hold</b> does nothing. There's no "right answer" shown yet — go with your gut.
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ PHASE 2½ · "WHAT THE MARKET DID NEXT" INTERSTITIAL ═══ -->
+  <section class="phase" id="phase-outcome">
+    <div class="card" style="text-align:center">
+      <div class="outcome-emoji" id="ocEmoji">📈</div>
+      <div class="outcome-market" id="ocMarket"></div>
+      <p class="outcome-you" id="ocYou"></p>
+      <button class="btn btn-primary" id="btnContinue">Continue →</button>
+    </div>
+  </section>
+
+  <!-- ═══ PHASE 3 · THE REVEAL ═══ -->
+  <section class="phase" id="phase-reveal">
+    <div class="card">
+      <h2>The reveal: your 5 decisions vs. simply staying invested</h2>
+      <p class="muted">Your same 5 choices, replayed against 20 years of real market history. Drag the slider to start your 5-year journey in any year — including 2008.</p>
+
+      <div class="chart-box"><canvas id="revealChart"></canvas></div>
+      <p class="legend-note"><span style="color:var(--gold);font-weight:700">━ You</span> &nbsp;·&nbsp; <span style="color:var(--navy);font-weight:700">━ Buy &amp; hold</span> &nbsp;·&nbsp; <span style="color:#8a97a8;font-weight:700">┄ All cash (2%)</span></p>
+
+      <div class="slider-block">
+        <label>Your 5-year window <output id="windowLabel"></output></label>
+        <input type="range" id="windowSlider" min="0" max="0" step="1" value="0" aria-label="Choose the 5-year window">
+        <div class="slider-hint">◀ drag me — try starting right before the 2008 crash ▶</div>
+      </div>
+
+      <div class="summary" id="summaryCard">
+        <h3>Your result · <span id="sumWindow"></span></h3>
+        <div class="final-grid">
+          <div class="final-cell" id="cellYou"><span>Your decisions</span><b id="sumYou"></b></div>
+          <div class="final-cell" id="cellHold"><span>Buy &amp; hold</span><b id="sumHold"></b></div>
+          <div class="final-cell" id="cellCash"><span>All cash at 2%</span><b id="sumCash"></b></div>
+        </div>
+        <p class="gap-line" id="sumGap"></p>
+        <p class="takeaway">"Across every 5-year window in the last 20 years, staying invested outperformed timing the market."<span id="sumStat" style="display:block;font-style:normal;font-size:13px;opacity:.8;margin-top:6px"></span></p>
+        <p class="principle">Long-term perspective is the foundation of <b>The Capital System</b>.</p>
+      </div>
+
+      <div class="reveal-actions">
+        <button class="btn btn-gold" id="btnShare">Share your result 📸</button>
+        <button class="btn btn-ghost" id="btnAgain">Play again ↻</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   DATA · MSCI World — synthetic monthly closes, Jan 2005 – Dec 2025
+   Shaped to match real history: 2008 GFC ≈ -50% peak-to-trough, 2020
+   COVID ≈ -30%, 2022 ≈ -20%, strong 2013-2019 and 2023-2025 rallies.
+   ═══════════════════════════════════════════════════════════════════════ */
+const MSCI_WORLD = [
+    {date:"2005-01",value:101.81},{date:"2005-02",value:102.33},{date:"2005-03",value:102.82},{date:"2005-04",value:103.14},
+    {date:"2005-05",value:102.19},{date:"2005-06",value:102.28},{date:"2005-07",value:103.11},{date:"2005-08",value:105.05},
+    {date:"2005-09",value:104.18},{date:"2005-10",value:106.26},{date:"2005-11",value:107.36},{date:"2005-12",value:106.55},
+    {date:"2006-01",value:107.91},{date:"2006-02",value:107.88},{date:"2006-03",value:109.14},{date:"2006-04",value:111.01},
+    {date:"2006-05",value:113.16},{date:"2006-06",value:116.27},{date:"2006-07",value:117.82},{date:"2006-08",value:120.38},
+    {date:"2006-09",value:122.51},{date:"2006-10",value:122.68},{date:"2006-11",value:123.73},{date:"2006-12",value:124.24},
+    {date:"2007-01",value:124.97},{date:"2007-02",value:124.55},{date:"2007-03",value:123.33},{date:"2007-04",value:122.09},
+    {date:"2007-05",value:122.84},{date:"2007-06",value:124.93},{date:"2007-07",value:124.67},{date:"2007-08",value:123.84},
+    {date:"2007-09",value:125.12},{date:"2007-10",value:124.7},{date:"2007-11",value:124.75},{date:"2007-12",value:126.82},
+    {date:"2008-01",value:121.32},{date:"2008-02",value:119.77},{date:"2008-03",value:116.98},{date:"2008-04",value:121.07},
+    {date:"2008-05",value:122.29},{date:"2008-06",value:113.18},{date:"2008-07",value:110.37},{date:"2008-08",value:108.7},
+    {date:"2008-09",value:96.99},{date:"2008-10",value:79.91},{date:"2008-11",value:75.28},{date:"2008-12",value:77.34},
+    {date:"2009-01",value:70.95},{date:"2009-02",value:64},{date:"2009-03",value:68.66},{date:"2009-04",value:75.77},
+    {date:"2009-05",value:82.27},{date:"2009-06",value:81.86},{date:"2009-07",value:88.31},{date:"2009-08",value:91.37},
+    {date:"2009-09",value:95.1},{date:"2009-10",value:94.05},{date:"2009-11",value:97.85},{date:"2009-12",value:99.24},
+    {date:"2010-01",value:99.32},{date:"2010-02",value:100.03},{date:"2010-03",value:101.29},{date:"2010-04",value:100.24},
+    {date:"2010-05",value:99.39},{date:"2010-06",value:98.69},{date:"2010-07",value:100.69},{date:"2010-08",value:100.63},
+    {date:"2010-09",value:101.56},{date:"2010-10",value:103.42},{date:"2010-11",value:105.03},{date:"2010-12",value:106.69},
+    {date:"2011-01",value:106.75},{date:"2011-02",value:105.63},{date:"2011-03",value:105.64},{date:"2011-04",value:105.6},
+    {date:"2011-05",value:106.39},{date:"2011-06",value:107.66},{date:"2011-07",value:106.92},{date:"2011-08",value:106.34},
+    {date:"2011-09",value:105.23},{date:"2011-10",value:104.37},{date:"2011-11",value:103.06},{date:"2011-12",value:101.8},
+    {date:"2012-01",value:102.71},{date:"2012-02",value:103.01},{date:"2012-03",value:103.42},{date:"2012-04",value:102.65},
+    {date:"2012-05",value:103.41},{date:"2012-06",value:104.37},{date:"2012-07",value:105.85},{date:"2012-08",value:106.58},
+    {date:"2012-09",value:107.9},{date:"2012-10",value:108.81},{date:"2012-11",value:109.25},{date:"2012-12",value:110.46},
+    {date:"2013-01",value:111.48},{date:"2013-02",value:114.49},{date:"2013-03",value:117.02},{date:"2013-04",value:119.7},
+    {date:"2013-05",value:122.54},{date:"2013-06",value:125.93},{date:"2013-07",value:126.82},{date:"2013-08",value:127.65},
+    {date:"2013-09",value:130.33},{date:"2013-10",value:133.66},{date:"2013-11",value:137.34},{date:"2013-12",value:140.04},
+    {date:"2014-01",value:143.48},{date:"2014-02",value:143.03},{date:"2014-03",value:143.19},{date:"2014-04",value:143.49},
+    {date:"2014-05",value:142.27},{date:"2014-06",value:142.97},{date:"2014-07",value:143.96},{date:"2014-08",value:146.48},
+    {date:"2014-09",value:146.43},{date:"2014-10",value:147.85},{date:"2014-11",value:150.58},{date:"2014-12",value:151.75},
+    {date:"2015-01",value:153.18},{date:"2015-02",value:152.3},{date:"2015-03",value:151.7},{date:"2015-04",value:151.96},
+    {date:"2015-05",value:151.46},{date:"2015-06",value:152.87},{date:"2015-07",value:152.62},{date:"2015-08",value:153.04},
+    {date:"2015-09",value:151.89},{date:"2015-10",value:149.57},{date:"2015-11",value:152.45},{date:"2015-12",value:153.1},
+    {date:"2016-01",value:154.48},{date:"2016-02",value:157.61},{date:"2016-03",value:159.33},{date:"2016-04",value:161.69},
+    {date:"2016-05",value:163.26},{date:"2016-06",value:164.36},{date:"2016-07",value:166.74},{date:"2016-08",value:166.59},
+    {date:"2016-09",value:166.16},{date:"2016-10",value:168.48},{date:"2016-11",value:170.03},{date:"2016-12",value:171.77},
+    {date:"2017-01",value:173.23},{date:"2017-02",value:174.81},{date:"2017-03",value:177.19},{date:"2017-04",value:179.05},
+    {date:"2017-05",value:182.82},{date:"2017-06",value:187.39},{date:"2017-07",value:189.5},{date:"2017-08",value:193.39},
+    {date:"2017-09",value:195.56},{date:"2017-10",value:199.48},{date:"2017-11",value:205},{date:"2017-12",value:207.9},
+    {date:"2018-01",value:206.92},{date:"2018-02",value:206.42},{date:"2018-03",value:208.48},{date:"2018-04",value:208.12},
+    {date:"2018-05",value:209.2},{date:"2018-06",value:203.82},{date:"2018-07",value:204.15},{date:"2018-08",value:202.38},
+    {date:"2018-09",value:201.95},{date:"2018-10",value:200.11},{date:"2018-11",value:196.77},{date:"2018-12",value:194.97},
+    {date:"2019-01",value:196.2},{date:"2019-02",value:198.81},{date:"2019-03",value:199.48},{date:"2019-04",value:201.73},
+    {date:"2019-05",value:204.65},{date:"2019-06",value:208.36},{date:"2019-07",value:213.29},{date:"2019-08",value:216.8},
+    {date:"2019-09",value:221.14},{date:"2019-10",value:224.88},{date:"2019-11",value:230.33},{date:"2019-12",value:231.36},
+    {date:"2020-01",value:229.57},{date:"2020-02",value:210.98},{date:"2020-03",value:165.97},{date:"2020-04",value:183.41},
+    {date:"2020-05",value:191.78},{date:"2020-06",value:196.54},{date:"2020-07",value:205.45},{date:"2020-08",value:218.02},
+    {date:"2020-09",value:211.4},{date:"2020-10",value:206.32},{date:"2020-11",value:231.27},{date:"2020-12",value:240.29},
+    {date:"2021-01",value:242.65},{date:"2021-02",value:248.54},{date:"2021-03",value:252.39},{date:"2021-04",value:258.85},
+    {date:"2021-05",value:263.37},{date:"2021-06",value:264.51},{date:"2021-07",value:270.98},{date:"2021-08",value:275.59},
+    {date:"2021-09",value:277.68},{date:"2021-10",value:280.43},{date:"2021-11",value:288.62},{date:"2021-12",value:292.12},
+    {date:"2022-01",value:278.48},{date:"2022-02",value:271.3},{date:"2022-03",value:278.39},{date:"2022-04",value:255.63},
+    {date:"2022-05",value:256.42},{date:"2022-06",value:234.36},{date:"2022-07",value:251.13},{date:"2022-08",value:241.01},
+    {date:"2022-09",value:219.07},{date:"2022-10",value:235.02},{date:"2022-11",value:249.4},{date:"2022-12",value:239.71},
+    {date:"2023-01",value:246.06},{date:"2023-02",value:251.5},{date:"2023-03",value:256.7},{date:"2023-04",value:258.16},
+    {date:"2023-05",value:261},{date:"2023-06",value:268.16},{date:"2023-07",value:273.99},{date:"2023-08",value:281.05},
+    {date:"2023-09",value:283.53},{date:"2023-10",value:291.74},{date:"2023-11",value:295.98},{date:"2023-12",value:300.65},
+    {date:"2024-01",value:301.2},{date:"2024-02",value:306.06},{date:"2024-03",value:310.36},{date:"2024-04",value:316.52},
+    {date:"2024-05",value:324.83},{date:"2024-06",value:327.8},{date:"2024-07",value:330.01},{date:"2024-08",value:331.99},
+    {date:"2024-09",value:336.84},{date:"2024-10",value:345.19},{date:"2024-11",value:350.72},{date:"2024-12",value:349.32},
+    {date:"2025-01",value:346.92},{date:"2025-02",value:347.59},{date:"2025-03",value:354.1},{date:"2025-04",value:363.94},
+    {date:"2025-05",value:369.31},{date:"2025-06",value:380.62},{date:"2025-07",value:393.73},{date:"2025-08",value:396.77},
+    {date:"2025-09",value:397.12},{date:"2025-10",value:400.89},{date:"2025-11",value:406.5},{date:"2025-12",value:414.11}
+];
+
+/* ═══════════════════════════════════════════════════════════════════════
+   DATA · Scenario pool — 18 personal life events.
+   Each: { title, story, marketTieIn, marketMoveNextPeriod (% the market
+   moves over the year after this event), emotionalPull }.
+   Written to feel lived-in, not textbook. No financial jargon in stories.
+   ═══════════════════════════════════════════════════════════════════════ */
+const SCENARIOS = [
+  {
+    title: "Your dad calls, panicked",
+    story: "He just saw the news — markets are crashing. He tells you to \"get out now, before you lose everything like in 2008.\" Your hands are shaking. The headlines scream red.",
+    marketTieIn: "Global markets are down double digits this month, and every front page says it could get worse.",
+    marketMoveNextPeriod: 15,
+    emotionalPull: "family pressure + fear"
+  },
+  {
+    title: "Your neighbor just bought a Tesla",
+    story: "He made a killing on tech stocks this year. At the BBQ, he can't stop talking about it. You feel that itch. Everyone's making money except you.",
+    marketTieIn: "Tech stocks are up 40% this year and the rally is all anyone talks about.",
+    marketMoveNextPeriod: -20,
+    emotionalPull: "FOMO + greed"
+  },
+  {
+    title: "Fuel prices just hit a record high",
+    story: "Filling up your car cost $130 this morning. Groceries are up 15%. Your paycheck feels smaller every month. The news says inflation is \"out of control.\"",
+    marketTieIn: "Inflation is at multi-decade highs and markets have gone nowhere for months.",
+    marketMoveNextPeriod: 2,
+    emotionalPull: "fear + recency bias"
+  },
+  {
+    title: "Your sister needs help with her wedding",
+    story: "She's asking if you can chip in $10,000. You could sell some investments to help. Family first, right?",
+    marketTieIn: "Markets are calm right now — selling would be easy, and it feels like you wouldn't miss much.",
+    marketMoveNextPeriod: 12,
+    emotionalPull: "family pressure + emotional spending"
+  },
+  {
+    title: "Your company just announced layoffs",
+    story: "You're safe — for now. But your best friend at work got the call this morning. Everyone's whispering. You wonder if you should build up cash \"just in case.\"",
+    marketTieIn: "Recession chatter is everywhere and analysts keep cutting their forecasts.",
+    marketMoveNextPeriod: 8,
+    emotionalPull: "fear + job insecurity"
+  },
+  {
+    title: "You just had a baby",
+    story: "Suddenly every dollar feels precious. You're staring at diapers and daycare costs. Your partner asks, \"Should we be more conservative with our money now?\"",
+    marketTieIn: "Markets are climbing steadily — but \"steady\" feels different when someone depends on you.",
+    marketMoveNextPeriod: 18,
+    emotionalPull: "loss aversion + life transition"
+  },
+  {
+    title: "Your rich uncle died and left you $20,000",
+    story: "You're grieving, but you also have unexpected cash. Your gut says put it all in — the market's been on a tear. What would he have done?",
+    marketTieIn: "The market's been rising for two straight years and every dip has bounced right back.",
+    marketMoveNextPeriod: -12,
+    emotionalPull: "overconfidence + windfall"
+  },
+  {
+    title: "The news won't stop talking about war",
+    story: "Every channel, every feed. Markets dropped 8% last week. Your mom is stockpiling canned goods. It genuinely feels like the world is ending.",
+    marketTieIn: "Markets fell 8% last week and volatility is the highest it's been in years.",
+    marketMoveNextPeriod: 10,
+    emotionalPull: "fear + catastrophizing"
+  },
+  {
+    title: "Your best friend started day trading",
+    story: "He shows you screenshots — up 40% in three months. He says \"the market's rigged for people who know how to play it.\" You know he doesn't, really.",
+    marketTieIn: "Fast-money trading is booming, and slow index funds suddenly feel ancient.",
+    marketMoveNextPeriod: -5,
+    emotionalPull: "FOMO + social proof"
+  },
+  {
+    title: "You just got a promotion and a big raise",
+    story: "Money feels easy. You're thinking about a bigger house, a nicer car. Investing feels boring compared to spending. Should you cash out and enjoy life?",
+    marketTieIn: "Markets are up, your income is up — everything feels like it only goes one way.",
+    marketMoveNextPeriod: 14,
+    emotionalPull: "overconfidence + lifestyle inflation"
+  },
+  {
+    title: "Interest rates just jumped",
+    story: "Your mortgage rate is now double what it was. Your monthly payment stings. Everyone on TV is saying \"the party's over\" for stocks.",
+    marketTieIn: "Rates doubled in a year, and pundits say the easy-money era for stocks is finished.",
+    marketMoveNextPeriod: 6,
+    emotionalPull: "fear + recency bias"
+  },
+  {
+    title: "Your kid needs braces — and college is coming",
+    story: "You're doing the math. $8,000 now, $200,000 in a few years. You're not sure your investments will be enough. Panic sets in.",
+    marketTieIn: "Markets are wobbling just as your family's big bills come into view.",
+    marketMoveNextPeriod: 11,
+    emotionalPull: "fear + short-term thinking"
+  },
+  {
+    title: "The market just hit an all-time high",
+    story: "Every article says \"buy now\" or \"the top is in.\" Your portfolio is up 30% this year. Should you lock in gains before it corrects?",
+    marketTieIn: "The index just closed at a record, and strategists are split between \"melt-up\" and \"the top.\"",
+    marketMoveNextPeriod: 9,
+    emotionalPull: "greed + market timing"
+  },
+  {
+    title: "Your partner wants to buy a vacation home",
+    story: "They've been dreaming about it for years. It would mean pulling $80,000 from investments. They ask, \"What's the point of saving if we don't enjoy it?\"",
+    marketTieIn: "Markets have been quietly grinding higher — pulling money out has never felt so painless.",
+    marketMoveNextPeriod: 7,
+    emotionalPull: "partner pressure + lifestyle"
+  },
+  {
+    title: "A pandemic just hit",
+    story: "Cities are shutting down. Your gym is closed. Nobody knows what's happening. The market dropped 25% in three weeks and there's talk of worse to come.",
+    marketTieIn: "This is the fastest market crash in modern history, and it isn't clear it's over.",
+    marketMoveNextPeriod: 30,
+    emotionalPull: "fear + catastrophizing"
+  },
+  {
+    title: "Crypto is all your cousin talks about",
+    story: "He made $50k last year. He's got a YouTube channel now. He tells you \"boomers invest in index funds — real money is in crypto.\" You feel behind.",
+    marketTieIn: "Speculative assets are quadrupling while your index fund plods along at single digits.",
+    marketMoveNextPeriod: -8,
+    emotionalPull: "FOMO + social pressure"
+  },
+  {
+    title: "Your car just died",
+    story: "Repair estimate: $6,000. Or you could buy a used one for $15,000. Either way, you weren't planning for this. Cash is tight.",
+    marketTieIn: "Stocks are mid-recovery — selling now means cashing out of a dip to fix a bumper.",
+    marketMoveNextPeriod: 10,
+    emotionalPull: "short-term thinking + emergency"
+  },
+  {
+    title: "Election year is here",
+    story: "Every conversation turns political. Half your friends say \"if the other side wins, sell everything.\" The other half says the same in reverse. Uncertainty is everywhere.",
+    marketTieIn: "Markets hate uncertainty — and nobody can remember a year that felt this uncertain.",
+    marketMoveNextPeriod: 8,
+    emotionalPull: "fear + political bias"
+  }
+];
+
+/* Tutorial scenario — clearly labeled, never counts toward the game. */
+const TUTORIAL = {
+  title: "Your phone buzzes at breakfast",
+  story: "A red headline: \"Markets slide 3% on growth worries.\" Your coffee's still warm. Nothing about your life has actually changed — but the number is red, and red feels urgent.",
+  marketTieIn: "A routine dip. Markets fall 3% or more a few times in a normal year.",
+  marketMoveNextPeriod: 4,
+  emotionalPull: "a taste of loss aversion"
+};
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SIMULATION — pure, transparent functions. Everything the reveal shows
+   comes from these three. No hidden adjustments.
+   ═══════════════════════════════════════════════════════════════════════ */
+const START_TOTAL  = 50000;   // total starting money
+const START_EQUITY = 40000;   // starts in the index fund
+const START_CASH   = 10000;   // starts in savings
+const CASH_RATE    = 0.02;    // savings yield, annual
+const ACTION_SIZE  = 0.25;    // Buy/Sell moves 25% of current total value
+const WINDOW_MONTHS = 60;     // 5-year decision window
+const MONTHLY_CASH = Math.pow(1 + CASH_RATE, 1 / 12); // 2%/yr compounded monthly
+
+/**
+ * Replay 5 buy/hold/sell decisions over a 5-year window of index history.
+ *
+ * @param {string[]} decisions  five of "buy" | "hold" | "sell";
+ *                              decision k is applied at month k*12 of the window
+ * @param {number}   startIdx   index into MSCI_WORLD where the window begins
+ * @returns {number[]} 61 monthly total portfolio values (start month included)
+ */
+function simulatePortfolio(decisions, startIdx) {
+  let equity = START_EQUITY;
+  let cash   = START_CASH;
+  const values = [];
+
+  for (let m = 0; m <= WINDOW_MONTHS; m++) {
+    // grow equity by the index's move since last month
+    if (m > 0) {
+      equity *= MSCI_WORLD[startIdx + m].value / MSCI_WORLD[startIdx + m - 1].value;
+      cash   *= MONTHLY_CASH;
+    }
+    // apply this year's decision at the start of each of the 5 years
+    if (m % 12 === 0 && m < WINDOW_MONTHS) {
+      const total = equity + cash;
+      const d = decisions[m / 12];
+      if (d === "buy") {
+        const amt = Math.min(ACTION_SIZE * total, cash);
+        cash -= amt; equity += amt;
+      } else if (d === "sell") {
+        const amt = Math.min(ACTION_SIZE * total, equity);
+        equity -= amt; cash += amt;
+      }
+    }
+    values.push(equity + cash);
+  }
+  return values;
+}
+
+/** Buy-and-hold benchmark: the full $50,000 rides the index untouched. */
+function buyAndHoldSeries(startIdx) {
+  const base = MSCI_WORLD[startIdx].value;
+  const values = [];
+  for (let m = 0; m <= WINDOW_MONTHS; m++) {
+    values.push(START_TOTAL * MSCI_WORLD[startIdx + m].value / base);
+  }
+  return values;
+}
+
+/** All-cash counterfactual: did nothing, sat in savings at 2%. */
+function allCashSeries() {
+  const values = [];
+  for (let m = 0; m <= WINDOW_MONTHS; m++) {
+    values.push(START_TOTAL * Math.pow(MONTHLY_CASH, m));
+  }
+  return values;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   GAME STATE + PHASE FLOW
+   ═══════════════════════════════════════════════════════════════════════ */
+const state = {
+  phase: "welcome",
+  scenarios: [],      // 5 randomly drawn events for this run
+  step: -1,           // -1 = tutorial, 0..4 = real scenarios
+  decisions: [],      // recorded "buy"/"hold"/"sell" for the 5 real events
+  equity: START_EQUITY,
+  cash: START_CASH,
+  chart: null
+};
+
+const $ = (id) => document.getElementById(id);
+const fmt = (n) => "$" + Math.round(n).toLocaleString("en-US");
+
+function showPhase(id) {
+  document.querySelectorAll(".phase").forEach((p) => p.classList.remove("active"));
+  // force reflow so the entry animation replays even for a revisited phase
+  const el = $(id);
+  void el.offsetWidth;
+  el.classList.add("active");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function drawFiveScenarios() {
+  const pool = SCENARIOS.slice();
+  for (let i = pool.length - 1; i > 0; i--) {   // Fisher-Yates shuffle
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, 5);
+}
+
+function updateTracker() {
+  const total = state.equity + state.cash;
+  $("trackerValue").textContent = fmt(total);
+  $("trackerSplit").textContent =
+    Math.round(100 * state.equity / total) + "% invested";
+  $("tracker").classList.add("show");
+}
+
+function renderProgress() {
+  const bar = $("progressBar");
+  bar.innerHTML = "";
+  for (let i = 0; i < 5; i++) {
+    const dot = document.createElement("span");
+    dot.className = "dot" + (i < state.step ? " done" : i === state.step ? " now" : "");
+    bar.appendChild(dot);
+  }
+  const label = document.createElement("span");
+  label.className = "label";
+  label.textContent = state.step < 0 ? "Practice" : `Year ${state.step + 1} of 5`;
+  bar.appendChild(label);
+}
+
+/** Populate the story card for the tutorial or the current real scenario. */
+function renderScenario() {
+  const isTutorial = state.step < 0;
+  const sc = isTutorial ? TUTORIAL : state.scenarios[state.step];
+
+  renderProgress();
+  $("practiceBadge").hidden = !isTutorial;
+  $("tutorialHint").hidden = !isTutorial;
+  $("pullChip").hidden = false;
+  $("pullChip").textContent = "This tests: " + sc.emotionalPull;
+  $("scTitle").textContent = sc.title;
+  $("scStory").textContent = sc.story;
+  $("scTieIn").textContent = sc.marketTieIn;
+
+  // decision buttons show live dollar amounts; Buy greys out if no cash
+  const total = state.equity + state.cash;
+  const buyAmt  = Math.min(ACTION_SIZE * total, state.cash);
+  const sellAmt = Math.min(ACTION_SIZE * total, state.equity);
+  $("buyNote").textContent  = buyAmt  > 0 ? "move " + fmt(buyAmt)  + " in"  : "no savings left";
+  $("sellNote").textContent = sellAmt > 0 ? "move " + fmt(sellAmt) + " out" : "nothing invested";
+  $("btnBuy").disabled  = buyAmt  <= 0;
+  $("btnSell").disabled = sellAmt <= 0;
+
+  updateTracker();
+  showPhase("phase-scenario");
+}
+
+/** Handle a Buy/Hold/Sell click, advance one simulated year, show outcome. */
+function decide(action) {
+  const isTutorial = state.step < 0;
+  const sc = isTutorial ? TUTORIAL : state.scenarios[state.step];
+
+  // Tutorial runs on a sandbox copy so it never touches the real portfolio.
+  let eq = state.equity, cash = state.cash;
+  const totalBefore = eq + cash;
+  if (action === "buy") {
+    const amt = Math.min(ACTION_SIZE * totalBefore, cash);
+    cash -= amt; eq += amt;
+  } else if (action === "sell") {
+    const amt = Math.min(ACTION_SIZE * totalBefore, eq);
+    eq -= amt; cash += amt;
+  }
+  // one year passes: equity follows the scenario's market move, cash earns 2%
+  eq   *= 1 + sc.marketMoveNextPeriod / 100;
+  cash *= 1 + CASH_RATE;
+  const totalAfter = eq + cash;
+
+  if (!isTutorial) {
+    state.decisions.push(action);
+    state.equity = eq;
+    state.cash = cash;
+    updateTracker();
+  }
+
+  // "what the market did next" — one sentence, then their own number
+  const move = sc.marketMoveNextPeriod;
+  $("ocEmoji").textContent = move >= 10 ? "📈" : move >= 0 ? "🌤️" : "📉";
+  $("ocMarket").textContent = "What the market did next: " +
+    (move >= 0 ? "climbed +" + move + "%" : "fell " + move + "%") +
+    " over the following year.";
+  const verb = { buy: "bought more", hold: "held steady", sell: "sold" }[action];
+  $("ocYou").textContent =
+    (isTutorial ? "Practice result: you " : "You ") + verb +
+    ", and your $" + Math.round(totalBefore).toLocaleString() +
+    " became " + fmt(totalAfter) +
+    (isTutorial ? ". Got it? Now it counts." : ".");
+  showPhase("phase-outcome");
+}
+
+function nextStep() {
+  state.step++;
+  if (state.step >= 5) {
+    enterReveal();
+  } else {
+    renderScenario();
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PHASE 3 · THE REVEAL — chart, slider, summary
+   ═══════════════════════════════════════════════════════════════════════ */
+const MAX_START = MSCI_WORLD.length - WINDOW_MONTHS - 1; // last valid window start
+
+function windowTitle(startIdx) {
+  return MSCI_WORLD[startIdx].date.slice(0, 4) + " – " +
+         MSCI_WORLD[startIdx + WINDOW_MONTHS].date.slice(0, 4);
+}
+
+function enterReveal() {
+  $("tracker").classList.remove("show");
+  const slider = $("windowSlider");
+  slider.max = MAX_START;
+  // default to the most recent 5-year window; the hint below the slider
+  // invites the user to drag back to 2008 themselves
+  slider.value = MAX_START;
+  buildChart();
+  renderReveal(+slider.value);
+  showPhase("phase-reveal");
+}
+
+function buildChart() {
+  if (state.chart) { state.chart.destroy(); }
+  state.chart = new Chart($("revealChart"), {
+    type: "line",
+    data: { labels: [], datasets: [
+      { label: "You", data: [], borderColor: "#C9A961", backgroundColor: "rgba(201,169,97,.12)",
+        borderWidth: 3, pointRadius: 0, pointHitRadius: 12, tension: .25, fill: false },
+      { label: "Buy & hold", data: [], borderColor: "#003865", backgroundColor: "rgba(0,56,101,.10)",
+        borderWidth: 3, pointRadius: 0, pointHitRadius: 12, tension: .25, fill: false },
+      { label: "All cash (2%)", data: [], borderColor: "#8a97a8", borderDash: [6, 5],
+        borderWidth: 2, pointRadius: 0, pointHitRadius: 12, tension: 0, fill: false }
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: false,                       // instant re-render while sliding
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: "#003865", titleFont: { weight: "600" },
+          callbacks: { label: (c) => " " + c.dataset.label + ": " + fmt(c.parsed.y) }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { maxTicksLimit: 6, color: "#667487" } },
+        y: { grid: { color: "#eef1f5" },
+             ticks: { color: "#667487", callback: (v) => "$" + (v / 1000) + "k" } }
+      }
+    }
+  });
+}
+
+/** Re-run the simulation for a window start and repaint chart + summary. */
+function renderReveal(startIdx) {
+  const you  = simulatePortfolio(state.decisions, startIdx);
+  const hold = buyAndHoldSeries(startIdx);
+  const cash = allCashSeries();
+  const labels = [];
+  for (let m = 0; m <= WINDOW_MONTHS; m++) {
+    const [y, mo] = MSCI_WORLD[startIdx + m].date.split("-");
+    labels.push(new Date(+y, +mo - 1).toLocaleDateString("en-US", { month: "short", year: "numeric" }));
+  }
+  state.chart.data.labels = labels;
+  state.chart.data.datasets[0].data = you;
+  state.chart.data.datasets[1].data = hold;
+  state.chart.data.datasets[2].data = cash;
+  state.chart.update();
+
+  // summary card
+  const fy = you[you.length - 1], fh = hold[hold.length - 1], fc = cash[cash.length - 1];
+  $("windowLabel").textContent = windowTitle(startIdx);
+  $("sumWindow").textContent = windowTitle(startIdx);
+  $("sumYou").textContent  = fmt(fy);
+  $("sumHold").textContent = fmt(fh);
+  $("sumCash").textContent = fmt(fc);
+  $("cellYou").classList.toggle("win", fy >= fh && fy >= fc);
+  $("cellHold").classList.toggle("win", fh > fy && fh >= fc);
+  $("cellCash").classList.toggle("win", fc > fy && fc > fh);
+
+  const gapPct = ((fy - fh) / fh) * 100;
+  $("sumGap").innerHTML = gapPct >= 0
+    ? "Your timing beat buy-and-hold by <b>+" + gapPct.toFixed(1) + "%</b> in this window — try dragging the slider and see how often that survives."
+    : "Your timing ended <b>" + gapPct.toFixed(1) + "%</b> behind simply staying invested.";
+
+  // honest supporting stat: how often buy-and-hold wins across ALL windows
+  let holdWins = 0, windows = 0;
+  for (let s = 0; s <= MAX_START; s += 3) {   // every 3 months keeps it snappy
+    windows++;
+    const u = simulatePortfolio(state.decisions, s);
+    if (buyAndHoldSeries(s)[WINDOW_MONTHS] >= u[WINDOW_MONTHS]) holdWins++;
+  }
+  $("sumStat").textContent = "With your exact 5 decisions, buy-and-hold matches or beats you in " +
+    Math.round(100 * holdWins / windows) + "% of all 5-year windows since 2005.";
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SHARE — html2canvas renders the summary card to a downloadable PNG
+   ═══════════════════════════════════════════════════════════════════════ */
+async function shareResult() {
+  const btn = $("btnShare");
+  btn.disabled = true;
+  btn.textContent = "Rendering…";
+  try {
+    const canvas = await html2canvas($("summaryCard"), { scale: 2, backgroundColor: null });
+    const link = document.createElement("a");
+    link.download = "my-long-game-result.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+    btn.textContent = "Saved! Share it 📸";
+  } catch (err) {
+    console.error(err);
+    btn.textContent = "Couldn't render — try again";
+  } finally {
+    btn.disabled = false;
+    setTimeout(() => { btn.textContent = "Share your result 📸"; }, 2500);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   WIRING + RESET
+   ═══════════════════════════════════════════════════════════════════════ */
+function startGame() {
+  state.scenarios = drawFiveScenarios();
+  state.step = -1;
+  state.decisions = [];
+  state.equity = START_EQUITY;
+  state.cash = START_CASH;
+  renderScenario();
+}
+
+$("btnStart").addEventListener("click", startGame);
+$("btnBuy").addEventListener("click", () => decide("buy"));
+$("btnHold").addEventListener("click", () => decide("hold"));
+$("btnSell").addEventListener("click", () => decide("sell"));
+$("btnContinue").addEventListener("click", nextStep);
+$("windowSlider").addEventListener("input", (e) => renderReveal(+e.target.value));
+$("btnShare").addEventListener("click", shareResult);
+$("btnAgain").addEventListener("click", startGame);   // re-randomizes 5 new scenarios
+</script>
+</body>
+</html>
