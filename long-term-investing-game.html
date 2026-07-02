@@ -13,7 +13,8 @@
   ──────────────────────────
   The file is organized top-to-bottom as:
 
-    1. <style>            All CSS. Design tokens (navy/gold palette) live in
+    1. <style>            All CSS. Design tokens (2026 CG Brand Primary
+                          palette, extracted from CG_Template.pptx) live in
                           :root custom properties.
     2. <body> markup      One <section> per phase; JS toggles the .active
                           class to move between phases with a fade/slide
@@ -72,24 +73,27 @@
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
   :root {
-    --navy: #003865;
-    --navy-soft: #1c4f7c;
-    --gold: #C9A961;
-    --gold-soft: #e6d5ae;
+    /* 2026 CG Brand Primary palette (from CG_Template.pptx theme) */
+    --navy: #083469;        /* dk2 — primary dark */
+    --navy-soft: #0068AE;   /* lt2 — secondary blue */
+    --accent: #008074;      /* accent1 — CG teal */
+    --accent-soft: #D0EAE9; /* accent2 — light teal */
     --ink: #1d2733;
-    --gray: #667487;
-    --gray-light: #eef1f5;
-    --line: #dde3ea;
+    --gray: #5f7081;
+    --gray-light: #E6ECEE;  /* accent3 */
+    --line: #d3dde1;
+    --sage: #8FADB2;        /* accent4 */
     --bg: #ffffff;
-    --green: #2e7d4f;
+    --green: #00D190;       /* accent6 — bright green, used for "winner" highlights */
     --red: #b3402e;
     --radius: 16px;
-    --shadow: 0 10px 30px rgba(0, 40, 80, .10), 0 2px 8px rgba(0, 40, 80, .06);
+    --shadow: 0 10px 30px rgba(8, 52, 105, .10), 0 2px 8px rgba(8, 52, 105, .06);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  [hidden] { display: none !important; }  /* beat any display rule on hidden elements */
   html { -webkit-text-size-adjust: 100%; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: Arial, Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     background: linear-gradient(175deg, #f7f9fb 0%, #eef2f6 100%);
     color: var(--ink);
     min-height: 100vh;
@@ -110,7 +114,7 @@
   .brandbar .logo {
     font-weight: 700; color: var(--navy); letter-spacing: .02em; font-size: 15px;
   }
-  .brandbar .logo span { color: var(--gold); }
+  .brandbar .logo span { color: var(--accent); }
   .tracker {
     background: var(--navy); color: #fff; border-radius: 999px;
     padding: 7px 16px; font-size: 13px; font-weight: 600;
@@ -123,7 +127,7 @@
   .card {
     background: var(--bg); border-radius: var(--radius);
     box-shadow: var(--shadow); padding: 32px 28px;
-    border-top: 4px solid var(--gold);
+    border-top: 4px solid var(--accent);
   }
   @media (max-width: 480px) { .card { padding: 24px 18px; } }
 
@@ -151,7 +155,7 @@
   .btn:active { transform: scale(.98); }
   .btn-primary { background: var(--navy); color: #fff; box-shadow: 0 6px 16px rgba(0,56,101,.28); }
   .btn-primary:hover { background: var(--navy-soft); }
-  .btn-gold { background: var(--gold); color: #fff; box-shadow: 0 6px 16px rgba(201,169,97,.35); }
+  .btn-gold { background: var(--accent); color: #fff; box-shadow: 0 6px 16px rgba(0,128,116,.35); }
   .btn-gold:hover { filter: brightness(1.05); }
   .btn-ghost { background: var(--gray-light); color: var(--navy); }
   .btn-ghost:hover { background: var(--line); }
@@ -162,7 +166,7 @@
   .decision-grid .btn small { display: block; font-weight: 400; font-size: 11.5px; opacity: .8; margin-top: 3px; }
   .btn-buy  { background: var(--navy); color: #fff; }
   .btn-buy:hover { background: var(--navy-soft); }
-  .btn-hold { background: var(--gold); color: #fff; }
+  .btn-hold { background: var(--accent); color: #fff; }
   .btn-hold:hover { filter: brightness(1.05); }
   .btn-sell { background: #fff; color: var(--navy); border: 2px solid var(--line); }
   .btn-sell:hover { border-color: var(--navy); }
@@ -171,12 +175,12 @@
   /* ── Scenario story card ───────────────────────────────────────────── */
   .progress { display: flex; gap: 7px; margin-bottom: 18px; align-items: center; }
   .progress .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--line); transition: background .3s; }
-  .progress .dot.done { background: var(--gold); }
+  .progress .dot.done { background: var(--accent); }
   .progress .dot.now { background: var(--navy); transform: scale(1.25); }
   .progress .label { margin-left: auto; font-size: 12px; color: var(--gray); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
 
   .badge-practice {
-    display: inline-block; background: var(--gold-soft); color: #7a5f22;
+    display: inline-block; background: var(--accent-soft); color: #005c53;
     font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
     border-radius: 999px; padding: 4px 12px; margin-bottom: 12px;
   }
@@ -188,18 +192,18 @@
   .story { font-size: 19px; line-height: 1.6; color: var(--ink); margin-bottom: 18px; }
   @media (max-width: 480px) { .story { font-size: 17.5px; } }
   .tie-in {
-    background: var(--gray-light); border-left: 3px solid var(--gold);
+    background: var(--gray-light); border-left: 3px solid var(--accent);
     border-radius: 0 10px 10px 0; padding: 11px 14px; font-size: 14px; color: var(--gray);
   }
   .tie-in b { color: var(--navy); display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 2px; }
 
   /* Tutorial hint tooltip */
   .hint {
-    position: relative; margin-top: 14px; background: #fdf8ec;
-    border: 1px solid var(--gold-soft); border-radius: 10px;
-    padding: 11px 14px; font-size: 13.5px; color: #6b5a2b;
+    position: relative; margin-top: 14px; background: #eef7f6;
+    border: 1px solid var(--accent-soft); border-radius: 10px;
+    padding: 11px 14px; font-size: 13.5px; color: #14554e;
   }
-  .hint b { color: #7a5f22; }
+  .hint b { color: #005c53; }
 
   /* ── Outcome interstitial ──────────────────────────────────────────── */
   .outcome-emoji { font-size: 40px; margin-bottom: 8px; }
@@ -212,10 +216,10 @@
 
   .slider-block { margin: 14px 0 22px; }
   .slider-block label { font-size: 13px; font-weight: 700; color: var(--navy); display: flex; justify-content: space-between; margin-bottom: 6px; }
-  .slider-block label output { color: var(--gold); }
+  .slider-block label output { color: var(--accent); }
   input[type=range] {
     width: 100%; appearance: none; -webkit-appearance: none; height: 8px; border-radius: 99px;
-    background: linear-gradient(90deg, var(--navy) 0%, var(--gold) 100%); outline: none; cursor: grab;
+    background: linear-gradient(90deg, var(--navy) 0%, var(--accent) 100%); outline: none; cursor: grab;
   }
   input[type=range]:active { cursor: grabbing; }
   input[type=range]::-webkit-slider-thumb {
@@ -229,21 +233,22 @@
   .slider-hint { font-size: 12.5px; color: var(--gray); text-align: center; margin-top: 7px; }
 
   .summary {
-    background: linear-gradient(160deg, var(--navy) 0%, #06416f 60%, #0a4a7a 100%);
+    background: linear-gradient(160deg, var(--navy) 0%, #0b4585 55%, #0068AE 130%);
     color: #fff; border-radius: var(--radius); padding: 26px 24px; margin-top: 20px;
   }
-  .summary h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .1em; color: var(--gold); margin-bottom: 14px; }
+  .summary h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .1em; color: var(--accent-soft); margin-bottom: 14px; }
   .final-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
   @media (max-width: 480px) { .final-grid { grid-template-columns: 1fr; } }
   .final-cell { background: rgba(255,255,255,.08); border-radius: 12px; padding: 12px 12px 10px; }
-  .final-cell.win { outline: 2px solid var(--gold); }
+  .final-cell.win { outline: 2px solid var(--green); }
   .final-cell span { display: block; font-size: 11.5px; opacity: .75; margin-bottom: 3px; }
   .final-cell b { font-size: 19px; letter-spacing: .01em; }
   .gap-line { font-size: 15px; margin-bottom: 14px; }
-  .gap-line b { color: var(--gold); }
+  .gap-line b.pos { color: var(--green); }
+  .gap-line b.neg { color: #FFB3A0; }
   .takeaway { font-size: 16.5px; line-height: 1.55; font-style: italic; border-top: 1px solid rgba(255,255,255,.18); padding-top: 14px; }
   .principle { margin-top: 12px; font-size: 12.5px; opacity: .78; }
-  .principle b { color: var(--gold); font-weight: 600; }
+  .principle b { color: var(--accent-soft); font-weight: 600; }
 
   .reveal-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
   .reveal-actions .btn { flex: 1 1 200px; width: auto; }
@@ -313,7 +318,7 @@
       <p class="muted">Your same 5 choices, replayed against 20 years of real market history. Drag the slider to start your 5-year journey in any year — including 2008.</p>
 
       <div class="chart-box"><canvas id="revealChart"></canvas></div>
-      <p class="legend-note"><span style="color:var(--gold);font-weight:700">━ You</span> &nbsp;·&nbsp; <span style="color:var(--navy);font-weight:700">━ Buy &amp; hold</span> &nbsp;·&nbsp; <span style="color:#8a97a8;font-weight:700">┄ All cash (2%)</span></p>
+      <p class="legend-note"><span style="color:#008074;font-weight:700">━ You</span> &nbsp;·&nbsp; <span style="color:var(--navy);font-weight:700">━ Buy &amp; hold</span> &nbsp;·&nbsp; <span style="color:#8FADB2;font-weight:700">┄ All cash (2%)</span></p>
 
       <div class="slider-block">
         <label>Your 5-year window <output id="windowLabel"></output></label>
@@ -786,11 +791,11 @@ function buildChart() {
   state.chart = new Chart($("revealChart"), {
     type: "line",
     data: { labels: [], datasets: [
-      { label: "You", data: [], borderColor: "#C9A961", backgroundColor: "rgba(201,169,97,.12)",
+      { label: "You", data: [], borderColor: "#008074", backgroundColor: "rgba(0,128,116,.12)",
         borderWidth: 3, pointRadius: 0, pointHitRadius: 12, tension: .25, fill: false },
-      { label: "Buy & hold", data: [], borderColor: "#003865", backgroundColor: "rgba(0,56,101,.10)",
+      { label: "Buy & hold", data: [], borderColor: "#083469", backgroundColor: "rgba(8,52,105,.10)",
         borderWidth: 3, pointRadius: 0, pointHitRadius: 12, tension: .25, fill: false },
-      { label: "All cash (2%)", data: [], borderColor: "#8a97a8", borderDash: [6, 5],
+      { label: "All cash (2%)", data: [], borderColor: "#8FADB2", borderDash: [6, 5],
         borderWidth: 2, pointRadius: 0, pointHitRadius: 12, tension: 0, fill: false }
     ]},
     options: {
@@ -800,14 +805,14 @@ function buildChart() {
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: "#003865", titleFont: { weight: "600" },
+          backgroundColor: "#083469", titleFont: { weight: "600" },
           callbacks: { label: (c) => " " + c.dataset.label + ": " + fmt(c.parsed.y) }
         }
       },
       scales: {
-        x: { grid: { display: false }, ticks: { maxTicksLimit: 6, color: "#667487" } },
-        y: { grid: { color: "#eef1f5" },
-             ticks: { color: "#667487", callback: (v) => "$" + (v / 1000) + "k" } }
+        x: { grid: { display: false }, ticks: { maxTicksLimit: 6, color: "#5f7081" } },
+        y: { grid: { color: "#E6ECEE" },
+             ticks: { color: "#5f7081", callback: (v) => "$" + (v / 1000) + "k" } }
       }
     }
   });
@@ -842,8 +847,8 @@ function renderReveal(startIdx) {
 
   const gapPct = ((fy - fh) / fh) * 100;
   $("sumGap").innerHTML = gapPct >= 0
-    ? "Your timing beat buy-and-hold by <b>+" + gapPct.toFixed(1) + "%</b> in this window — try dragging the slider and see how often that survives."
-    : "Your timing ended <b>" + gapPct.toFixed(1) + "%</b> behind simply staying invested.";
+    ? "Your timing beat buy-and-hold by <b class=\"pos\">+" + gapPct.toFixed(1) + "%</b> in this window — try dragging the slider and see how often that survives."
+    : "Your timing ended <b class=\"neg\">" + gapPct.toFixed(1) + "%</b> behind simply staying invested.";
 
   // honest supporting stat: how often buy-and-hold wins across ALL windows
   let holdWins = 0, windows = 0;
