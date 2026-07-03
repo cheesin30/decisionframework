@@ -30,7 +30,11 @@ These were each discovered the hard way, sometimes via the user's real device te
 
 ## 3. The live architecture (what the tool currently does)
 
-The tool is a **guided 4-step wizard**: **Details → Touchpoints → Resources → Share & QR**. Step 1 collects **firm name** + **workshop completion date**; those two values drive everything downstream. Session-detail inputs stay in the DOM across steps so export/QR logic can always read them.
+The tool is a **guided 4-step wizard**: **Details → Resources → Touchpoints → Share & QR**. Step 1 collects **firm name** + **workshop completion date**; those two values drive everything downstream. Session-detail inputs stay in the DOM across steps so export/QR logic can always read them.
+
+- **Step 2 (Resources)** leads with **"Import a materials pack (Europe / Asia)"** — a `.json` (produced by `exportSettings()`, imported by `importSettings()`) that embeds the region's resource files *and* the touchpoint layout, so a consultant loads a cohort's materials in one click. Import does **not** overwrite the firm/date from Step 1 (those aren't in the pack). Individual add/swap still available.
+- **Step 3 (Touchpoints)** is where they fine-tune the pre-loaded touchpoints.
+- **Step 4 (Share)** can **auto-upload** the `.ics` + `.json` to SharePoint via an ingest flow (see below), instead of a local download.
 
 **Primary delivery = QR → pre-filled Microsoft Form → Power Automate emails/creates the calendar.** Diagram:
 
@@ -56,6 +60,8 @@ On **Step 4 (Share & QR)** the QR is **auto-generated with no pasting/clicking**
 **Two export buttons on Step 4:**
 - **Download the .ics** — `downloadICS()` → `assembleIcs()` (no urlMap) → **embeds** the attached files as `ATTACH;ENCODING=BASE64`. (Embedding was regressed once when link-mode was introduced; it is restored — keep it.)
 - **Download flow data (.json)** — `downloadFlowJson()` / `buildFlowJson()` → a plain array Flow A consumes with **standard, free** actions. Each element: `{subject, start, end, timeZone, description, attachments:[{"@odata.type":"#microsoft.graph.fileAttachment", name, contentType, contentBytes}]}`. The `attachments` shape is exactly what Create event (V4) wants — paste `item()?['attachments']` straight in, no transform. **This is the no-premium path and the one to use.**
+
+**Auto-upload to SharePoint (Step 4, `uploadToSharePoint()`):** POSTs `{folder, icsFileName, icsBase64, jsonFileName, jsonBase64}` as `text/plain` (avoids a CORS preflight the Power Automate request trigger can't answer) to a pasted **ingest-flow URL** ("Flow B" = HTTP-trigger → Create file ×2 in SharePoint). Manual Download buttons remain as fallback. **Caveats (documented in the guide):** the HTTP-request trigger is likely **premium**; and PA request triggers send no CORS headers, so the browser can't read the response — the tool says "sent, verify in SharePoint." Not yet testable end-to-end from here (browser side verified against a mock; the PA/SharePoint round-trip is the user's to confirm).
 
 Other Share options are tucked under "Other ways to share" (kept, not primary): landing page (`buildLandingPage()` — one self-contained HTML bundling calendar+files), signed-link QR (Azure SAS / S3 / GCS / SharePoint recognised and left byte-exact), and GitHub auto-publish (only if policy ever allows public hosting).
 

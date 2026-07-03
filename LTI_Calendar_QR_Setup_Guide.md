@@ -81,6 +81,45 @@ Trigger: When a new response is submitted (Microsoft Forms)
 
 ---
 
+## Auto-upload to SharePoint ("Flow B") — so consultants don't download/upload by hand
+
+On **Share & QR**, the tool has an **Upload to SharePoint** button. Instead of downloading the `.ics`/`.json` and dropping them in SharePoint manually, it **POSTs both files to a small "ingest" flow** you set up once ("Flow B"), which writes them into `/Capital Learning Hub/LTI/Generated ICS/`. The consultant just clicks Upload — nothing touches their desktop.
+
+**What the tool sends** (one HTTP POST, body is JSON as `text/plain`):
+```json
+{
+  "folder": "/Capital Learning Hub/LTI/Generated ICS/",
+  "icsFileName": "DBS_LTI_Follow_Up_2026-06-26.ics",
+  "icsBase64": "…base64 of the .ics…",
+  "jsonFileName": "DBS_LTI_Follow_Up_2026-06-26.json",
+  "jsonBase64": "…base64 of the .json…"
+}
+```
+
+### Build Flow B (a separate flow from Flow A)
+
+1. **New → Instant cloud flow → When a HTTP request is received.**
+2. Leave the request-body schema empty (the tool sends `text/plain`, so you'll parse it yourself in the next step).
+3. **Compose "Payload"** = expression `json(triggerBody())` — turns the posted text into an object.
+4. **SharePoint → Create file** (the `.ics`):
+   - **Site Address**: your Capital Learning Hub site
+   - **Folder Path**: `outputs('Payload')?['folder']`
+   - **File Name**: `outputs('Payload')?['icsFileName']`
+   - **File Content**: expression `base64ToBinary(outputs('Payload')?['icsBase64'])`
+5. **SharePoint → Create file** again (the `.json`): same, but `jsonFileName` / `base64ToBinary(outputs('Payload')?['jsonBase64'])`.
+6. **Save**, then copy the trigger's generated **HTTP POST URL**.
+7. In the tool → **Share & QR → "SharePoint upload flow (set once)"** → paste that URL, tick *Remember on this device*.
+
+Now clicking **Upload to SharePoint** drops both files in the folder, and Flow A picks them up on the next Form submission exactly as before.
+
+### Two honest caveats (please read)
+
+- **Licensing:** the **When a HTTP request is received** trigger is a **premium** Power Automate feature in most plans, just like *Execute JavaScript Code*. If your environment doesn't have premium, this auto-upload won't work — **use the "Or download the files manually" fallback** on the same screen (both buttons are still there), or ask your admin about premium / a Microsoft Graph upload instead. Confirm this before relying on it.
+- **No success confirmation in the browser:** Power Automate's request trigger doesn't return CORS headers, so the browser **cannot read the flow's response**. The tool therefore says *"Upload request sent — verify in SharePoint,"* which is expected, not an error. After clicking Upload, glance at the `Generated ICS` folder to confirm both files landed. (This is a limitation of calling Power Automate from a browser, not of the tool.)
+- **Re-uploads / overwrites:** *Create file* doesn't overwrite — re-uploading the same firm+date can produce `…(1).ics`. If consultants will re-run a cohort, change the two Create file actions to a *"get file / if exists then Update file, else Create file"* pattern, or delete the old file first.
+
+---
+
 ## Recommended: use the tool's JSON export (no Power Automate premium needed)
 
 `Execute JavaScript Code` — used in the walkthrough further below — is a **premium** Power Automate action. If your environment doesn't have Power Automate premium licensing, or you'd simply rather not parse the `.ics` yourself, the tool can do that parsing for you and export the result as **plain JSON** instead:

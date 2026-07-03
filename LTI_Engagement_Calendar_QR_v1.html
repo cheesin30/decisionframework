@@ -823,6 +823,7 @@ var LS_REMINDERS=BUILD_ID+"-reminders";
 var LS_ASSETS=BUILD_ID+"-assets";
 var LS_GH=BUILD_ID+"-gh";
 var LS_FORM=BUILD_ID+"-form";
+var LS_UPLOAD=BUILD_ID+"-upload";
 var activeStep="details";
 var reminders=loadReminders();
 var assets=loadAssets();
@@ -852,8 +853,8 @@ function downloadBlob(blob,filename){var a=document.createElement("a");a.href=UR
 /* ---------- Wizard navigation ---------- */
 var STEPS=[
   {id:"details",label:"Details",min:"Details"},
-  {id:"touchpoints",label:"Touchpoints",min:"Steps"},
   {id:"resources",label:"Resources",min:"Files"},
+  {id:"touchpoints",label:"Touchpoints",min:"Steps"},
   {id:"share",label:"Share & QR",min:"Share"}
 ];
 function stepIndex(id){for(var i=0;i<STEPS.length;i++){if(STEPS[i].id===id)return i;}return 0;}
@@ -898,7 +899,7 @@ function render(){renderActive();}
 /* ---------- Sequence ---------- */
 function renderSequence(openId){
   $("mainPanel").innerHTML=
-  '<div class="pane-head"><h2>Touchpoints</h2><p class="pane-sub">Three follow-up moments after the workshop. Open any one to edit it or attach a resource.</p></div>'+
+  '<div class="pane-head"><h2>Touchpoints</h2><p class="pane-sub">Fine-tune the three follow-up moments. Open any one to edit its talking point, timing, or the resources attached to it (from the Resources step).</p></div>'+
   '<div class="section-head"><div></div>'+
   '<div class="actions"><button class="btn ghost small" onclick="addReminder()">+ Add touchpoint</button><button class="btn ghost small" onclick="resetReminders()">Reset to default</button></div></div>'+
   '<div class="sequence">'+reminders.map(reminderCard).join("")+'</div>';
@@ -964,11 +965,16 @@ function clearReminderAssets(id){var r=findReminder(id);if(!r)return;r.assetIds=
 /* ---------- Resource library ---------- */
 function renderAssets(){
   $("mainPanel").innerHTML=
-  '<div class="pane-head"><h2>Resources</h2><p class="pane-sub">Upload each resource, attach it to a touchpoint (previous step), and use <strong>Edit</strong> to paste its signed/direct-download link (Azure SAS, S3/GCS pre-signed, or SharePoint). That link is what advisers tap inside the calendar event.</p></div>'+
-  '<div class="section-head"><div></div>'+
-  '<div class="actions"><button class="btn primary small" onclick="uploadFileAssets()">+ Upload resources</button><button class="btn ghost small" onclick="exportSettings()">Export setup</button><button class="btn ghost small" onclick="importSettings()">Import setup</button></div></div>'+
-  (assets.length?'<div class="asset-grid">'+assets.map(assetCard).join("")+'</div>':'<div class="empty"><strong>No resources uploaded yet.</strong><br>Select <strong>Upload resources</strong> to add PDFs, PowerPoints, Word documents, charts or other workshop materials.</div>')+
-  '<details class="opts" style="margin-top:16px"><summary>About storage &amp; backups</summary><div class="opts-body"><p class="share-sub">File contents stay in this browser tab while you work; the touchpoint structure is saved automatically. Use <strong>Export setup</strong> to save your full configuration <em>including the resource files</em> in one .json — importing it later restores everything.</p></div></details>';
+  '<div class="pane-head"><h2>Resources</h2><p class="pane-sub">Start by importing the <strong>regional materials pack</strong> (Europe or Asia) — it loads the resource files and their touchpoint layout in one go. You\'ll fine-tune the touchpoints on the next step. You can also add or swap individual files here.</p></div>'+
+  '<div class="share-card">'+
+    '<h4 class="share-sec">Import a materials pack (Europe / Asia)</h4>'+
+    '<p class="share-sub">Pick the prepared <code>.json</code> pack for this cohort\'s region. It restores every resource file <em>and</em> the touchpoint structure, so you can jump straight to fine-tuning.</p>'+
+    '<button class="btn primary full" style="margin-top:10px" onclick="importSettings()"><span class="ico" aria-hidden="true">↑</span> Import materials pack (.json)</button>'+
+    '<details class="opts"><summary>Create / update a pack (admin)</summary><div class="opts-body"><p class="share-sub">Building the Europe/Asia pack once: upload the region\'s files, attach them to touchpoints, then export. The resulting <code>.json</code> embeds the files and layout — share it with consultants to import here.</p><button class="btn ghost full" onclick="exportSettings()"><span class="ico" aria-hidden="true">↓</span> Save current setup as a pack (.json)</button></div></details>'+
+  '</div>'+
+  '<div class="section-head" style="margin-top:18px"><div><h4 class="share-sec" style="margin:0">Resource files'+(assets.length?' ('+assets.length+')':'')+'</h4></div>'+
+  '<div class="actions"><button class="btn ghost small" onclick="uploadFileAssets()">+ Add / swap a file</button></div></div>'+
+  (assets.length?'<div class="asset-grid">'+assets.map(assetCard).join("")+'</div>':'<div class="empty"><strong>No resources yet.</strong><br>Import a materials pack above, or <strong>Add a file</strong> to build the set manually (PDFs, decks, charts…).</div>');
 }
 function assetCard(a){
   var linkedCount=0;reminders.forEach(function(r){if((r.assetIds||[]).indexOf(a.id)>=0)linkedCount++;});
@@ -1291,10 +1297,50 @@ async function downloadFlowJson(){
   setTab("share");
 }
 
+/* ---------- Auto-upload to SharePoint (via a Power Automate ingest flow) ---------- */
+var uploadState={url:"",remember:false};
+function loadUpload(){try{var s=JSON.parse(localStorage.getItem(LS_UPLOAD));if(s&&typeof s==="object"){for(var k in s){if(s.hasOwnProperty(k))uploadState[k]=s[k];}uploadState.remember=true;}}catch(e){}}
+function saveUpload(){try{if(uploadState.remember){localStorage.setItem(LS_UPLOAD,JSON.stringify(uploadState));}else{localStorage.removeItem(LS_UPLOAD);}}catch(e){}}
+function onUploadInput(){if($("uploadUrl"))uploadState.url=$("uploadUrl").value.trim();if($("uploadRemember"))uploadState.remember=$("uploadRemember").checked;saveUpload();}
+/* Build both files and POST them to the ingest flow, which drops them in SharePoint.
+   Uses a text/plain body so the browser sends it without a CORS preflight the Power
+   Automate request trigger can't answer. */
+async function uploadToSharePoint(){
+  onUploadInput();
+  var url=(uploadState.url||"").trim();
+  if(!/^https?:\/\//i.test(url)){toast("Paste your SharePoint upload-flow URL first");return;}
+  var icsBuilt=await assembleIcs();               /* embeds the selected files */
+  if(!icsBuilt)return;
+  var jsonBuilt=await buildFlowJson();
+  if(!jsonBuilt)return;
+  var progress=$("progress"),bar=$("bar"),pt=$("progressText");
+  if(progress){progress.style.display="block";bar.style.width="80%";pt.textContent="Uploading to SharePoint…";}
+  var payload={
+    folder:"/Capital Learning Hub/LTI/Generated ICS/",
+    icsFileName:icsFileName(),
+    icsBase64:bytesToBase64(new TextEncoder().encode(icsBuilt.parts.join(""))),
+    jsonFileName:flowJsonFileName(),
+    jsonBase64:bytesToBase64(new TextEncoder().encode(JSON.stringify(jsonBuilt.events)))
+  };
+  try{
+    var res=await fetch(url,{method:"POST",headers:{"Content-Type":"text/plain;charset=UTF-8"},body:JSON.stringify(payload)});
+    if(res&&(res.ok||res.status===202||res.status===200))showStatus("Uploaded "+payload.icsFileName+" and the .json to SharePoint. Give the flow a few seconds, then confirm both appear in the Generated ICS folder.");
+    else showStatus("Upload flow responded with HTTP "+(res?res.status:"?")+". Check the flow run history in Power Automate.");
+    toast("Uploaded to SharePoint");
+  }catch(e){
+    /* Power Automate request triggers don't send CORS headers, so a successful upload
+       often still throws when the browser tries to read the response. Treat as sent. */
+    showStatus("Upload request sent. The browser can't read Power Automate's response (normal — no CORS headers), so open the Generated ICS folder to confirm the two files arrived. If they didn't, re-check the flow URL.");
+    toast("Sent — verify in SharePoint");
+  }
+  if(!shareState.label)shareState.label=(icsBuilt.client?icsBuilt.client+" — ":"")+"Long-Term Investing Follow-Up";
+  if(progress){bar.style.width="100%";setTimeout(function(){progress.style.display="none";},1400);}
+}
+
 /* ---------- Setup backup ---------- */
 function base64ToBytes(b64){var binary=atob(b64),len=binary.length,bytes=new Uint8Array(len);for(var i=0;i<len;i++){bytes[i]=binary.charCodeAt(i);}return bytes;}
-async function exportSettings(){var files={};var missing=[];for(var i=0;i<assets.length;i++){var a=assets[i],f=sessionFiles[a.id];if(f){try{var bytes=await readBlobPart(f,0,f.size);files[a.id]={filename:f.name,mime:f.type||a.mime||"application/octet-stream",data:bytesToBase64(bytes)};}catch(e){missing.push(a.name);}}else{missing.push(a.name);}}var backup={version:BUILD_ID,exportedAt:new Date().toISOString(),reminders:reminders,assets:assets,files:files};downloadBlob(new Blob([JSON.stringify(backup,null,2)],{type:"application/json"}),"LTI_Calendar_Setup.json");if(missing.length){toast("Setup exported. "+missing.length+" resource(s) had no file loaded and were saved as metadata only.");}else{toast("Setup exported with resource files included");}}
-function importSettings(){var input=document.createElement("input");input.type="file";input.accept=".json,application/json";input.onchange=async function(){var file=input.files[0];if(!file)return;var text=await file.text();var backup;try{backup=JSON.parse(text);}catch(e){alert("That file is not a valid setup file.");return;}if(!backup.reminders||!backup.assets){alert("This file does not contain touchpoint and resource data.");return;}reminders=backup.reminders;assets=backup.assets;sessionFiles={};var restored=0,pending=0;if(backup.files){for(var id in backup.files){if(!backup.files.hasOwnProperty(id))continue;var rec=backup.files[id];try{var bytes=base64ToBytes(rec.data);var blob=new Blob([bytes],{type:rec.mime||"application/octet-stream"});var f=new File([blob],rec.filename||"resource",{type:rec.mime||"application/octet-stream"});sessionFiles[id]=f;restored++;}catch(e){pending++;}}}assets.forEach(function(a){if(!sessionFiles[a.id])pending++;});saveReminders();saveAssets();render();if(restored&&!pending){toast("Setup imported with "+restored+" resource file(s) restored. Ready to export.");}else if(restored){toast("Setup imported. "+restored+" file(s) restored, "+pending+" need reselecting.");}else{toast("Setup imported. Reselect files before exporting.");}};input.click();}
+async function exportSettings(){var files={};var missing=[];for(var i=0;i<assets.length;i++){var a=assets[i],f=sessionFiles[a.id];if(f){try{var bytes=await readBlobPart(f,0,f.size);files[a.id]={filename:f.name,mime:f.type||a.mime||"application/octet-stream",data:bytesToBase64(bytes)};}catch(e){missing.push(a.name);}}else{missing.push(a.name);}}var backup={version:BUILD_ID,exportedAt:new Date().toISOString(),reminders:reminders,assets:assets,files:files};downloadBlob(new Blob([JSON.stringify(backup,null,2)],{type:"application/json"}),"LTI_Materials_Pack.json");if(missing.length){toast("Pack saved. "+missing.length+" resource(s) had no file loaded and were saved as metadata only.");}else{toast("Materials pack saved with resource files included");}}
+function importSettings(){var input=document.createElement("input");input.type="file";input.accept=".json,application/json";input.onchange=async function(){var file=input.files[0];if(!file)return;var text=await file.text();var backup;try{backup=JSON.parse(text);}catch(e){alert("That file is not a valid setup file.");return;}if(!backup.reminders||!backup.assets){alert("That doesn't look like a materials pack — it has no touchpoint/resource data.");return;}reminders=backup.reminders;assets=backup.assets;sessionFiles={};var restored=0,pending=0;if(backup.files){for(var id in backup.files){if(!backup.files.hasOwnProperty(id))continue;var rec=backup.files[id];try{var bytes=base64ToBytes(rec.data);var blob=new Blob([bytes],{type:rec.mime||"application/octet-stream"});var f=new File([blob],rec.filename||"resource",{type:rec.mime||"application/octet-stream"});sessionFiles[id]=f;restored++;}catch(e){pending++;}}}assets.forEach(function(a){if(!sessionFiles[a.id])pending++;});saveReminders();saveAssets();render();if(restored&&!pending){toast("Materials pack imported — "+restored+" file(s) loaded. Next: fine-tune the touchpoints.");}else if(restored){toast("Pack imported. "+restored+" file(s) loaded, "+pending+" need reselecting.");}else{toast("Pack imported. Reselect files before exporting.");}};input.click();}
 
 /* ---------- Share by QR ---------- */
 var lastQRCanvas=null, lastQRSub="";
@@ -1571,13 +1617,22 @@ function renderShare(){
         '<h4 class="share-sec">QR → pre-filled Microsoft Form</h4>'+
         '<p class="share-sub">Built from the LTI follow-up Form with the <strong>firm + workshop date from Step 1</strong> pre-filled. The QR is generated automatically — no pasting, and it updates whenever Step 1 changes.</p>'+
         '<ol class="qr-steps" style="margin-top:8px">'+
-          '<li><span class="n">1</span><span><strong>Download the .ics</strong> and drop it in SharePoint <code>/Capital Learning Hub/LTI/Generated ICS/</code>, keeping the name shown, so Flow A can fetch it.</span></li>'+
+          '<li><span class="n">1</span><span><strong>Upload to SharePoint</strong> (below) — the <code>.ics</code> and <code>.json</code> go straight into <code>/Capital Learning Hub/LTI/Generated ICS/</code>, so nothing lands on your desktop.</span></li>'+
           '<li><span class="n">2</span><span>The QR on the right is ready for this firm + date — <strong>Download PNG</strong> or <strong>Print</strong> it.</span></li>'+
         '</ol>'+
-        '<button class="btn ghost full" style="margin-top:12px" onclick="downloadICS()"><span class="ico" aria-hidden="true">↓</span> Download the .ics (for SharePoint)</button>'+
-        '<p class="share-sub" style="margin-top:8px">Saves as <code id="icsName">…</code> — keep this exact name in the <code>Generated ICS</code> folder.</p>'+
-        '<button class="btn ghost full" style="margin-top:10px" onclick="downloadFlowJson()"><span class="ico" aria-hidden="true">↓</span> Download flow data (.json) — no Power Automate premium needed</button>'+
-        '<p class="share-sub" style="margin-top:8px">Saves as <code id="flowJsonName">…</code>. If Flow A doesn\'t have <strong>Execute JavaScript Code</strong> (a premium action) available, drop this alongside the <code>.ics</code> instead — it\'s already-parsed JSON, so Flow A just needs the standard, free <strong>Parse JSON</strong> action, no custom parsing or premium licensing.</p>'+
+        '<button class="btn primary full" style="margin-top:12px" onclick="uploadToSharePoint()"><span class="ico" aria-hidden="true">↑</span> Upload to SharePoint</button>'+
+        '<p class="share-sub" style="margin-top:8px">Sends <code id="icsName">…</code> and <code id="flowJsonName">…</code> to the <code>Generated ICS</code> folder via your upload flow.</p>'+
+        '<details class="opts" id="uploadSettings"><summary>SharePoint upload flow (set once)</summary><div class="opts-body">'+
+          '<p class="share-sub">Paste the URL of your Power Automate <em>ingest</em> flow (an HTTP-request-triggered flow that saves the posted files to SharePoint — see the setup guide). One-time setup.</p>'+
+          '<label for="uploadUrl">Upload flow URL</label>'+
+          '<input id="uploadUrl" type="url" placeholder="https://prod-…logic.azure.com/…/triggers/manual/paths/invoke?…sig=…" oninput="onUploadInput()">'+
+          '<label class="gh-remember"><input type="checkbox" id="uploadRemember" onchange="onUploadInput()"> Remember on this device</label>'+
+        '</div></details>'+
+        '<details class="opts"><summary>Or download the files manually</summary><div class="opts-body">'+
+          '<button class="btn ghost full" onclick="downloadICS()"><span class="ico" aria-hidden="true">↓</span> Download the .ics</button>'+
+          '<button class="btn ghost full" style="margin-top:10px" onclick="downloadFlowJson()"><span class="ico" aria-hidden="true">↓</span> Download flow data (.json)</button>'+
+          '<p class="share-sub" style="margin-top:8px">Then drop them into the <code>Generated ICS</code> folder yourself. The <code>.json</code> lets Flow A work with only standard (non-premium) Power Automate actions.</p>'+
+        '</div></details>'+
         '<div id="formPreview" class="link-preview"></div>'+
         '<details class="opts"><summary>Form settings (pre-configured)</summary><div class="opts-body">'+
           '<p class="share-sub">The follow-up Form link is already set and its firm/date fields mapped. Only change this if the Form itself changes.</p>'+
@@ -1637,6 +1692,9 @@ function renderShare(){
   $("ghPath").value=ghState.path||"lti-followup.ics";
   $("ghToken").value=ghState.token||"";
   $("ghRemember").checked=!!ghState.remember;
+  if($("uploadUrl"))$("uploadUrl").value=uploadState.url||"";
+  if($("uploadRemember"))$("uploadRemember").checked=!!uploadState.remember;
+  if($("uploadSettings")&&uploadState.url)$("uploadSettings").open=false;
   if(shareState.label)$("spName").value=shareState.label;
   $("formTpl").value=formState.template||"";
   refreshFormUI();
@@ -1647,7 +1705,7 @@ function renderShare(){
 
 /* ---------- Init ---------- */
 function init(){
-  loadGh();loadForm();
+  loadGh();loadForm();loadUpload();
   var today=new Date();
   $("startDate").value=today.getFullYear()+"-"+pad(today.getMonth()+1)+"-"+pad(today.getDate());
   document.addEventListener("keydown",function(e){if(e.key==="Escape"){var open=document.querySelector(".reminder-card.open");if(open){open.classList.remove("open");}}});
