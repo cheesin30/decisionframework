@@ -58,9 +58,11 @@
     • Hold     → no change.
   Each scenario represents one year. During the game, equity moves by the
   scenario's marketMoveNextPeriod and cash earns 2%/yr. In the reveal, the
-  SAME 5 recorded decisions are replayed against real monthly index history
-  (decision k applied at month k*12 of the chosen window), so the player can
-  drag the window anywhere in 2005-2025 and watch the outcome change.
+  SAME 5 recorded decisions are replayed against the illustrative monthly
+  index series (decision k applied at month k*12 of the chosen window), so
+  the player can drag the window anywhere in 2005-2025 and watch the outcome
+  change. A bridge line + compliance disclaimer make the story-vs-replay
+  distinction and the simulated nature of the data explicit on screen.
 
   OUT OF SCOPE: accounts, backend, analytics, real API calls, i18n.
   ═══════════════════════════════════════════════════════════════════════════
@@ -299,6 +301,7 @@
   .reveal-actions .btn { flex: 1 1 200px; width: auto; }
 
   .legend-note { font-size: 12.5px; color: var(--gray); text-align: center; }
+  .disclaimer { font-size: 11px; line-height: 1.5; color: var(--gray); margin-top: 14px; padding: 0 2px; }
 </style>
 </head>
 <body>
@@ -325,7 +328,7 @@
         <div class="stat"><b>$10,000</b><span>in savings (earning 2%)</span></div>
         <div class="stat"><b>5</b><span>decisions ahead of you</span></div>
       </div>
-      <p class="muted" style="margin-bottom:22px">Each time life knocks, you choose: <b>Buy</b>, <b>Hold</b>, or <b>Sell</b>. Buying or selling moves 25% of your portfolio between savings and the market. At the end, you'll see how your instincts compare to simply staying invested. Takes about 4 minutes.</p>
+      <p class="muted" style="margin-bottom:22px">Each time life knocks, you choose: <b>Buy</b>, <b>Hold</b>, or <b>Sell</b>. Buying or selling moves 25% of your portfolio between savings and the market. At the end, you'll see how your instincts compare to simply staying invested. Takes about 4 minutes. This is an educational simulation using illustrative data — not investment advice.</p>
       <button class="btn btn-primary" id="btnStart">Start with a practice round →</button>
     </div>
   </section>
@@ -364,7 +367,12 @@
   <section class="phase" id="phase-reveal">
     <div class="card">
       <h2>The reveal: your 5 decisions vs. simply staying invested</h2>
-      <p class="muted">Your same 5 choices, replayed against 20 years of real market history. Drag the slider to start your 5-year journey in any year — including 2008.</p>
+      <!-- Bridge line: the story rounds ran on one simulated market path, and
+           the replay below runs the same decisions through a different
+           (illustrative 20-year) series — so the player's dollar figure will
+           change. Saying so explicitly keeps the tool honest and heads off
+           the "why did my number change?" question mid-demo. -->
+      <p class="muted">In the game, your five choices turned $50,000 into <b id="bridgeStory"></b> along one simulated market path. Below, those same five instincts are replayed through an illustrative 20-year market history modeled on the MSCI World Index. Drag the slider to start your 5-year journey in any year — including 2008.</p>
 
       <!-- #shareCapture is the html2canvas export target: chart + summary
            together, so the visual proof travels with the numbers. The
@@ -389,9 +397,13 @@
             <div class="final-cell" id="cellCash"><span>All cash at 2%</span><b id="sumCash"></b></div>
           </div>
           <p class="gap-line" id="sumGap"></p>
-          <p class="takeaway">"Across every 5-year window in the last 20 years, staying invested outperformed timing the market."<span id="sumStat" style="display:block;font-style:normal;font-size:13px;opacity:.8;margin-top:6px"></span></p>
+          <p class="takeaway">"Across 5-year windows in this 20-year history, staying invested typically outperformed timing the market."<span id="sumStat" style="display:block;font-style:normal;font-size:13px;opacity:.8;margin-top:6px"></span></p>
           <p class="principle">Long-term perspective is the foundation of <b>The Capital System</b>.</p>
         </div>
+
+        <!-- Compliance disclaimer. Lives inside #shareCapture on purpose so
+             it travels with every exported/shared PNG, not just the page. -->
+        <p class="disclaimer">For illustrative and educational purposes only. Market data shown is simulated, modeled on the historical behavior of the MSCI World Index; it does not represent actual index returns or any Capital Group product. Hypothetical results do not reflect fees, expenses or taxes. Past performance is not predictive of results in future periods. This experience is not investment, tax or legal advice; investors should consider their own circumstances and consult a financial professional.</p>
       </div>
 
       <div class="reveal-actions">
@@ -836,6 +848,9 @@ function windowTitle(startIdx) {
 }
 
 function enterReveal() {
+  // Bridge line: show what the story rounds produced before switching to the
+  // historical replay, so the change in dollar figures is explicit.
+  $("bridgeStory").textContent = fmt(state.equity + state.cash);
   $("tracker").classList.remove("show");
   const slider = $("windowSlider");
   slider.max = MAX_START;
@@ -919,7 +934,7 @@ function renderReveal(startIdx) {
     if (buyAndHoldSeries(s)[WINDOW_MONTHS] >= u[WINDOW_MONTHS]) holdWins++;
   }
   $("sumStat").textContent = "With your exact 5 decisions, buy-and-hold matches or beats you in " +
-    Math.round(100 * holdWins / windows) + "% of all 5-year windows since 2005.";
+    Math.round(100 * holdWins / windows) + "% of the 5-year windows in this simulated 2005–2025 history.";
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
