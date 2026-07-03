@@ -815,7 +815,7 @@ function drawQR(text,scale){
 var BUILD_ID="lti-engagement-calendar-v16"; /* localStorage key — kept stable so saved setups survive upgrades */
 var APP_VERSION="v17"; /* display / ICS PRODID version */
 var DEFAULT_REMINDERS=[
-{"id":"day0","label":"Day 0","offsetValue":0,"offsetUnit":"days","enabled":true,"title":"Prepare, then capture one real client concern","description":"Review one resource and decide which client concern it helps you address. Then write down one real client objection in the client's own words — don't solve it yet, just capture it clearly so you can respond more effectively next time.","assetIds":[]},
+{"id":"day1","label":"Day 1","offsetValue":1,"offsetUnit":"days","enabled":true,"title":"Prepare, then capture one real client concern","description":"Review one resource and decide which client concern it helps you address. Then write down one real client objection in the client's own words — don't solve it yet, just capture it clearly so you can respond more effectively next time.","assetIds":[]},
 {"id":"week1","label":"Week 1","offsetValue":1,"offsetUnit":"weeks","enabled":true,"title":"Build one full response in your next conversation","description":"In your next conversation, work through the full loop: acknowledge the concern first, add one useful perspective from the workshop (inflation, compounding, volatility or time in market), then end with one clear, practical next step. Keep it simple — one insight, one example, one takeaway.","assetIds":[]},
 {"id":"month1","label":"Month 1","offsetValue":1,"offsetUnit":"months","enabled":true,"title":"Keep one habit and reinforce the core message","description":"Choose one behaviour to keep as part of your standard client preparation — a better discovery question, a strong metaphor, or always ending with a next step. Use a resource to reconnect clients to their long-term goals and reinforce the workshop's core message: staying invested matters more than trying to time every move.","assetIds":[]}
 ];
@@ -841,7 +841,16 @@ function flowJsonFileName(){return icsFileName().replace(/\.ics$/,".json");}
 function toast(msg){var t=$("toast");t.textContent=msg;t.style.display="block";clearTimeout(t._t);t._t=setTimeout(function(){t.style.display="none";},2300);}
 function saveReminders(){try{localStorage.setItem(LS_REMINDERS,JSON.stringify(reminders));}catch(e){}}
 function saveAssets(){try{localStorage.setItem(LS_ASSETS,JSON.stringify(assets));}catch(e){}}
-function loadReminders(){try{return JSON.parse(localStorage.getItem(LS_REMINDERS))||clone(DEFAULT_REMINDERS);}catch(e){return clone(DEFAULT_REMINDERS);}}
+function loadReminders(){
+  try{
+    var saved=JSON.parse(localStorage.getItem(LS_REMINDERS));
+    if(!saved)return clone(DEFAULT_REMINDERS);
+    /* Migrate the old stock first touchpoint (day-of-workshop) to day 1.
+       Only touches the untouched default shape, never a custom offset. */
+    saved.forEach(function(r){if(r.id==="day0"&&Number(r.offsetValue)===0&&r.offsetUnit==="days"){r.offsetValue=1;if(r.label==="Day 0")r.label="Day 1";}});
+    return saved;
+  }catch(e){return clone(DEFAULT_REMINDERS);}
+}
 function loadAssets(){try{return JSON.parse(localStorage.getItem(LS_ASSETS))||[];}catch(e){return [];}}
 function getAsset(id){for(var i=0;i<assets.length;i++){if(assets[i].id===id)return assets[i];}return null;}
 function findReminder(id){for(var i=0;i<reminders.length;i++){if(reminders[i].id===id)return reminders[i];}return null;}
