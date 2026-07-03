@@ -1337,6 +1337,80 @@ async function uploadToSharePoint(){
   if(progress){bar.style.width="100%";setTimeout(function(){progress.style.display="none";},1400);}
 }
 
+/* ---------- Save straight into the OneDrive-synced SharePoint folder ----------
+   No Power Automate needed: the consultant syncs the Generated ICS library once
+   (SharePoint's "Sync" button), picks that local folder here once, and from then
+   on "Save to SharePoint" writes both files into it — the OneDrive client uploads
+   them to the library automatically. Uses the File System Access API (Edge/Chrome);
+   the folder handle persists in IndexedDB so it's a one-time pick. */
+var FS_KEY="genIcsDir";
+var syncDirHandle=null;
+function fsSupported(){return typeof window.showDirectoryPicker==="function";}
+function idbKV(){return new Promise(function(res,rej){var r=indexedDB.open(BUILD_ID+"-fs",1);r.onupgradeneeded=function(){try{r.result.createObjectStore("kv");}catch(e){}};r.onsuccess=function(){res(r.result);};r.onerror=function(){rej(r.error);};});}
+function idbSet(k,v){return idbKV().then(function(db){return new Promise(function(res,rej){var tx=db.transaction("kv","readwrite");tx.objectStore("kv").put(v,k);tx.oncomplete=function(){res();};tx.onerror=function(){rej(tx.error);};});});}
+function idbGet(k){return idbKV().then(function(db){return new Promise(function(res,rej){var tx=db.transaction("kv","readonly");var rq=tx.objectStore("kv").get(k);rq.onsuccess=function(){res(rq.result);};rq.onerror=function(){rej(rq.error);};});});}
+function updateSyncFolderUI(){var el=$("syncFolderName");if(el)el.textContent=syncDirHandle?("Saving into: "+syncDirHandle.name):"No folder chosen yet — click “choose folder” once.";}
+async function restoreSyncFolder(){
+  if(syncDirHandle||!fsSupported()){updateSyncFolderUI();return;}
+  try{
+    var saved=await idbGet(FS_KEY);
+    if(saved&&saved.queryPermission&&(await saved.queryPermission({mode:"readwrite"}))==="granted")syncDirHandle=saved;
+    else if(saved)syncDirHandle=saved; /* permission re-confirmed on first save */
+  }catch(e){}
+  updateSyncFolderUI();
+}
+async function chooseSyncedFolder(){
+  if(!fsSupported()){alert("This browser can't write directly into a folder. Open the tool in Edge or Chrome, or use the manual downloads under “Other ways”.");return null;}
+  try{
+    var dir=await window.showDirectoryPicker({id:"lti-generated-ics",mode:"readwrite"});
+    syncDirHandle=dir;
+    try{await idbSet(FS_KEY,dir);}catch(e){}
+    updateSyncFolderUI();
+    toast("Folder set: "+dir.name);
+    return dir;
+  }catch(e){if(e&&e.name==="AbortError")return null;toast("Couldn't open the folder picker");return null;}
+}
+async function getSyncedFolder(){
+  if(!syncDirHandle)await restoreSyncFolder();
+  var dir=syncDirHandle;
+  if(dir&&dir.queryPermission){
+    try{
+      var q=await dir.queryPermission({mode:"readwrite"});
+      if(q!=="granted")q=await dir.requestPermission({mode:"readwrite"});
+      if(q!=="granted")dir=null;
+    }catch(e){dir=null;}
+  }
+  return dir||chooseSyncedFolder();
+}
+async function writeFileToDir(dir,name,blob){
+  var fh=await dir.getFileHandle(name,{create:true});
+  var w=await fh.createWritable();      /* truncates -> clean overwrite on re-save */
+  await w.write(blob);
+  await w.close();
+}
+async function saveToSharePoint(){
+  if(!fsSupported()){toast("Direct save needs Edge or Chrome — downloading instead");await downloadICS();await downloadFlowJson();return;}
+  var icsBuilt=await assembleIcs();               /* embeds the selected files */
+  if(!icsBuilt)return;
+  var jsonBuilt=await buildFlowJson();
+  if(!jsonBuilt)return;
+  var dir=await getSyncedFolder();
+  if(!dir)return;
+  var progress=$("progress"),bar=$("bar"),pt=$("progressText");
+  if(progress){progress.style.display="block";bar.style.width="85%";pt.textContent="Saving into the synced folder…";}
+  try{
+    await writeFileToDir(dir,icsFileName(),new Blob([icsBuilt.parts.join("")],{type:"text/calendar;charset=utf-8"}));
+    await writeFileToDir(dir,flowJsonFileName(),new Blob([JSON.stringify(jsonBuilt.events)],{type:"application/json"}));
+    showStatus("Saved "+icsFileName()+" and the .json into “"+(dir.name||"the synced folder")+"”. OneDrive will sync them up to the Generated ICS library in a few seconds — no Power Automate involved.");
+    toast("Saved — OneDrive is syncing to SharePoint");
+  }catch(e){
+    showStatus("Couldn't write to the folder ("+((e&&e.message)||e)+"). Click “choose folder” to re-pick the synced Generated ICS folder, or use the manual downloads under “Other ways”.");
+    toast("Save failed — see note");
+  }
+  if(!shareState.label)shareState.label=(icsBuilt.client?icsBuilt.client+" — ":"")+"Long-Term Investing Follow-Up";
+  if(progress){bar.style.width="100%";setTimeout(function(){progress.style.display="none";},1400);}
+}
+
 /* ---------- Setup backup ---------- */
 function base64ToBytes(b64){var binary=atob(b64),len=binary.length,bytes=new Uint8Array(len);for(var i=0;i<len;i++){bytes[i]=binary.charCodeAt(i);}return bytes;}
 async function exportSettings(){var files={};var missing=[];for(var i=0;i<assets.length;i++){var a=assets[i],f=sessionFiles[a.id];if(f){try{var bytes=await readBlobPart(f,0,f.size);files[a.id]={filename:f.name,mime:f.type||a.mime||"application/octet-stream",data:bytesToBase64(bytes)};}catch(e){missing.push(a.name);}}else{missing.push(a.name);}}var backup={version:BUILD_ID,exportedAt:new Date().toISOString(),reminders:reminders,assets:assets,files:files};downloadBlob(new Blob([JSON.stringify(backup,null,2)],{type:"application/json"}),"LTI_Materials_Pack.json");if(missing.length){toast("Pack saved. "+missing.length+" resource(s) had no file loaded and were saved as metadata only.");}else{toast("Materials pack saved with resource files included");}}
@@ -1617,21 +1691,22 @@ function renderShare(){
         '<h4 class="share-sec">QR → pre-filled Microsoft Form</h4>'+
         '<p class="share-sub">Built from the LTI follow-up Form with the <strong>firm + workshop date from Step 1</strong> pre-filled. The QR is generated automatically — no pasting, and it updates whenever Step 1 changes.</p>'+
         '<ol class="qr-steps" style="margin-top:8px">'+
-          '<li><span class="n">1</span><span><strong>Upload to SharePoint</strong> (below) — the <code>.ics</code> and <code>.json</code> go straight into <code>/Capital Learning Hub/LTI/Generated ICS/</code>, so nothing lands on your desktop.</span></li>'+
+          '<li><span class="n">1</span><span><strong>Save to SharePoint</strong> (below) — writes <code id="icsName">…</code> and <code id="flowJsonName">…</code> straight into your synced <code>Generated ICS</code> folder; OneDrive syncs them up automatically. Nothing lands loose on your desktop and no Power Automate is involved.</span></li>'+
           '<li><span class="n">2</span><span>The QR on the right is ready for this firm + date — <strong>Download PNG</strong> or <strong>Print</strong> it.</span></li>'+
         '</ol>'+
-        '<button class="btn primary full" style="margin-top:12px" onclick="uploadToSharePoint()"><span class="ico" aria-hidden="true">↑</span> Upload to SharePoint</button>'+
-        '<p class="share-sub" style="margin-top:8px">Sends <code id="icsName">…</code> and <code id="flowJsonName">…</code> to the <code>Generated ICS</code> folder via your upload flow.</p>'+
-        '<details class="opts" id="uploadSettings"><summary>SharePoint upload flow (set once)</summary><div class="opts-body">'+
-          '<p class="share-sub">Paste the URL of your Power Automate <em>ingest</em> flow (an HTTP-request-triggered flow that saves the posted files to SharePoint — see the setup guide). One-time setup.</p>'+
-          '<label for="uploadUrl">Upload flow URL</label>'+
-          '<input id="uploadUrl" type="url" placeholder="https://prod-…logic.azure.com/…/triggers/manual/paths/invoke?…sig=…" oninput="onUploadInput()">'+
-          '<label class="gh-remember"><input type="checkbox" id="uploadRemember" onchange="onUploadInput()"> Remember on this device</label>'+
+        '<button class="btn primary full" style="margin-top:12px" onclick="saveToSharePoint()"><span class="ico" aria-hidden="true">↑</span> Save to SharePoint</button>'+
+        '<p class="share-sub" style="margin-top:8px"><span id="syncFolderName">No folder chosen yet — click “choose folder” once.</span> <a href="#" onclick="chooseSyncedFolder();return false;">choose folder</a></p>'+
+        '<details class="opts"><summary>First-time setup (once, ~1 minute, no licences)</summary><div class="opts-body">'+
+          '<p class="share-sub">① In SharePoint, open <code>/Capital Learning Hub/LTI/Generated ICS/</code> and click <strong>Sync</strong> — the folder appears in File Explorer under your organisation\'s name. ② Back here, click <strong>choose folder</strong> and pick that synced folder. That\'s it: from now on <strong>Save to SharePoint</strong> is one click, and the OneDrive client uploads both files to the library within seconds. Needs Edge or Chrome.</p>'+
         '</div></details>'+
-        '<details class="opts"><summary>Or download the files manually</summary><div class="opts-body">'+
+        '<details class="opts"><summary>Other ways to get the files there</summary><div class="opts-body">'+
           '<button class="btn ghost full" onclick="downloadICS()"><span class="ico" aria-hidden="true">↓</span> Download the .ics</button>'+
           '<button class="btn ghost full" style="margin-top:10px" onclick="downloadFlowJson()"><span class="ico" aria-hidden="true">↓</span> Download flow data (.json)</button>'+
           '<p class="share-sub" style="margin-top:8px">Then drop them into the <code>Generated ICS</code> folder yourself. The <code>.json</code> lets Flow A work with only standard (non-premium) Power Automate actions.</p>'+
+          '<label for="uploadUrl" style="margin-top:14px">Or POST via an ingest flow (needs a premium HTTP trigger)</label>'+
+          '<input id="uploadUrl" type="url" placeholder="https://prod-…logic.azure.com/…/triggers/manual/paths/invoke?…sig=…" oninput="onUploadInput()">'+
+          '<label class="gh-remember"><input type="checkbox" id="uploadRemember" onchange="onUploadInput()"> Remember on this device</label>'+
+          '<button class="btn secondary full" style="margin-top:10px" onclick="uploadToSharePoint()"><span class="ico" aria-hidden="true">↑</span> Upload via ingest flow</button>'+
         '</div></details>'+
         '<div id="formPreview" class="link-preview"></div>'+
         '<details class="opts"><summary>Form settings (pre-configured)</summary><div class="opts-body">'+
@@ -1694,7 +1769,7 @@ function renderShare(){
   $("ghRemember").checked=!!ghState.remember;
   if($("uploadUrl"))$("uploadUrl").value=uploadState.url||"";
   if($("uploadRemember"))$("uploadRemember").checked=!!uploadState.remember;
-  if($("uploadSettings")&&uploadState.url)$("uploadSettings").open=false;
+  restoreSyncFolder();
   if(shareState.label)$("spName").value=shareState.label;
   $("formTpl").value=formState.template||"";
   refreshFormUI();

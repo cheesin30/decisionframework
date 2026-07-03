@@ -81,9 +81,29 @@ Trigger: When a new response is submitted (Microsoft Forms)
 
 ---
 
-## Auto-upload to SharePoint ("Flow B") — so consultants don't download/upload by hand
+## Getting the files into SharePoint automatically (no Power Automate needed)
 
-On **Share & QR**, the tool has an **Upload to SharePoint** button. Instead of downloading the `.ics`/`.json` and dropping them in SharePoint manually, it **POSTs both files to a small "ingest" flow** you set up once ("Flow B"), which writes them into `/Capital Learning Hub/LTI/Generated ICS/`. The consultant just clicks Upload — nothing touches their desktop.
+On **Share & QR**, the primary button is **Save to SharePoint**. It writes the `.ics` and `.json` **directly into the consultant's OneDrive-synced copy of the `Generated ICS` library**, and the OneDrive sync client uploads them to SharePoint within seconds. No download folder, no manual upload, **no Power Automate, no premium licence, no IT app registration**.
+
+### One-time setup per consultant (~1 minute)
+
+1. In the browser, open the SharePoint library `/Capital Learning Hub/LTI/Generated ICS/` and click **Sync** (top toolbar). The folder appears in File Explorer under the organisation's name (e.g. `Capital Group / Capital Learning Hub - Generated ICS`). This is the standard OneDrive sync — most corporate machines already have the client running.
+2. In the tool → **Share & QR** → click **choose folder** and pick that synced folder. The tool remembers it (a browser permission prompt may appear on first save after reopening — one click).
+
+From then on: **Save to SharePoint** = one click → both files are written with the correct `<Firm>_LTI_Follow_Up_<date>` names → OneDrive syncs them up → Flow A finds them on the next Form submission.
+
+**Notes:**
+- Needs **Edge or Chrome** (the File System Access API). On other browsers the button automatically falls back to downloading both files for a manual drop.
+- Re-saving the same firm+date **cleanly overwrites** the previous files (no `…(1).ics` duplicates).
+- The OneDrive sync client must be signed in and running — on managed corporate Windows machines it is.
+
+---
+
+## Alternative: POST to an ingest flow ("Flow B") — requires a premium trigger
+
+> Skip this if you don't have Power Automate premium — the synced-folder route above does the same job with no licence. This option remains under **"Other ways to get the files there"** for teams that prefer a server-side flow.
+
+The tool can instead **POST both files to a small "ingest" flow** you set up once ("Flow B"), which writes them into `/Capital Learning Hub/LTI/Generated ICS/`.
 
 **What the tool sends** (one HTTP POST, body is JSON as `text/plain`):
 ```json
@@ -108,13 +128,11 @@ On **Share & QR**, the tool has an **Upload to SharePoint** button. Instead of d
    - **File Content**: expression `base64ToBinary(outputs('Payload')?['icsBase64'])`
 5. **SharePoint → Create file** again (the `.json`): same, but `jsonFileName` / `base64ToBinary(outputs('Payload')?['jsonBase64'])`.
 6. **Save**, then copy the trigger's generated **HTTP POST URL**.
-7. In the tool → **Share & QR → "SharePoint upload flow (set once)"** → paste that URL, tick *Remember on this device*.
+7. In the tool → **Share & QR → "Other ways to get the files there"** → paste that URL into the ingest-flow field, tick *Remember on this device*, and use **Upload via ingest flow**.
 
-Now clicking **Upload to SharePoint** drops both files in the folder, and Flow A picks them up on the next Form submission exactly as before.
+### Caveats for this alternative
 
-### Two honest caveats (please read)
-
-- **Licensing:** the **When a HTTP request is received** trigger is a **premium** Power Automate feature in most plans, just like *Execute JavaScript Code*. If your environment doesn't have premium, this auto-upload won't work — **use the "Or download the files manually" fallback** on the same screen (both buttons are still there), or ask your admin about premium / a Microsoft Graph upload instead. Confirm this before relying on it.
+- **Licensing:** the **When a HTTP request is received** trigger is a **premium** Power Automate feature in most plans, just like *Execute JavaScript Code*. If your environment doesn't have premium, use the synced-folder route above instead.
 - **No success confirmation in the browser:** Power Automate's request trigger doesn't return CORS headers, so the browser **cannot read the flow's response**. The tool therefore says *"Upload request sent — verify in SharePoint,"* which is expected, not an error. After clicking Upload, glance at the `Generated ICS` folder to confirm both files landed. (This is a limitation of calling Power Automate from a browser, not of the tool.)
 - **Re-uploads / overwrites:** *Create file* doesn't overwrite — re-uploading the same firm+date can produce `…(1).ics`. If consultants will re-run a cohort, change the two Create file actions to a *"get file / if exists then Update file, else Create file"* pattern, or delete the old file first.
 
