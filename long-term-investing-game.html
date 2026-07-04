@@ -323,7 +323,22 @@
   .reveal-actions .btn { flex: 1 1 200px; width: auto; }
 
   .legend-note { font-size: 12.5px; color: var(--gray); text-align: center; }
+  .marker-note { font-size: 12px; color: var(--gray); text-align: center; margin-top: 4px; }
   .disclaimer { font-size: 11px; line-height: 1.5; color: var(--gray); margin-top: 14px; padding: 0 2px; }
+
+  /* Illustrative active-line toggle */
+  .active-toggle { display: flex; align-items: center; gap: 9px; margin-top: 16px;
+    font-size: 14px; font-weight: 600; color: var(--navy); cursor: pointer; }
+  .active-toggle input { width: 18px; height: 18px; accent-color: #831574; cursor: pointer; }
+  .active-toggle .illus { font-weight: 400; font-size: 12px; color: var(--gray); }
+
+  /* Compliant fund tie-in (no performance claim) */
+  .handoff { margin-top: 16px; background: var(--gray-light); border-radius: 12px;
+    border-left: 4px solid var(--accent); padding: 16px 18px; }
+  .handoff p { font-size: 14.5px; line-height: 1.5; color: var(--ink); margin-bottom: 8px; }
+  .handoff p b { color: var(--navy); }
+  .handoff-link { display: inline-block; font-size: 14px; font-weight: 700; color: var(--accent); text-decoration: none; }
+  .handoff-link:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -407,7 +422,8 @@
              The visually-hidden <table> below is the full data alternative. -->
         <div class="chart-box"><canvas id="revealChart" role="img" aria-label="Loading chart…"></canvas></div>
         <table id="chartTable" class="sr-only" aria-label="Portfolio value at the start and end of the selected window"></table>
-        <p class="legend-note"><span style="color:#008074;font-weight:700">━ You</span> &nbsp;·&nbsp; <span style="color:var(--navy);font-weight:700">━ Buy &amp; hold</span> &nbsp;·&nbsp; <span style="color:#8FADB2;font-weight:700">┄ All cash (2%)</span></p>
+        <p class="legend-note"><span style="color:#008074;font-weight:700">━ You</span> &nbsp;·&nbsp; <span style="color:var(--navy);font-weight:700">━ Buy &amp; hold</span> &nbsp;·&nbsp; <span style="color:#8FADB2;font-weight:700">┄ All cash (2%)</span> <span id="activeLegend" hidden>&nbsp;·&nbsp; <span style="color:#831574;font-weight:700">┄ Active (illustrative)</span></span></p>
+        <p class="marker-note">The markers on your line show each yearly decision — <b style="color:#b3402e">◆ sold</b>, <b style="color:#008074">▲ bought</b>, <b style="color:var(--navy)">● held</b>.</p>
 
         <div class="slider-block">
           <label>Your 5-year window <output id="windowLabel"></output></label>
@@ -429,7 +445,19 @@
 
         <!-- Compliance disclaimer. Lives inside #shareCapture on purpose so
              it travels with every exported/shared PNG, not just the page. -->
-        <p class="disclaimer">For illustrative and educational purposes only. Market data shown is simulated, modeled on the historical behavior of the MSCI World Index; it does not represent actual index returns or any Capital Group product. Hypothetical results do not reflect fees, expenses or taxes. Past performance is not predictive of results in future periods. This experience is not investment, tax or legal advice; investors should consider their own circumstances and consult a financial professional.</p>
+        <p class="disclaimer">For illustrative and educational purposes only. All lines shown are simulated, modeled on the historical behavior of the MSCI World Index; the "Active (illustrative)" line is a hypothetical lower-volatility approach and does NOT represent any actual fund, strategy, or Capital Group product or its performance. Hypothetical results do not reflect fees, expenses or taxes. Past performance is not predictive of results in future periods. This experience is not investment, tax or legal advice; investors should consider their own circumstances and consult a financial professional.</p>
+      </div>
+
+      <!-- Optional illustrative overlay. Kept OFF by default and clearly labelled
+           as hypothetical — it teaches the concept of a lower-volatility active
+           approach without depicting any real fund (see activeSeries + the
+           disclaimer above). -->
+      <label class="active-toggle"><input type="checkbox" id="activeToggle"> Show an actively managed approach <span class="illus">(illustrative concept — not a real fund)</span></label>
+
+      <!-- Compliant fund tie-in: a soft handoff, NOT a performance claim. -->
+      <div class="handoff">
+        <p><b>Staying invested is the hardest part of investing.</b> A financial professional — and Capital Group's actively managed funds — can help you hold the line through moments exactly like the ones you just played.</p>
+        <a class="handoff-link" href="https://www.capitalgroup.com" target="_blank" rel="noopener">Explore Capital Group →</a>
       </div>
 
       <div class="reveal-actions">
@@ -538,7 +566,7 @@ const SCENARIOS = [
     title: "Fuel prices just hit a record high",
     story: "Filling up your car cost $130 this morning. Groceries are up 15%. Your paycheck feels smaller every month. The news says inflation is \"out of control.\"",
     marketTieIn: "Inflation is at multi-decade highs and markets have gone nowhere for months.",
-    marketMoveNextPeriod: 2,
+    marketMoveNextPeriod: -6,
     emotionalPull: "fear + recency bias"
   },
   {
@@ -552,7 +580,7 @@ const SCENARIOS = [
     title: "Your company just announced layoffs",
     story: "You're safe — for now. But your best friend at work got the call this morning. Everyone's whispering. You wonder if you should build up cash \"just in case.\"",
     marketTieIn: "Recession chatter is everywhere and analysts keep cutting their forecasts.",
-    marketMoveNextPeriod: 8,
+    marketMoveNextPeriod: -6,
     emotionalPull: "fear + job insecurity"
   },
   {
@@ -573,7 +601,7 @@ const SCENARIOS = [
     title: "The news won't stop talking about war",
     story: "Every channel, every feed. Markets dropped 8% last week. Your mom is stockpiling canned goods. It genuinely feels like the world is ending.",
     marketTieIn: "Markets fell 8% last week and volatility is the highest it's been in years.",
-    marketMoveNextPeriod: 10,
+    marketMoveNextPeriod: -9,
     emotionalPull: "fear + catastrophizing"
   },
   {
@@ -594,7 +622,7 @@ const SCENARIOS = [
     title: "Interest rates just jumped",
     story: "Your mortgage rate is now double what it was. Your monthly payment stings. Everyone on TV is saying \"the party's over\" for stocks.",
     marketTieIn: "Rates doubled in a year, and pundits say the easy-money era for stocks is finished.",
-    marketMoveNextPeriod: 6,
+    marketMoveNextPeriod: -7,
     emotionalPull: "fear + recency bias"
   },
   {
@@ -729,6 +757,34 @@ function allCashSeries() {
   const values = [];
   for (let m = 0; m <= WINDOW_MONTHS; m++) {
     values.push(START_TOTAL * Math.pow(MONTHLY_CASH, m));
+  }
+  return values;
+}
+
+/**
+ * ILLUSTRATIVE ONLY — NOT A REAL FUND OR STRATEGY.
+ *
+ * A hypothetical "actively managed" line for the optional overlay. It takes
+ * the index's monthly moves at a lower beta (0.90) plus a small steady
+ * value-add, net — i.e. a lower-VOLATILITY path: it cushions the crashes and
+ * lags the raging bulls, ending near buy-and-hold with a smoother ride. This
+ * illustrates the CONCEPT of active/defensive management. It deliberately
+ * does NOT uniformly beat the index (that would be a performance claim), and
+ * it does not represent any actual Capital Group fund or its returns. The
+ * checkbox is off by default and the disclaimer spells this out.
+ */
+// beta 0.90 + a small per-month value-add tuned so the line beats buy-and-hold
+// in only ~46% of windows — it cushions crashes but lags strong bulls, so it
+// reads as a DIFFERENT risk profile, not a reliably-better one (which would be
+// an implicit performance claim).
+const ACTIVE_BETA = 0.90, ACTIVE_ALPHA = 0.0006;
+function activeSeries(startIdx) {
+  let v = START_TOTAL;
+  const values = [v];
+  for (let m = 1; m <= WINDOW_MONTHS; m++) {
+    const idxRet = MSCI_WORLD[startIdx + m].value / MSCI_WORLD[startIdx + m - 1].value - 1;
+    v *= (1 + ACTIVE_BETA * idxRet + ACTIVE_ALPHA);
+    values.push(v);
   }
   return values;
 }
@@ -908,6 +964,9 @@ function enterReveal() {
   const slider = $("windowSlider");
   slider.max = MAX_START;
   slider.value = DEFAULT_START;
+  // Reset the illustrative overlay to off for each fresh reveal.
+  $("activeToggle").checked = false;
+  $("activeLegend").hidden = true;
   buildChart();
   renderReveal(+slider.value);
   showPhase("phase-reveal");
@@ -923,7 +982,10 @@ function buildChart() {
       { label: "Buy & hold", data: [], borderColor: "#083469", backgroundColor: "rgba(8,52,105,.10)",
         borderWidth: 3, pointRadius: 0, pointHitRadius: 12, tension: .25, fill: false },
       { label: "All cash (2%)", data: [], borderColor: "#8FADB2", borderDash: [6, 5],
-        borderWidth: 2, pointRadius: 0, pointHitRadius: 12, tension: 0, fill: false }
+        borderWidth: 2, pointRadius: 0, pointHitRadius: 12, tension: 0, fill: false },
+      // Illustrative active line — hidden until the checkbox is ticked.
+      { label: "Active (illustrative)", data: [], borderColor: "#831574", borderDash: [3, 3],
+        borderWidth: 2, pointRadius: 0, pointHitRadius: 12, tension: .25, fill: false, hidden: true }
     ]},
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -933,7 +995,18 @@ function buildChart() {
         legend: { display: false },
         tooltip: {
           backgroundColor: "#083469", titleFont: { weight: "600" },
-          callbacks: { label: (c) => " " + c.dataset.label + ": " + fmt(c.parsed.y) }
+          callbacks: {
+            label: (c) => " " + c.dataset.label + ": " + fmt(c.parsed.y),
+            // On the "You" line, name the decision made at that year.
+            afterBody: (items) => {
+              const i = items[0].dataIndex;
+              if (i % 12 === 0 && i < WINDOW_MONTHS) {
+                const d = state.decisions[i / 12];
+                return "\nYour move: " + { buy: "Bought 25%", sell: "Sold 25%", hold: "Held" }[d];
+              }
+              return "";
+            }
+          }
         }
       },
       scales: {
@@ -959,6 +1032,25 @@ function renderReveal(startIdx) {
   state.chart.data.datasets[0].data = you;
   state.chart.data.datasets[1].data = hold;
   state.chart.data.datasets[2].data = cash;
+  state.chart.data.datasets[3].data = activeSeries(startIdx);
+
+  // Mark each yearly decision on the "You" line so the story choices are
+  // visible against the outcome: sell = red diamond, buy = teal triangle,
+  // hold = navy dot. Non-decision months stay invisible (radius 0).
+  const decColor = { buy: "#008074", sell: "#b3402e", hold: "#083469" };
+  const decShape = { buy: "triangle", sell: "rectRot", hold: "circle" };
+  const pr = [], ps = [], pbg = [];
+  for (let m = 0; m <= WINDOW_MONTHS; m++) {
+    const d = (m % 12 === 0 && m < WINDOW_MONTHS) ? state.decisions[m / 12] : null;
+    pr.push(d ? 6 : 0);
+    ps.push(d ? decShape[d] : "circle");
+    pbg.push(d ? decColor[d] : "transparent");
+  }
+  Object.assign(state.chart.data.datasets[0], {
+    pointRadius: pr, pointStyle: ps, pointBackgroundColor: pbg,
+    pointBorderColor: "#fff", pointBorderWidth: 1.5,
+    pointHoverRadius: pr.map((r) => (r ? 8 : 0))
+  });
   state.chart.update();
 
   // summary card
@@ -1058,6 +1150,16 @@ $("btnContinue").addEventListener("click", nextStep);
 $("windowSlider").addEventListener("input", (e) => renderReveal(+e.target.value));
 $("btnShare").addEventListener("click", shareResult);
 $("btnAgain").addEventListener("click", startGame);   // re-randomizes 5 new scenarios
+
+// Illustrative active-line overlay: toggle the hidden dataset + its legend entry.
+$("activeToggle").addEventListener("change", (e) => {
+  const on = e.target.checked;
+  if (state.chart) {
+    state.chart.data.datasets[3].hidden = !on;
+    state.chart.update();
+  }
+  $("activeLegend").hidden = !on;
+});
 </script>
 </body>
 </html>
