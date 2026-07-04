@@ -47,18 +47,21 @@
 
   GAME MECHANICS
   ──────────────
-  The player starts with $50,000: $40,000 in a global index fund and $10,000
-  in savings (cash). Starting with some cash makes "Buy" a real option.
-    • Buy 25%  → moves 25% of current TOTAL portfolio value from cash into
-                 equity (clamped to available cash).
+  The player starts with $50,000 FULLY invested in the index (no cash on the
+  sidelines), which is exactly where the buy-and-hold benchmark starts too.
     • Sell 25% → moves 25% of current total value from equity into cash
                  (clamped to available equity).
+    • Buy 25%  → moves 25% of total value from cash back into equity
+                 (clamped to available cash; disabled while fully invested).
     • Hold     → no change.
-  The "Buy & hold" benchmark is the SAME 80/20 starting mix left untouched
-  (see buyAndHoldSeries): it starts from the player's own allocation, not a
-  100%-equity portfolio, so the gap between "You" and the benchmark measures
-  only TIMING (reacting to the events), never allocation. A pure-hold player
-  ties the benchmark exactly.
+  Because the player and the "Buy & hold" benchmark begin identically at 100%
+  equity, the gap between "You" and the benchmark measures ONLY timing: you
+  can never hold more than 100% equity, so the only way to beat buy-and-hold
+  is to sell before a fall and buy back before a rise. A pure-hold player
+  ties the benchmark exactly, and (per the data) active reacting beats it in
+  well under a third of windows and loses on average — the intended lesson.
+  This is why the game is framed around the temptation to SELL in fear: that
+  is the only emotional error a fully-invested investor can actually make.
   Each scenario represents one year. During the game, equity moves by the
   scenario's marketMoveNextPeriod and cash earns 2%/yr. In the reveal, the
   SAME 5 recorded decisions are replayed against the illustrative monthly
@@ -343,11 +346,11 @@
       <h1>You have $50,000 invested.<br>Over the next 5 years, life is going to test you.</h1>
       <p class="lede">Not with charts. With phone calls from your dad. With your neighbor's new Tesla. With a baby, a layoff, a wedding.</p>
       <div class="stat-row">
-        <div class="stat"><b>$40,000</b><span>in a global index fund</span></div>
-        <div class="stat"><b>$10,000</b><span>in savings (earning 2%)</span></div>
+        <div class="stat"><b>$50,000</b><span>in a global index fund</span></div>
+        <div class="stat"><b>100%</b><span>invested — nothing on the sidelines</span></div>
         <div class="stat"><b>5</b><span>decisions ahead of you</span></div>
       </div>
-      <p class="muted" style="margin-bottom:22px">Each time life knocks, you choose: <b>Buy</b>, <b>Hold</b>, or <b>Sell</b>. Buying or selling moves 25% of your portfolio between savings and the market. At the end, you'll see how your instincts compare to simply staying invested. Takes about 4 minutes. This is an educational simulation using illustrative data — not investment advice.</p>
+      <p class="muted" style="margin-bottom:22px">Each time life knocks, you choose: <b>Hold</b> and stay invested, or <b>Sell</b> — pulling 25% of your money out into cash. Once you've stepped out, you can <b>Buy</b> back in. At the end, you'll see how your instincts compared to simply staying invested. Takes about 4 minutes. This is an educational simulation using illustrative data — not investment advice.</p>
       <button class="btn btn-primary" id="btnStart">Start with a practice round →</button>
     </div>
   </section>
@@ -366,7 +369,7 @@
         <button class="btn btn-sell" id="btnSell">Sell 25%<small id="sellNote"></small></button>
       </div>
       <div class="hint" id="tutorialHint" hidden>
-        💡 <b>How it works:</b> <b>Buy</b> moves 25% of your portfolio's value from savings into the market. <b>Sell</b> moves 25% out of the market into savings. <b>Hold</b> does nothing. There's no "right answer" shown yet — go with your gut.
+        💡 <b>How it works:</b> You start fully invested. <b>Sell</b> pulls 25% of your money out of the market into cash. <b>Hold</b> stays put. Once you've sold, <b>Buy</b> moves money back in. There's no "right answer" shown yet — go with your gut.
       </div>
     </div>
   </section>
@@ -526,9 +529,9 @@ const SCENARIOS = [
   },
   {
     title: "Your neighbor just bought a Tesla",
-    story: "He made a killing on tech stocks this year. At the BBQ, he can't stop talking about it. You feel that itch. Everyone's making money except you.",
-    marketTieIn: "Tech stocks are up 40% this year and the rally is all anyone talks about.",
-    marketMoveNextPeriod: -20,
+    story: "He made a killing on tech stocks this year. At the BBQ, he won't stop talking about it. You're tempted to dump your boring index fund and chase what's hot. Everyone's making money except you.",
+    marketTieIn: "A handful of tech names are up 40% while your diversified fund plods along — the itch to chase is everywhere.",
+    marketMoveNextPeriod: 12,
     emotionalPull: "FOMO + greed"
   },
   {
@@ -560,11 +563,11 @@ const SCENARIOS = [
     emotionalPull: "loss aversion + life transition"
   },
   {
-    title: "Your rich uncle died and left you $20,000",
-    story: "You're grieving, but you also have unexpected cash. Your gut says put it all in — the market's been on a tear. What would he have done?",
-    marketTieIn: "The market's been rising for two straight years and every dip has bounced right back.",
-    marketMoveNextPeriod: -12,
-    emotionalPull: "overconfidence + windfall"
+    title: "An inheritance has you feeling untouchable",
+    story: "Your uncle's money has landed and your portfolio's near record highs. You feel clever — part of you wants to sell now, lock in the gains, and buy back in cheaper when it dips. What would he have done?",
+    marketTieIn: "The market's risen for two straight years, and calling the top has never felt more tempting.",
+    marketMoveNextPeriod: 10,
+    emotionalPull: "overconfidence + market timing"
   },
   {
     title: "The news won't stop talking about war",
@@ -575,9 +578,9 @@ const SCENARIOS = [
   },
   {
     title: "Your best friend started day trading",
-    story: "He shows you screenshots — up 40% in three months. He says \"the market's rigged for people who know how to play it.\" You know he doesn't, really.",
-    marketTieIn: "Fast-money trading is booming, and slow index funds suddenly feel ancient.",
-    marketMoveNextPeriod: -5,
+    story: "He shows you screenshots — up 40% in three months. \"The market's rigged for people who just buy and hold,\" he says. You're tempted to pull money out of your fund and try trading it yourself.",
+    marketTieIn: "Fast-money trading is booming, and your slow index fund suddenly feels ancient.",
+    marketMoveNextPeriod: 8,
     emotionalPull: "FOMO + social proof"
   },
   {
@@ -624,9 +627,9 @@ const SCENARIOS = [
   },
   {
     title: "Crypto is all your cousin talks about",
-    story: "He made $50k last year. He's got a YouTube channel now. He tells you \"boomers invest in index funds — real money is in crypto.\" You feel behind.",
-    marketTieIn: "Speculative assets are quadrupling while your index fund plods along at single digits.",
-    marketMoveNextPeriod: -8,
+    story: "He made $50k last year and has a YouTube channel now. \"Boomers invest in index funds — real money's in crypto,\" he says. You're tempted to cash out your fund and jump in. You feel behind.",
+    marketTieIn: "Speculative coins are quadrupling while your index fund plods along at single digits — the FOMO is relentless.",
+    marketMoveNextPeriod: 10,
     emotionalPull: "FOMO + social pressure"
   },
   {
@@ -659,9 +662,9 @@ const TUTORIAL = {
    comes from these three. No hidden adjustments.
    ═══════════════════════════════════════════════════════════════════════ */
 const START_TOTAL  = 50000;   // total starting money
-const START_EQUITY = 40000;   // starts in the index fund
-const START_CASH   = 10000;   // starts in savings
-const CASH_RATE    = 0.02;    // savings yield, annual
+const START_EQUITY = 50000;   // 100% invested in the index fund at the start
+const START_CASH   = 0;       // no cash on the sidelines — matches the benchmark
+const CASH_RATE    = 0.02;    // yield on any cash you move to the sidelines, annual
 const ACTION_SIZE  = 0.25;    // Buy/Sell moves 25% of current total value
 const WINDOW_MONTHS = 60;     // 5-year decision window
 const MONTHLY_CASH = Math.pow(1 + CASH_RATE, 1 / 12); // 2%/yr compounded monthly
@@ -703,16 +706,17 @@ function simulatePortfolio(decisions, startIdx) {
 }
 
 /**
- * Buy-and-hold benchmark: the SAME starting 80/20 mix ($40k index + $10k
- * savings), left completely alone for five years.
+ * Buy-and-hold benchmark: the full $50,000 left fully invested in the index
+ * for five years, untouched.
  *
- * This deliberately starts from the player's allocation, not a 100%-equity
- * portfolio. If the benchmark rode the full $50k in equity, a player who
- * simply held every round would still "lose" to it purely because their
- * $10k cash buffer earned 2% instead of the index return — a difference in
- * ALLOCATION, not timing. Matching the starting mix isolates the one thing
- * the game is actually about: whether reacting to the life events helped or
- * hurt. A pure-hold player now ties this line exactly (gap = 0%).
+ * Because the player also STARTS 100% invested, the benchmark and the player
+ * begin from the identical position. That makes the comparison a pure test
+ * of TIMING: the only way "You" can differ from buy-and-hold is by selling
+ * out and/or buying back in response to the life events. A player who holds
+ * every round ties this line exactly; and since you can never hold MORE than
+ * 100% equity, you can only beat it by successfully stepping out before a
+ * fall and back in before a rise — which the data shows is rare. There is no
+ * allocation/risk confound: "more stock in a rising market" is off the table.
  */
 function buyAndHoldSeries(startIdx) {
   // Equivalent to simulatePortfolio with five "hold" decisions, but kept as
@@ -806,11 +810,12 @@ function renderScenario() {
   $("scStory").textContent = sc.story;
   $("scTieIn").textContent = sc.marketTieIn;
 
-  // decision buttons show live dollar amounts; Buy greys out if no cash
+  // decision buttons show live dollar amounts; Buy greys out while fully
+  // invested (no cash to deploy), Sell greys out if nothing is left in.
   const total = state.equity + state.cash;
   const buyAmt  = Math.min(ACTION_SIZE * total, state.cash);
   const sellAmt = Math.min(ACTION_SIZE * total, state.equity);
-  $("buyNote").textContent  = buyAmt  > 0 ? "move " + fmt(buyAmt)  + " in"  : "no savings left";
+  $("buyNote").textContent  = buyAmt  > 0 ? "move " + fmt(buyAmt)  + " in"  : "you're fully invested";
   $("sellNote").textContent = sellAmt > 0 ? "move " + fmt(sellAmt) + " out" : "nothing invested";
   $("btnBuy").disabled  = buyAmt  <= 0;
   $("btnSell").disabled = sellAmt <= 0;
