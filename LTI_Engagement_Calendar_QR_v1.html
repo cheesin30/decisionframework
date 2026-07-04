@@ -246,6 +246,7 @@ footer.legal{font-family:"Helvetica Neue",Arial,sans-serif;margin-top:20px;text-
 .stepper li.done{color:rgba(255,255,255,.9)}
 .stepper li.done .sdot{background:var(--mint);color:var(--navy)}
 .stepper li.active{color:#fff;border-bottom-color:var(--mint)}
+.stepper li:focus-visible{outline:2px solid var(--mint);outline-offset:-3px}
 .stepper li.active .sdot{background:#fff;color:var(--navy)}
 .stepper li .slabel-min{display:none}
 .step-body{padding:26px 30px 6px;min-height:340px}
@@ -814,6 +815,7 @@ function drawQR(text,scale){
 
 var BUILD_ID="lti-engagement-calendar-v16"; /* localStorage key — kept stable so saved setups survive upgrades */
 var APP_VERSION="v17"; /* display / ICS PRODID version */
+var ATTACH_LIMIT=3*1024*1024; /* Outlook Create-event attachment ceiling (~3 MB) */
 var DEFAULT_REMINDERS=[
 {"id":"day1","label":"Day 1","offsetValue":1,"offsetUnit":"days","enabled":true,"title":"Prepare, then capture one real client concern","description":"Review one resource and decide which client concern it helps you address. Then write down one real client objection in the client's own words — don't solve it yet, just capture it clearly so you can respond more effectively next time.","assetIds":[]},
 {"id":"week1","label":"Week 1","offsetValue":1,"offsetUnit":"weeks","enabled":true,"title":"Build one full response in your next conversation","description":"In your next conversation, work through the full loop: acknowledge the concern first, add one useful perspective from the workshop (inflation, compounding, volatility or time in market), then end with one clear, practical next step. Keep it simple — one insight, one example, one takeaway.","assetIds":[]},
@@ -834,6 +836,8 @@ function clone(o){return JSON.parse(JSON.stringify(o));}
 function uid(prefix){return (prefix||"id")+"-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,7);}
 function escapeHtml(s){s=String(s==null?"":s);return s.replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function pad(n){return String(n).padStart(2,"0");}
+function pluralize(n,word){return n+" "+word+(Number(n)===1?"":"s");}
+function offsetText(r){var v=Number(r.offsetValue)||0;return pluralize(v,String(r.offsetUnit||"").replace(/s$/,""));}
 function slug(s){return String(s||"").trim().replace(/[^a-zA-Z0-9]+/g,"_").replace(/^_|_$/g,"")||"LTI";}
 /* Deterministic SharePoint filename Flow A looks up: <Firm>_LTI_Follow_Up_<YYYY-MM-DD>.ics */
 function icsFileName(){var firm=$("clientName")?$("clientName").value.trim():"";var date=$("startDate")?$("startDate").value:"";return slug(firm||"LTI")+"_LTI_Follow_Up_"+(date||"date")+".ics";}
@@ -871,14 +875,19 @@ function setText(id,v){var el=$(id);if(el)el.textContent=v;}
 /* Back-compat: existing code calls setTab('sequence'|'assets'|'preview'|'share'). */
 function setTab(tab){var map={sequence:"touchpoints",assets:"resources",preview:"details",share:"share",details:"details",touchpoints:"touchpoints",resources:"resources"};goStep(map[tab]||tab);}
 function goStep(id){activeStep=id;renderActive();try{window.scrollTo({top:0,behavior:"smooth"});}catch(e){}}
-function nextStep(){var i=stepIndex(activeStep);if(i<STEPS.length-1)goStep(STEPS[i+1].id);}
+var firmNudged=false;
+function nextStep(){
+  var i=stepIndex(activeStep);
+  if(activeStep==="details"&&!firmNudged&&$("clientName")&&!$("clientName").value.trim()){firmNudged=true;toast("Tip: add the adviser/firm name — the QR and filenames are built from it");}
+  if(i<STEPS.length-1)goStep(STEPS[i+1].id);
+}
 function prevStep(){var i=stepIndex(activeStep);if(i>0)goStep(STEPS[i-1].id);}
 function renderStepper(){
   var cur=stepIndex(activeStep);
   $("stepper").innerHTML=STEPS.map(function(s,i){
     var cls=i===cur?"active":(i<cur?"done":"");
     var mark=i<cur?"✓":(i+1);
-    return '<li class="'+cls+'" onclick="goStep(\''+s.id+'\')"><span class="sdot">'+mark+'</span><span class="slabel">'+escapeHtml(s.label)+'</span><span class="slabel-min">'+escapeHtml(s.min)+'</span></li>';
+    return '<li class="'+cls+'" role="button" tabindex="0"'+(i===cur?' aria-current="step"':'')+' aria-label="Step '+(i+1)+': '+escapeHtml(s.label)+'" onclick="goStep(\''+s.id+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();goStep(\''+s.id+'\');}"><span class="sdot" aria-hidden="true">'+mark+'</span><span class="slabel">'+escapeHtml(s.label)+'</span><span class="slabel-min">'+escapeHtml(s.min)+'</span></li>';
   }).join("");
 }
 function updateNav(){
@@ -927,7 +936,7 @@ function reminderCard(r){
     '<div class="reminder-main">'+
       '<div class="date-label" id="label-'+r.id+'">'+escapeHtml(r.label)+'</div>'+
       '<div><h3 id="title-view-'+r.id+'">'+escapeHtml(r.title)+'</h3>'+
-        '<p class="desc" id="summary-'+r.id+'">'+(r.enabled?"Active":"Disabled")+' · '+r.offsetValue+' '+r.offsetUnit+' after workshop · '+selectedNames.length+' resource(s)</p>'+
+        '<p class="desc" id="summary-'+r.id+'">'+(r.enabled?"Active":"Disabled")+' · '+offsetText(r)+' after workshop · '+pluralize(selectedNames.length,"resource")+'</p>'+
         '<div class="linked-list" id="linked-'+r.id+'">'+assetChips+'</div>'+
       '</div>'+
       '<div class="actions"><button class="btn ghost small" onclick="toggleReminder(\''+r.id+'\')">Edit</button><button class="btn danger small" onclick="deleteReminder(\''+r.id+'\')">Delete</button></div>'+
@@ -961,7 +970,7 @@ function updateReminderVisual(id){
   var r=findReminder(id);if(!r)return;var names=assetNames(r.assetIds);
   if($("label-"+id))$("label-"+id).textContent=r.label;
   if($("title-view-"+id))$("title-view-"+id).textContent=r.title;
-  if($("summary-"+id))$("summary-"+id).textContent=(r.enabled?"Active":"Disabled")+" · "+r.offsetValue+" "+r.offsetUnit+" after workshop · "+names.length+" resource(s)";
+  if($("summary-"+id))$("summary-"+id).textContent=(r.enabled?"Active":"Disabled")+" · "+offsetText(r)+" after workshop · "+pluralize(names.length,"resource");
   if($("linked-"+id))$("linked-"+id).innerHTML=names.length?names.map(function(n){return'<span class="linked-pill">'+escapeHtml(n)+'</span>';}).join(""):'<span class="chip">No resource linked</span>';
 }
 function toggleReminder(id){var c=$("rem-"+id);if(c)c.classList.toggle("open");}
@@ -989,25 +998,25 @@ function assetCard(a){
   var linkedCount=0;reminders.forEach(function(r){if((r.assetIds||[]).indexOf(a.id)>=0)linkedCount++;});
   var ready=!!sessionFiles[a.id];
   return '<article class="asset-card"><div><h3>'+escapeHtml(a.name)+'</h3><p>'+escapeHtml(a.description||"Adviser resource.")+'</p></div>'+
-    '<div class="meta"><span class="chip">'+escapeHtml(a.type||"File")+'</span><span class="chip">'+escapeHtml(a.filename||"")+'</span><span class="chip">'+formatBytes(a.size)+'</span>'+
-    '<span class="chip '+(ready?"ready":"warn")+'">'+(ready?"Ready":"Reselect file")+'</span><span class="chip">'+linkedCount+' touchpoint(s)</span>'+
+    '<div class="meta"><span class="chip">'+escapeHtml(a.type||"File")+'</span><span class="chip">'+escapeHtml(a.filename||"")+'</span><span class="chip'+(Number(a.size)>ATTACH_LIMIT?' warn':'')+'">'+formatBytes(a.size)+(Number(a.size)>ATTACH_LIMIT?" — too big to attach":"")+'</span>'+
+    '<span class="chip '+(ready?"ready":"warn")+'">'+(ready?"Ready":"Reselect file")+'</span><span class="chip">'+pluralize(linkedCount,"touchpoint")+'</span>'+
     '<span class="chip '+(a.url?"ready":"warn")+'">'+(a.url?"Hosted link set":"No hosted link")+'</span></div>'+
     '<div class="actions"><button class="btn secondary small" onclick="reselectAsset(\''+a.id+'\')">Reselect</button><button class="btn ghost small" onclick="editAsset(\''+a.id+'\')">Edit</button><button class="btn danger small" onclick="deleteAsset(\''+a.id+'\')">Delete</button></div></article>';
 }
 function uploadFileAssets(){
   var input=document.createElement("input");input.type="file";input.multiple=true;
-  input.onchange=function(){var files=[].slice.call(input.files);if(!files.length)return;files.forEach(function(file){var id=uid("asset");sessionFiles[id]=file;assets.unshift({id:id,kind:"sessionFile",name:displayNameFromFile(file),type:assetType(file),filename:file.name,mime:file.type||"application/octet-stream",description:"Uploaded resource. Held in memory for this session.",size:file.size,createdAt:new Date().toISOString()});});saveAssets();renderAssets();updateStats();toast(files.length+" resource"+(files.length===1?"":"s")+" uploaded");};
+  input.onchange=function(){var files=[].slice.call(input.files);if(!files.length)return;files.forEach(function(file){var id=uid("asset");sessionFiles[id]=file;persistFile(id,file);assets.unshift({id:id,kind:"sessionFile",name:displayNameFromFile(file),type:assetType(file),filename:file.name,mime:file.type||"application/octet-stream",description:"Uploaded resource. Stored in this browser.",size:file.size,createdAt:new Date().toISOString()});});saveAssets();renderAssets();updateStats();toast(files.length+" resource"+(files.length===1?"":"s")+" uploaded");};
   input.click();
 }
 function reselectAsset(id){
   var input=document.createElement("input");input.type="file";
-  input.onchange=function(){var file=input.files[0];if(!file)return;sessionFiles[id]=file;var a=getAsset(id);if(a){a.filename=file.name;a.mime=file.type||"application/octet-stream";a.type=assetType(file);a.size=file.size;a.name=a.name||displayNameFromFile(file);a.updatedAt=new Date().toISOString();saveAssets();renderAssets();toast("File reselected and ready");}};
+  input.onchange=function(){var file=input.files[0];if(!file)return;sessionFiles[id]=file;persistFile(id,file);var a=getAsset(id);if(a){a.filename=file.name;a.mime=file.type||"application/octet-stream";a.type=assetType(file);a.size=file.size;a.name=a.name||displayNameFromFile(file);a.updatedAt=new Date().toISOString();saveAssets();renderAssets();toast("File reselected and ready");}};
   input.click();
 }
 function editAsset(id){var a=getAsset(id);if(!a)return;var name=prompt("Resource display name",a.name);if(name===null)return;var type=prompt("Resource type / category",a.type||"File");if(type===null)return;var description=prompt("Short description",a.description||"");if(description===null)return;var link=prompt("Hosted link for advisers — the signed/direct-download URL for this file (Azure SAS, S3/GCS pre-signed, or SharePoint 'Anyone with the link'). Leave blank until you've uploaded it.",a.url||"");if(link===null)return;a.name=name;a.type=type;a.description=description;a.url=link.trim();saveAssets();renderAssets();toast("Resource updated");}
 /* Map of assetId -> hosted link, for events to reference (e.g. SharePoint). */
 function assetUrlMap(){var map={};assets.forEach(function(a){if(a.url)map[a.id]=a.url;});return map;}
-function deleteAsset(id){if(!confirm("Delete this resource and unlink it from all touchpoints?"))return;assets=assets.filter(function(a){return a.id!==id;});reminders.forEach(function(r){r.assetIds=(r.assetIds||[]).filter(function(x){return x!==id;});});delete sessionFiles[id];saveAssets();saveReminders();render();toast("Resource deleted");}
+function deleteAsset(id){if(!confirm("Delete this resource and unlink it from all touchpoints?"))return;assets=assets.filter(function(a){return a.id!==id;});reminders.forEach(function(r){r.assetIds=(r.assetIds||[]).filter(function(x){return x!==id;});});delete sessionFiles[id];removeStoredFile(id);saveAssets();saveReminders();render();toast("Resource deleted");}
 
 /* ---------- Scheduling ---------- */
 function addOffset(base,r){var d=new Date(base);if(r.offsetUnit==="days")d.setDate(d.getDate()+Number(r.offsetValue));if(r.offsetUnit==="weeks")d.setDate(d.getDate()+Number(r.offsetValue)*7);if(r.offsetUnit==="months")d.setMonth(d.getMonth()+Number(r.offsetValue));return d;}
@@ -1261,6 +1270,12 @@ async function buildFlowJson(){
     return null;
   }
 
+  /* Outlook's Create event rejects attachments over ~3 MB — warn now, not
+     days later when Flow A fails silently on a submission. */
+  var oversized=[],seenBig={};
+  rows.forEach(function(r){(r.assetIds||[]).forEach(function(id){if(seenBig[id])return;seenBig[id]=true;var a=getAsset(id),f=a?sessionFiles[a.id]:null;if(f&&f.size>ATTACH_LIMIT)oversized.push(a.name+" ("+formatBytes(f.size)+")");});});
+  if(oversized.length&&!confirm("These resources are over "+formatBytes(ATTACH_LIMIT)+", so Outlook will reject them when Flow A creates the invites:\n\n"+oversized.map(function(n){return "• "+n;}).join("\n")+"\n\nCompress or split them first (recommended), or continue anyway?"))return null;
+
   var progress=$("progress"),bar=$("bar"),pt=$("progressText");
   if(progress){progress.style.display="block";bar.style.width="10%";pt.textContent="Building flow data…";}
   var client=$("clientName").value.trim(),time=$("reminderTime").value||"09:00",tz=$("timezone").value,duration=Number($("duration").value)||15;
@@ -1358,6 +1373,27 @@ function fsSupported(){return typeof window.showDirectoryPicker==="function";}
 function idbKV(){return new Promise(function(res,rej){var r=indexedDB.open(BUILD_ID+"-fs",1);r.onupgradeneeded=function(){try{r.result.createObjectStore("kv");}catch(e){}};r.onsuccess=function(){res(r.result);};r.onerror=function(){rej(r.error);};});}
 function idbSet(k,v){return idbKV().then(function(db){return new Promise(function(res,rej){var tx=db.transaction("kv","readwrite");tx.objectStore("kv").put(v,k);tx.oncomplete=function(){res();};tx.onerror=function(){rej(tx.error);};});});}
 function idbGet(k){return idbKV().then(function(db){return new Promise(function(res,rej){var tx=db.transaction("kv","readonly");var rq=tx.objectStore("kv").get(k);rq.onsuccess=function(){res(rq.result);};rq.onerror=function(){rej(rq.error);};});});}
+function idbDel(k){return idbKV().then(function(db){return new Promise(function(res,rej){var tx=db.transaction("kv","readwrite");tx.objectStore("kv").delete(k);tx.oncomplete=function(){res();};tx.onerror=function(){rej(tx.error);};});});}
+
+/* ---------- Resource-file persistence (survives refresh) ----------
+   File bytes live in IndexedDB keyed by asset id, so a page reload
+   restores them instead of demanding a reselect. localStorage keeps
+   only the metadata, as before. */
+function persistFile(id,file){try{idbSet("file:"+id,{name:file.name,type:file.type||"",blob:file}).catch(function(){});}catch(e){}}
+function removeStoredFile(id){try{idbDel("file:"+id).catch(function(){});}catch(e){}}
+async function restoreFiles(){
+  var restored=0;
+  for(var i=0;i<assets.length;i++){
+    var a=assets[i];
+    if(sessionFiles[a.id])continue;
+    try{
+      var rec=await idbGet("file:"+a.id);
+      if(rec&&rec.blob){sessionFiles[a.id]=new File([rec.blob],rec.name||a.filename||"resource",{type:rec.type||a.mime||"application/octet-stream"});restored++;}
+    }catch(e){}
+  }
+  if(restored){render();}
+  return restored;
+}
 function updateSyncFolderUI(){var el=$("syncFolderName");if(el)el.textContent=syncDirHandle?("Saving into: "+syncDirHandle.name):"No folder chosen yet — click “choose folder” once.";}
 async function restoreSyncFolder(){
   if(syncDirHandle||!fsSupported()){updateSyncFolderUI();return;}
@@ -1423,7 +1459,7 @@ async function saveToSharePoint(){
 /* ---------- Setup backup ---------- */
 function base64ToBytes(b64){var binary=atob(b64),len=binary.length,bytes=new Uint8Array(len);for(var i=0;i<len;i++){bytes[i]=binary.charCodeAt(i);}return bytes;}
 async function exportSettings(){var files={};var missing=[];for(var i=0;i<assets.length;i++){var a=assets[i],f=sessionFiles[a.id];if(f){try{var bytes=await readBlobPart(f,0,f.size);files[a.id]={filename:f.name,mime:f.type||a.mime||"application/octet-stream",data:bytesToBase64(bytes)};}catch(e){missing.push(a.name);}}else{missing.push(a.name);}}var backup={version:BUILD_ID,exportedAt:new Date().toISOString(),reminders:reminders,assets:assets,files:files};downloadBlob(new Blob([JSON.stringify(backup,null,2)],{type:"application/json"}),"LTI_Materials_Pack.json");if(missing.length){toast("Pack saved. "+missing.length+" resource(s) had no file loaded and were saved as metadata only.");}else{toast("Materials pack saved with resource files included");}}
-function importSettings(){var input=document.createElement("input");input.type="file";input.accept=".json,application/json";input.onchange=async function(){var file=input.files[0];if(!file)return;var text=await file.text();var backup;try{backup=JSON.parse(text);}catch(e){alert("That file is not a valid setup file.");return;}if(!backup.reminders||!backup.assets){alert("That doesn't look like a materials pack — it has no touchpoint/resource data.");return;}reminders=backup.reminders;assets=backup.assets;sessionFiles={};var restored=0,pending=0;if(backup.files){for(var id in backup.files){if(!backup.files.hasOwnProperty(id))continue;var rec=backup.files[id];try{var bytes=base64ToBytes(rec.data);var blob=new Blob([bytes],{type:rec.mime||"application/octet-stream"});var f=new File([blob],rec.filename||"resource",{type:rec.mime||"application/octet-stream"});sessionFiles[id]=f;restored++;}catch(e){pending++;}}}assets.forEach(function(a){if(!sessionFiles[a.id])pending++;});saveReminders();saveAssets();render();if(restored&&!pending){toast("Materials pack imported — "+restored+" file(s) loaded. Next: fine-tune the touchpoints.");}else if(restored){toast("Pack imported. "+restored+" file(s) loaded, "+pending+" need reselecting.");}else{toast("Pack imported. Reselect files before exporting.");}};input.click();}
+function importSettings(){var input=document.createElement("input");input.type="file";input.accept=".json,application/json";input.onchange=async function(){var file=input.files[0];if(!file)return;var text=await file.text();var backup;try{backup=JSON.parse(text);}catch(e){alert("That file is not a valid setup file.");return;}if(!backup.reminders||!backup.assets){alert("That doesn't look like a materials pack — it has no touchpoint/resource data.");return;}reminders=backup.reminders;assets=backup.assets;sessionFiles={};var restored=0,pending=0;if(backup.files){for(var id in backup.files){if(!backup.files.hasOwnProperty(id))continue;var rec=backup.files[id];try{var bytes=base64ToBytes(rec.data);var blob=new Blob([bytes],{type:rec.mime||"application/octet-stream"});var f=new File([blob],rec.filename||"resource",{type:rec.mime||"application/octet-stream"});sessionFiles[id]=f;persistFile(id,f);restored++;}catch(e){pending++;}}}assets.forEach(function(a){if(!sessionFiles[a.id])pending++;});saveReminders();saveAssets();render();if(restored&&!pending){toast("Materials pack imported — "+restored+" file(s) loaded. Next: fine-tune the touchpoints.");}else if(restored){toast("Pack imported. "+restored+" file(s) loaded, "+pending+" need reselecting.");}else{toast("Pack imported. Reselect files before exporting.");}};input.click();}
 
 /* ---------- Share by QR ---------- */
 var lastQRCanvas=null, lastQRSub="";
@@ -1617,7 +1653,27 @@ function printQR(){
   var url=lastQRCanvas.toDataURL("image/png");
   var w=window.open("","_blank");
   if(!w){toast("Allow pop-ups to print the QR");return;}
-  w.document.write('<html><head><title>LTI Calendar QR</title><style>body{font-family:Arial,sans-serif;text-align:center;padding:50px;color:#083469}h1{font-size:20px;margin:0 0 6px}p{color:#5d6b7a;margin:0 0 28px;font-size:13px}img{width:300px;height:300px;border:1px solid #e3e9ef;border-radius:10px;padding:14px}.lab{margin-top:18px;font-size:15px;font-weight:bold}</style></head><body><h1>Long-Term Investing — Follow-Up</h1><p>Scan to add the calendar to your phone or Outlook</p><img src="'+url+'"><div class="lab">'+escapeHtml(name||"")+'</div></body></html>');
+  var firm=$("clientName")?$("clientName").value.trim():"";
+  w.document.write('<html><head><title>LTI Calendar QR</title><style>'+
+    'body{font-family:Arial,sans-serif;text-align:center;padding:44px;color:#083469}'+
+    'h1{font-size:22px;margin:0 0 4px}'+
+    '.sub{color:#5d6b7a;margin:0 0 24px;font-size:13px}'+
+    'img{width:280px;height:280px;border:1px solid #e3e9ef;border-radius:10px;padding:14px}'+
+    '.lab{margin-top:14px;font-size:15px;font-weight:bold}'+
+    'ol{display:inline-block;text-align:left;margin:26px auto 0;padding:0 0 0 22px;max-width:24em;color:#1c2833;font-size:14px;line-height:1.7}'+
+    '.fine{color:#9fb0bf;font-size:11px;margin-top:26px}'+
+    '</style></head><body>'+
+    '<h1>Long-Term Investing — Follow-Up</h1>'+
+    '<p class="sub">Capital Group · Capital Learning'+(firm?' · '+escapeHtml(firm):'')+'</p>'+
+    '<img src="'+url+'" alt="QR code">'+
+    '<div class="lab">'+escapeHtml(name||"")+'</div>'+
+    '<ol>'+
+    '<li>Scan the code with your phone camera.</li>'+
+    '<li>A short form opens, already filled in for your firm — tap <strong>Submit</strong>.</li>'+
+    '<li>Your three follow-up invites arrive in Outlook — <strong>accept</strong> them and the touchpoints (with the materials) are in your calendar.</li>'+
+    '</ol>'+
+    '<p class="fine">One scan per adviser. Questions? Contact your Capital Group representative.</p>'+
+    '</body></html>');
   w.document.close();setTimeout(function(){w.print();},300);
 }
 /* ---------- QR to a pre-filled Microsoft Form ---------- */
@@ -1794,6 +1850,7 @@ function init(){
   $("startDate").value=today.getFullYear()+"-"+pad(today.getMonth()+1)+"-"+pad(today.getDate());
   document.addEventListener("keydown",function(e){if(e.key==="Escape"){var open=document.querySelector(".reminder-card.open");if(open){open.classList.remove("open");}}});
   goStep("details");
+  restoreFiles().catch(function(){});   /* bring stored resource files back after a refresh */
 }
 try{init();}catch(e){console.error(e);var target=$("mainPanel");if(target)target.innerHTML='<div class="warning"><strong>Interactive mode did not load.</strong> Open this file in Chrome, Edge or Safari.</div>';}
 </script>
