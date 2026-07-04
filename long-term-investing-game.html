@@ -48,14 +48,17 @@
   GAME MECHANICS
   ──────────────
   The player starts with $50,000: $40,000 in a global index fund and $10,000
-  in savings (cash). Starting with some cash makes "Buy" a real option while
-  keeping every comparison fair — the buy-and-hold and all-cash benchmarks
-  start from the same $50,000 total.
+  in savings (cash). Starting with some cash makes "Buy" a real option.
     • Buy 25%  → moves 25% of current TOTAL portfolio value from cash into
                  equity (clamped to available cash).
     • Sell 25% → moves 25% of current total value from equity into cash
                  (clamped to available equity).
     • Hold     → no change.
+  The "Buy & hold" benchmark is the SAME 80/20 starting mix left untouched
+  (see buyAndHoldSeries): it starts from the player's own allocation, not a
+  100%-equity portfolio, so the gap between "You" and the benchmark measures
+  only TIMING (reacting to the events), never allocation. A pure-hold player
+  ties the benchmark exactly.
   Each scenario represents one year. During the game, equity moves by the
   scenario's marketMoveNextPeriod and cash earns 2%/yr. In the reveal, the
   SAME 5 recorded decisions are replayed against the illustrative monthly
@@ -143,10 +146,20 @@
   }
   .wrap { max-width: 720px; margin: 0 auto; padding: 24px 16px 64px; }
 
+  /* Visually hidden but available to screen readers (chart data table). */
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
   /* ── Phase transitions ─────────────────────────────────────────────── */
   .phase { display: none; opacity: 0; transform: translateY(14px); }
   .phase.active { display: block; animation: rise .45s ease forwards; }
   @keyframes rise { to { opacity: 1; transform: translateY(0); } }
+
+  /* Respect users who ask for less motion: no phase slide, no smooth scroll. */
+  @media (prefers-reduced-motion: reduce) {
+    .phase, .phase.active { animation: none; opacity: 1; transform: none; }
+    * { scroll-behavior: auto !important; }
+  }
 
   /* ── Header ────────────────────────────────────────────────────────── */
   .brandbar {
@@ -286,10 +299,16 @@
   .summary h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .1em; color: var(--accent-soft); margin-bottom: 14px; }
   .final-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
   @media (max-width: 480px) { .final-grid { grid-template-columns: 1fr; } }
-  .final-cell { background: rgba(255,255,255,.08); border-radius: 12px; padding: 12px 12px 10px; }
+  .final-cell { position: relative; background: rgba(255,255,255,.08); border-radius: 12px; padding: 12px 12px 10px; }
   .final-cell.win { outline: 2px solid var(--green); }
   .final-cell span { display: block; font-size: 11.5px; opacity: .75; margin-bottom: 3px; }
   .final-cell b { font-size: 19px; letter-spacing: .01em; }
+  /* Winner marker carries TEXT ("✓ Highest"), so the outcome isn't signalled
+     by color alone — shown only on the winning cell. Selectors are scoped to
+     .final-cell so they outrank the generic `.final-cell span` rule above. */
+  .final-cell .win-badge { display: none; margin-top: 6px; font-size: 10.5px;
+    font-weight: 700; letter-spacing: .04em; color: var(--green); opacity: 1; }
+  .final-cell.win .win-badge { display: inline-block; }
   .gap-line { font-size: 15px; margin-bottom: 14px; }
   .gap-line b.pos { color: var(--green); }
   .gap-line b.neg { color: #FFB3A0; }
@@ -380,7 +399,11 @@
            change) but gets temporarily hidden via .exporting during the
            actual capture — see shareResult(). -->
       <div id="shareCapture">
-        <div class="chart-box"><canvas id="revealChart"></canvas></div>
+        <!-- role="img" + a live-updated aria-label give screen-reader users
+             the chart's meaning; the <canvas> itself is invisible to them.
+             The visually-hidden <table> below is the full data alternative. -->
+        <div class="chart-box"><canvas id="revealChart" role="img" aria-label="Loading chart…"></canvas></div>
+        <table id="chartTable" class="sr-only" aria-label="Portfolio value at the start and end of the selected window"></table>
         <p class="legend-note"><span style="color:#008074;font-weight:700">━ You</span> &nbsp;·&nbsp; <span style="color:var(--navy);font-weight:700">━ Buy &amp; hold</span> &nbsp;·&nbsp; <span style="color:#8FADB2;font-weight:700">┄ All cash (2%)</span></p>
 
         <div class="slider-block">
@@ -392,9 +415,9 @@
         <div class="summary" id="summaryCard">
           <h3>Your result · <span id="sumWindow"></span></h3>
           <div class="final-grid">
-            <div class="final-cell" id="cellYou"><span>Your decisions</span><b id="sumYou"></b></div>
-            <div class="final-cell" id="cellHold"><span>Buy &amp; hold</span><b id="sumHold"></b></div>
-            <div class="final-cell" id="cellCash"><span>All cash at 2%</span><b id="sumCash"></b></div>
+            <div class="final-cell" id="cellYou"><span>Your decisions</span><b id="sumYou"></b><span class="win-badge">✓ Highest</span></div>
+            <div class="final-cell" id="cellHold"><span>Buy &amp; hold</span><b id="sumHold"></b><span class="win-badge">✓ Highest</span></div>
+            <div class="final-cell" id="cellCash"><span>All cash at 2%</span><b id="sumCash"></b><span class="win-badge">✓ Highest</span></div>
           </div>
           <p class="gap-line" id="sumGap"></p>
           <p class="takeaway">"Across 5-year windows in this 20-year history, staying invested typically outperformed timing the market."<span id="sumStat" style="display:block;font-style:normal;font-size:13px;opacity:.8;margin-top:6px"></span></p>
@@ -679,14 +702,22 @@ function simulatePortfolio(decisions, startIdx) {
   return values;
 }
 
-/** Buy-and-hold benchmark: the full $50,000 rides the index untouched. */
+/**
+ * Buy-and-hold benchmark: the SAME starting 80/20 mix ($40k index + $10k
+ * savings), left completely alone for five years.
+ *
+ * This deliberately starts from the player's allocation, not a 100%-equity
+ * portfolio. If the benchmark rode the full $50k in equity, a player who
+ * simply held every round would still "lose" to it purely because their
+ * $10k cash buffer earned 2% instead of the index return — a difference in
+ * ALLOCATION, not timing. Matching the starting mix isolates the one thing
+ * the game is actually about: whether reacting to the life events helped or
+ * hurt. A pure-hold player now ties this line exactly (gap = 0%).
+ */
 function buyAndHoldSeries(startIdx) {
-  const base = MSCI_WORLD[startIdx].value;
-  const values = [];
-  for (let m = 0; m <= WINDOW_MONTHS; m++) {
-    values.push(START_TOTAL * MSCI_WORLD[startIdx + m].value / base);
-  }
-  return values;
+  // Equivalent to simulatePortfolio with five "hold" decisions, but kept as
+  // its own function so the benchmark's meaning stays legible.
+  return simulatePortfolio(["hold", "hold", "hold", "hold", "hold"], startIdx);
 }
 
 /** All-cash counterfactual: did nothing, sat in savings at 2%. */
@@ -713,6 +744,14 @@ const state = {
 
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => "$" + Math.round(n).toLocaleString("en-US");
+const REDUCED_MOTION = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* Demo mode (?demo=1 in the URL): fixes the five scenarios and the opening
+   window so an advisor can rehearse a run and present it live without the
+   randomizer surprising them. Any non-demo session stays fully random. */
+const DEMO_MODE = new URLSearchParams(location.search).has("demo");
+// A curated fear/greed arc for the scripted demo (indices into SCENARIOS).
+const DEMO_SCENARIO_IDS = [0, 12, 14, 1, 6]; // dad panic, all-time high, pandemic, Tesla FOMO, inheritance
 
 function showPhase(id) {
   document.querySelectorAll(".phase").forEach((p) => p.classList.remove("active"));
@@ -720,10 +759,11 @@ function showPhase(id) {
   const el = $(id);
   void el.offsetWidth;
   el.classList.add("active");
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo({ top: 0, behavior: REDUCED_MOTION ? "auto" : "smooth" });
 }
 
 function drawFiveScenarios() {
+  if (DEMO_MODE) return DEMO_SCENARIO_IDS.map((i) => SCENARIOS[i]);
   const pool = SCENARIOS.slice();
   for (let i = pool.length - 1; i > 0; i--) {   // Fisher-Yates shuffle
     const j = Math.floor(Math.random() * (i + 1));
@@ -847,6 +887,14 @@ function windowTitle(startIdx) {
          MSCI_WORLD[startIdx + WINDOW_MONTHS].date.slice(0, 4);
 }
 
+// Open on the most recent 5-year window. It's on-message (staying invested
+// is clearly ahead) and shows every line growing, so the first impression is
+// positive rather than deflating. Deliberately NOT the 2007-2012 window: that
+// stretch ends at the post-GFC low, so "all cash" actually wins there — a
+// misleading opener for a tool whose whole point is that time in the market
+// beats timing. The slider hint invites users to explore 2008 themselves.
+const DEFAULT_START = MAX_START;
+
 function enterReveal() {
   // Bridge line: show what the story rounds produced before switching to the
   // historical replay, so the change in dollar figures is explicit.
@@ -854,9 +902,7 @@ function enterReveal() {
   $("tracker").classList.remove("show");
   const slider = $("windowSlider");
   slider.max = MAX_START;
-  // default to the most recent 5-year window; the hint below the slider
-  // invites the user to drag back to 2008 themselves
-  slider.value = MAX_START;
+  slider.value = DEFAULT_START;
   buildChart();
   renderReveal(+slider.value);
   showPhase("phase-reveal");
@@ -922,9 +968,31 @@ function renderReveal(startIdx) {
   $("cellCash").classList.toggle("win", fc > fy && fc > fh);
 
   const gapPct = ((fy - fh) / fh) * 100;
-  $("sumGap").innerHTML = gapPct >= 0
-    ? "Your timing beat buy-and-hold by <b class=\"pos\">+" + gapPct.toFixed(1) + "%</b> in this window — try dragging the slider and see how often that survives."
-    : "Your timing ended <b class=\"neg\">" + gapPct.toFixed(1) + "%</b> behind simply staying invested.";
+  if (Math.abs(gapPct) < 0.05) {
+    // A pure-hold player ties the benchmark exactly — say so rather than
+    // showing a meaningless "+0.0%".
+    $("sumGap").innerHTML = "You finished <b class=\"pos\">even</b> with buy-and-hold — leaving it alone and your choices landed in the same place here. Drag the slider to see where they diverge.";
+  } else if (gapPct > 0) {
+    $("sumGap").innerHTML = "Your timing beat buy-and-hold by <b class=\"pos\">+" + gapPct.toFixed(1) + "%</b> in this window — try dragging the slider and see how often that survives.";
+  } else {
+    $("sumGap").innerHTML = "Your timing ended <b class=\"neg\">" + gapPct.toFixed(1) + "%</b> behind simply leaving it alone.";
+  }
+
+  // ── Accessibility: keep the canvas's aria-label and the hidden data table
+  //    in sync with the chart, so screen-reader users get the same story. ──
+  const winner = fy >= fh && fy >= fc ? "your decisions"
+               : fh >= fc ? "buy-and-hold" : "all cash";
+  $("revealChart").setAttribute("aria-label",
+    "Line chart of portfolio value over " + windowTitle(startIdx) + ", all starting at " +
+    fmt(START_TOTAL) + ". Ending values: your decisions " + fmt(fy) +
+    ", buy-and-hold " + fmt(fh) + ", all cash " + fmt(fc) + ". Highest: " + winner + ".");
+  $("windowSlider").setAttribute("aria-valuetext", windowTitle(startIdx));
+  $("chartTable").innerHTML =
+    "<caption>Portfolio value, " + windowTitle(startIdx) + "</caption>" +
+    "<tr><th>Strategy</th><th>Start</th><th>End</th></tr>" +
+    "<tr><td>Your decisions</td><td>" + fmt(you[0]) + "</td><td>" + fmt(fy) + "</td></tr>" +
+    "<tr><td>Buy &amp; hold</td><td>" + fmt(hold[0]) + "</td><td>" + fmt(fh) + "</td></tr>" +
+    "<tr><td>All cash at 2%</td><td>" + fmt(cash[0]) + "</td><td>" + fmt(fc) + "</td></tr>";
 
   // honest supporting stat: how often buy-and-hold wins across ALL windows
   let holdWins = 0, windows = 0;
