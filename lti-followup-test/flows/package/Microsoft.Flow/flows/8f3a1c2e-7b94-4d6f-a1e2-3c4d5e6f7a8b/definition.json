@@ -78,9 +78,28 @@
                 "authentication": "@parameters('$authentication')"
               }
             },
-            "Send_advisor_email": {
+            "Get_howto_pdf": {
               "runAfter": {
                 "Get_file_content_using_path": ["Succeeded"]
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "GetFileContentByPath",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "https://capitalgroup.sharepoint.com/sites/CapitalLearningHub",
+                  "path": "/LTI/Assets/LTI_Calendar_How-To.pdf",
+                  "inferContentType": true
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            },
+            "Send_advisor_email": {
+              "runAfter": {
+                "Get_howto_pdf": ["Succeeded"]
               },
               "type": "OpenApiConnection",
               "inputs": {
@@ -92,13 +111,17 @@
                 "parameters": {
                   "emailMessage/To": "@body('Get_response_details')?['YourEmail']",
                   "emailMessage/Subject": "Your LTI workshop follow-up",
-                  "emailMessage/Body": "<div style=\"margin:0;padding:0;background:#f4f6f8;\"><table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f4f6f8;font-family:Arial,Helvetica,sans-serif;\"><tr><td align=\"center\" style=\"padding:24px 12px;\"><table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:600px;width:100%;background:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #e3e8ee;\"><tr><td style=\"background:#003DA5;padding:22px 28px;\"><span style=\"color:#ffffff;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;font-weight:bold;\">Capital Group &middot; Capital Learning</span></td></tr><tr><td style=\"padding:28px;color:#1c2833;font-size:16px;line-height:1.6;\"><p style=\"margin:0 0 16px;\">Hi @{body('Get_response_details')?['YourName']},</p><p style=\"margin:0 0 16px;\">Thanks for joining today's LTI workshop. Your follow-up pack is attached as a calendar file. Tap the .ics on your phone and the three client touchpoints &mdash; with talking points built into each event &mdash; will land in your calendar.</p><p style=\"margin:0 0 16px;padding:12px 16px;background:#eef4fb;border-left:4px solid #003DA5;border-radius:0 6px 6px 0;font-size:15px;\"><strong style=\"color:#003DA5;\">How to use it:</strong> Tap the .ics on your phone, or open it in Outlook on desktop.</p><p style=\"margin:0 0 16px;\">If you have any questions, just reply to this email and the Capital Learning team will help.</p><p style=\"margin:24px 0 4px;\">Warm regards,</p><p style=\"margin:0;font-weight:bold;color:#003DA5;\">Capital Learning Team</p></td></tr><tr><td style=\"background:#f4f6f8;padding:16px 28px;color:#5d6b78;font-size:12px;line-height:1.5;border-top:1px solid #e3e8ee;\">Capital Group &middot; Sent following your Long-Term Investing workshop.</td></tr></table></td></tr></table></div>",
+                  "emailMessage/Body": "<div style=\"margin:0;padding:0;background:#f4f6f8;\"><table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f4f6f8;font-family:Arial,Helvetica,sans-serif;\"><tr><td align=\"center\" style=\"padding:24px 12px;\"><table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:600px;width:100%;background:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #e3e8ee;\"><tr><td style=\"background:#003DA5;padding:22px 28px;\"><span style=\"color:#ffffff;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;font-weight:bold;\">Capital Group &middot; Capital Learning</span></td></tr><tr><td style=\"padding:28px;color:#1c2833;font-size:16px;line-height:1.6;\"><p style=\"margin:0 0 16px;\">Hi @{body('Get_response_details')?['YourName']},</p><p style=\"margin:0 0 16px;\">Thanks for joining today's LTI workshop. Your follow-up pack is attached as a calendar file. Tap the .ics on your phone and the three client touchpoints &mdash; with talking points built into each event &mdash; will land in your calendar.</p><p style=\"margin:0 0 16px;padding:12px 16px;background:#eef4fb;border-left:4px solid #003DA5;border-radius:0 6px 6px 0;font-size:15px;\"><strong style=\"color:#003DA5;\">How to use it:</strong> Tap the .ics on your phone, or open it in Outlook on desktop. New to calendar files? Open the attached <strong>How-To guide (PDF)</strong> for step-by-step help on phone and desktop.</p><p style=\"margin:0 0 16px;\">If you have any questions, just reply to this email and the Capital Learning team will help.</p><p style=\"margin:24px 0 4px;\">Warm regards,</p><p style=\"margin:0;font-weight:bold;color:#003DA5;\">Capital Learning Team</p></td></tr><tr><td style=\"background:#f4f6f8;padding:16px 28px;color:#5d6b78;font-size:12px;line-height:1.5;border-top:1px solid #e3e8ee;\">Capital Group &middot; Sent following your Long-Term Investing workshop.</td></tr></table></td></tr></table></div>",
                   "emailMessage/Importance": "Normal",
                   "emailMessage/ReplyTo": "cheesin.foong@capitalgroup.com",
                   "emailMessage/Attachments": [
                     {
                       "Name": "@outputs('Compose_filename')",
                       "ContentBytes": "@body('Get_file_content_using_path')?['$content']"
+                    },
+                    {
+                      "Name": "LTI_Calendar_How-To.pdf",
+                      "ContentBytes": "@body('Get_howto_pdf')?['$content']"
                     }
                   ]
                 },

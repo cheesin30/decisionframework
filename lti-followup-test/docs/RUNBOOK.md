@@ -76,6 +76,19 @@ that URL in a browser to confirm it pre-fills *before* making the QR. See
 [`../form/prefill-url-guide.md`](../form/prefill-url-guide.md) and
 [`../qr/qr-setup.md`](../qr/qr-setup.md).
 
+### 4. Every email fails / no one gets a pack (how-to PDF missing)
+
+**Symptom:** *All* runs fail at **Get how-to PDF**, and no adviser receives a
+pack — even though the `.ics` files exist.
+
+**Cause:** The static guide is missing from `/Capital Learning Hub/LTI/Assets/`,
+or was renamed. Because the flow attaches it to every email, a missing PDF blocks
+every send.
+
+**Fix:** Upload `LTI_Calendar_How-To.pdf` to `/Capital Learning Hub/LTI/Assets/`
+with **exactly** that name (source: `emails/LTI_Calendar_How-To.pdf` in the repo).
+This is a one-time upload; you only touch it again if you re-render the guide.
+
 ---
 
 ## How to add a new workshop session
@@ -128,7 +141,8 @@ When moving from test to live:
 | Filename pattern | `{Firm}_LTI_Follow_Up_{yyyy-MM-dd}.ics` (Firm case-sensitive; date hyphenated) |
 | SharePoint folder | `/Capital Learning Hub/LTI/Generated ICS/` |
 | Form | "LTI Workshop Follow-up" — 2 visible (Name, Email), 2 hidden pre-filled (Firm, Workshop Date), Anyone can respond |
-| Attachment count | Exactly one — the `.ics` |
+| Attachment count | Two — the personalised `.ics` + the static `LTI_Calendar_How-To.pdf` |
+| Static asset | `/Capital Learning Hub/LTI/Assets/LTI_Calendar_How-To.pdf` (one-time upload; attached to every email) |
 | Test sender / reply-to | `cheesin.foong@capitalgroup.com` |
 | Time zone | Asia/Singapore (SGT) |
 | QR rule | One unique QR per firm-per-workshop session |

@@ -71,6 +71,8 @@ naming convention** section below — it is the most important thing in this rep
 | `sharepoint/structure.md` | The minimal SharePoint layout, the exact folder the `.ics` files live in, and a sample listing. |
 | `emails/advisor-pack-email.html` | The adviser-facing HTML email body, with Power Automate placeholders and inline (mobile-friendly) CSS. |
 | `emails/error-alert-email.html` | The diagnostic email body sent to the operator when the flow fails, with full debug context. |
+| `emails/how-to-guide.html` | Source for the how-to PDF (rendered to PDF with headless Chromium). |
+| `emails/LTI_Calendar_How-To.pdf` | The "how to open the calendar file" guide (phone + desktop) attached to every adviser email — upload once to SharePoint `/LTI/Assets/`. |
 | `qr/qr-setup.md` | How to generate the QR for each session, plus three worked examples (DBS, AIA, HSBC). |
 | `docs/RUNBOOK.md` | Operating manual: what the system does, the three most common failures and their fixes, how to add a new workshop session, and the production handover steps. |
 
@@ -78,9 +80,10 @@ naming convention** section below — it is the most important thing in this rep
 
 ## Quick start (5 steps)
 
-1. **SharePoint** — create the folder `/Capital Learning Hub/LTI/Generated ICS/`
-   and confirm the existing calendar tool drops files there. See
-   `sharepoint/structure.md`.
+1. **SharePoint** — create `/Capital Learning Hub/LTI/Generated ICS/` (confirm
+   the existing calendar tool drops `.ics` files there) and
+   `/Capital Learning Hub/LTI/Assets/`, then upload `emails/LTI_Calendar_How-To.pdf`
+   into `Assets/`. See `sharepoint/structure.md`.
 2. **Form** — build the Microsoft Form exactly as in `form/form-spec.md`
    (2 visible questions, 2 hidden pre-filled questions, "Anyone can respond").
 3. **Flow** — build **Flow A** in Power Automate from `flows/flow-a-sender.md`
@@ -91,7 +94,8 @@ naming convention** section below — it is the most important thing in this rep
    (`form/prefill-url-guide.md`) and turn it into a QR (`qr/qr-setup.md`). Put
    the QR on the closing slide.
 5. **Test** — run a real workshop date end-to-end: scan, submit your own email,
-   confirm the `.ics` arrives within ~30 seconds with exactly one attachment.
+   confirm the email arrives within ~30 seconds with **two** attachments (the
+   `.ics` and the how-to PDF).
 
 ---
 

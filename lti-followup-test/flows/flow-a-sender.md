@@ -2,8 +2,8 @@
 
 Power Automate cloud flow. When an adviser submits the LTI follow-up Form, this
 flow fetches the matching pre-generated `.ics` from SharePoint and emails it to
-them as the single attachment. On any failure it emails a diagnostic alert to
-the operator.
+them, together with a static **How-To guide PDF**, as the two attachments. On any
+failure it emails a diagnostic alert to the operator.
 
 Read this alongside [`flow-a-sender.json`](./flow-a-sender.json), which is the
 same flow expressed as a Logic Apps / Power Automate workflow definition.
@@ -28,7 +28,10 @@ The deployed flow, in order (designer display names):
 4. **Try** *(scope)*
    - **Get file content using path** — fetches the `.ics` from SharePoint by the
      composed filename
-   - **Send advisor email** — emails the adviser with the `.ics` attached
+   - **Get how-to PDF** — fetches the static `LTI_Calendar_How-To.pdf` from
+     SharePoint (same for every send)
+   - **Send advisor email** — emails the adviser with the `.ics` **and** the
+     how-to PDF attached
 5. **Catch** *(scope — runs only if Try fails/times out)*
    - **Filter failed actions** — isolates the failed action(s) in Try
    - **Compose error** — extracts the error message
@@ -47,7 +50,7 @@ The sections below detail each step's inputs and expressions.
 | **Trigger** | Microsoft Forms — *When a new response is submitted* |
 | **Connectors** | Microsoft Forms, SharePoint, Office 365 Outlook |
 | **Premium connectors** | None |
-| **Run target** | ~30 seconds, one email, exactly one attachment (the `.ics`) |
+| **Run target** | ~30 seconds, one email, two attachments (the `.ics` + the static `LTI_Calendar_How-To.pdf`) |
 | **Region / time zone** | Asia/Singapore (SGT). Only the diagnostic timestamp is formatted; the filename date is passed through untouched. |
 
 ---
@@ -121,10 +124,10 @@ DBS_LTI_Follow_Up_2026-06-30.ics
 
 ### 3. Try scope — fetch and send
 
-A **Scope** named `Try` wraps the two actions that can fail, so a single catch
-can handle either one.
+A **Scope** named `Try` wraps the actions that can fail, so a single catch can
+handle any of them.
 
-#### 3a. Get file content using path (SharePoint)
+#### 3a. Get file content using path (SharePoint) — the `.ics`
 
 - **Site Address:** the *Capital Learning Hub* site.
   `# TODO: confirm with [SharePoint owner]` the exact site URL, e.g.
@@ -137,9 +140,26 @@ can handle either one.
   segment to match your library; see
   [`../sharepoint/structure.md`](../sharepoint/structure.md).)
 - Output `body('Get_file_content_using_path')?['$content']` is the base64 file
-  content used as the attachment.
+  content used as the first attachment.
 
-#### 3b. Send an email (V2) (Office 365 Outlook)
+#### 3b. Get how-to PDF (SharePoint) — the static guide
+
+Action name: **`Get_howto_pdf`**. Fetches the same guide for every send, so the
+path is **fixed** (no Firm/date in it).
+
+- **Site Address:** same *Capital Learning Hub* site as 3a.
+- **File Path:**
+  ```
+  /LTI/Assets/LTI_Calendar_How-To.pdf
+  ```
+- Output `body('Get_howto_pdf')?['$content']` is the base64 PDF used as the
+  second attachment.
+- The PDF is a **one-time upload** — put `emails/LTI_Calendar_How-To.pdf` from
+  this repo into `/Capital Learning Hub/LTI/Assets/` once (see
+  [`../sharepoint/structure.md`](../sharepoint/structure.md)). It only changes if
+  you re-render the guide from `emails/how-to-guide.html`.
+
+#### 3c. Send an email (V2) (Office 365 Outlook)
 
 | Field | Value |
 | --- | --- |
@@ -150,9 +170,16 @@ can handle either one.
 | **Reply To** | `cheesin.foong@capitalgroup.com` |
 | **Attachments Name - 1** | `@{outputs('Compose_filename')}` |
 | **Attachments Content - 1** | `@{body('Get_file_content_using_path')?['$content']}` |
+| **Attachments Name - 2** | `LTI_Calendar_How-To.pdf` |
+| **Attachments Content - 2** | `@{body('Get_howto_pdf')?['$content']}` |
 
-There must be **exactly one** attachment — the `.ics`. No separate tipsheet, no
-extra files.
+The email carries **two** attachments — the personalised `.ics` and the static
+how-to PDF.
+
+> **Note — this changed the original one-attachment rule.** The initial spec said
+> exactly one attachment (the `.ics`, no tipsheet). The how-to PDF was added
+> later on request, making it two attachments. The PDF is identical for every
+> adviser and is the only second attachment; nothing else is added.
 
 > **Sender nuance (production-quality note).** The standard *Send an email (V2)*
 > action sends as the **owner of the Outlook connection**. During the test phase

@@ -2,7 +2,7 @@
   "schema": "1.0",
   "details": {
     "displayName": "LTI Follow-up Sender",
-    "description": "Emails the pre-generated .ics follow-up pack to an adviser after they submit the LTI Workshop Follow-up form. Fetches the file from SharePoint by reconstructing its fixed filename, sends it as the single attachment, and emails a diagnostic alert on failure.",
+    "description": "Emails the pre-generated .ics follow-up pack to an adviser after they submit the LTI Workshop Follow-up form. Fetches the file from SharePoint by reconstructing its fixed filename, attaches it plus a static how-to PDF, and emails a diagnostic alert on failure.",
     "createdTime": "2026-06-30T00:00:00.0000000Z",
     "packageTelemetryId": "8f3a1c2e-7b94-4d6f-a1e2-3c4d5e6f7a8b",
     "creator": "Capital Learning",

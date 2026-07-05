@@ -11,12 +11,21 @@ logs, no separate tipsheet library, no consent register.
 ```
 Capital Learning Hub            ← SharePoint site
 └── LTI                         ← document library (or top-level folder)
-    └── Generated ICS           ← the existing calendar tool drops .ics files here
-        ├── DBS_LTI_Follow_Up_2026-06-30.ics
-        ├── AIA_LTI_Follow_Up_2026-07-15.ics
-        ├── HSBC_LTI_Follow_Up_2026-07-22.ics
-        └── …
+    ├── Generated ICS           ← the existing calendar tool drops .ics files here
+    │   ├── DBS_LTI_Follow_Up_2026-06-30.ics
+    │   ├── AIA_LTI_Follow_Up_2026-07-15.ics
+    │   ├── HSBC_LTI_Follow_Up_2026-07-22.ics
+    │   └── …
+    └── Assets                  ← static shared assets attached to every email
+        └── LTI_Calendar_How-To.pdf
 ```
+
+The **Assets** folder holds `LTI_Calendar_How-To.pdf` — the "how to open the
+calendar file" guide attached to every adviser email. It is a **one-time upload**
+(source: `emails/LTI_Calendar_How-To.pdf` in this repo, rendered from
+`emails/how-to-guide.html`) and is the same for every send. Flow A reads it from
+`/LTI/Assets/LTI_Calendar_How-To.pdf`; if you re-render the guide, replace the
+file here keeping the exact same name.
 
 Full path used in Flow A's *Get file content using path*:
 

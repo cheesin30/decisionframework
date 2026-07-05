@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>How to add your LTI follow-up calendar</title>
+<!--
+  Source for LTI_Calendar_How-To.pdf (the how-to attached to the advisor email).
+  Rendered to PDF with headless Chromium (A4). Edit this file, then rebuild:
+    /opt/pw-browsers/chromium-1194/chrome-linux/chrome --headless \
+      --disable-gpu --no-pdf-header-footer --print-to-pdf=LTI_Calendar_How-To.pdf \
+      how-to-guide.html
+-->
+<style>
+  @page { size: A4; margin: 12mm 14mm; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+    color: #1c2833;
+    font-size: 10pt;
+    line-height: 1.4;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .band { background: #003DA5; color: #fff; padding: 14px 20px; border-radius: 8px; }
+  .band .eyebrow { font-size: 8pt; letter-spacing: 2px; text-transform: uppercase; font-weight: bold; opacity: .85; margin: 0 0 5px; }
+  .band h1 { font-size: 17pt; margin: 0; line-height: 1.12; }
+  .band p { margin: 6px 0 0; font-size: 9.5pt; opacity: .92; }
+  h2 { font-size: 11.5pt; color: #003DA5; margin: 16px 0 5px; padding-bottom: 3px; border-bottom: 2px solid #eef4fb; }
+  ol { margin: 6px 0 0; padding-left: 0; list-style: none; counter-reset: step; }
+  ol li { position: relative; padding: 2px 0 7px 30px; counter-increment: step; }
+  ol li::before {
+    content: counter(step);
+    position: absolute; left: 0; top: 1px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: #003DA5; color: #fff; font-size: 9.5pt; font-weight: bold;
+    display: flex; align-items: center; justify-content: center;
+  }
+  li strong { color: #003DA5; }
+  .two { display: flex; gap: 14px; margin-top: 4px; }
+  .card { flex: 1; border: 1px solid #e3e8ee; border-radius: 8px; padding: 2px 14px 10px; background: #ffffff; }
+  .card h3 { font-size: 10.5pt; margin: 10px 0 2px; color: #1c2833; }
+  .callout { margin-top: 10px; padding: 9px 13px; background: #eef4fb; border-left: 4px solid #003DA5; border-radius: 0 6px 6px 0; font-size: 9.5pt; }
+  .tips { margin-top: 3px; }
+  .tips li { padding: 2px 0 2px 16px; }
+  .tips li::before { content: "•"; left: 2px; top: 1px; width: auto; height: auto; background: none; color: #003DA5; font-size: 12pt; }
+  footer { margin-top: 18px; padding-top: 9px; border-top: 1px solid #e3e8ee; color: #5d6b78; font-size: 8pt; }
+  .whatis { margin-top: 12px; padding: 10px 14px; background: #f4f6f8; border-radius: 8px; font-size: 9.5pt; }
+  .two, .callout, .whatis, footer { break-inside: avoid; }
+  h2 { break-after: avoid; }
+</style>
+</head>
+<body>
+  <div class="band">
+    <p class="eyebrow">Capital Group &middot; Capital Learning</p>
+    <h1>How to add your LTI follow-up calendar</h1>
+    <p>A 2-minute guide to opening the calendar file (<strong>.ics</strong>) attached to your email &mdash; on your phone or on your desktop.</p>
+  </div>
+
+  <div class="whatis">
+    <strong>What you received:</strong> a single calendar file called something like
+    <em>Firm_LTI_Follow_Up_2026-06-30.ics</em>. Opening it adds three short follow-up
+    touchpoints &mdash; with talking points already written into each event &mdash; to your calendar.
+    You only need to open it <strong>once</strong>.
+  </div>
+
+  <h2>On your phone</h2>
+  <div class="two">
+    <div class="card">
+      <h3>iPhone (iOS)</h3>
+      <ol>
+        <li>Open the email in <strong>Mail</strong> or <strong>Outlook</strong>.</li>
+        <li>Tap the <strong>.ics</strong> attachment.</li>
+        <li>Tap <strong>Add All</strong> (or <strong>Add</strong>) when the events preview appears.</li>
+        <li>Choose which calendar to add them to if asked, then tap <strong>Done</strong>.</li>
+      </ol>
+    </div>
+    <div class="card">
+      <h3>Android</h3>
+      <ol>
+        <li>Open the email in <strong>Gmail</strong> or <strong>Outlook</strong>.</li>
+        <li>Tap the <strong>.ics</strong> attachment to download/open it.</li>
+        <li>Tap <strong>Add</strong> / <strong>Save</strong> when Google Calendar shows the events.</li>
+        <li>If it doesn't open automatically, open <strong>Files</strong> &rarr; tap the downloaded <strong>.ics</strong>.</li>
+      </ol>
+    </div>
+  </div>
+
+  <h2>On your desktop</h2>
+  <div class="two">
+    <div class="card">
+      <h3>Outlook (Windows / Mac)</h3>
+      <ol>
+        <li>Open the email and <strong>double-click</strong> the <strong>.ics</strong> attachment.</li>
+        <li>The events open in Outlook's calendar preview.</li>
+        <li>Click <strong>Save &amp; Close</strong> (or <strong>Add to Calendar</strong>) for each, or <strong>Save All</strong>.</li>
+      </ol>
+    </div>
+    <div class="card">
+      <h3>Google Calendar (browser)</h3>
+      <ol>
+        <li><strong>Download</strong> the <strong>.ics</strong> from the email to your computer.</li>
+        <li>In Google Calendar, click the <strong>gear</strong> &rarr; <strong>Settings</strong>.</li>
+        <li>Choose <strong>Import &amp; export</strong> &rarr; <strong>Import</strong>, select the file, click <strong>Import</strong>.</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>Reminders are built in.</strong> Each touchpoint already includes a 15-minute
+    reminder, so your calendar will nudge you at the right time &mdash; no setup needed.
+  </div>
+
+  <h2>Troubleshooting</h2>
+  <ul class="tips">
+    <li>Can't see the attachment on mobile? Open the same email on a desktop and add it there &mdash; it syncs back to your phone.</li>
+    <li>Tapping the file just shows text? Use <strong>Open in&hellip;</strong> and choose your calendar app (or Outlook).</li>
+    <li>Events landed in the wrong calendar? Delete them and re-open the <strong>.ics</strong>, choosing the calendar you want.</li>
+    <li>Still stuck? Reply to the email that sent you this file and the Capital Learning team will help.</li>
+  </ul>
+
+  <footer>
+    Capital Group &middot; Capital Learning &mdash; sent following your Long-Term Investing workshop.
+    This guide covers only how to open the attached calendar file; it collects no information.
+  </footer>
+</body>
+</html>

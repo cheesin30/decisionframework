@@ -65,9 +65,14 @@ The package ships with placeholders that you must replace once:
    After you pick the Form, re-select the proper dynamic-content tokens (or paste
    the real internal IDs from
    [`../form/form-spec.md`](../form/form-spec.md#question--dynamic-content-mapping)).
+4. **How-to PDF** — upload `../emails/LTI_Calendar_How-To.pdf` to
+   `/Capital Learning Hub/LTI/Assets/` once (the *Get how-to PDF* action reads it
+   from `/LTI/Assets/LTI_Calendar_How-To.pdf`). If it's missing, **every** send
+   fails.
 
 Then **Save** and run one end-to-end test (scan → submit your own email →
-confirm the `.ics` arrives with exactly one attachment).
+confirm the email arrives with **two** attachments — the `.ics` and the how-to
+PDF).
 
 ---
 

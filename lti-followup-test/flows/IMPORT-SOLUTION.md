@@ -66,9 +66,14 @@ Open **Solutions → LTI Workshop Follow-up → LTI Follow-up Sender** and edit:
    `['YourName']`, `['YourEmail']` as placeholders; re-point them to the real
    dynamic-content tokens / IDs (see
    [`../form/form-spec.md`](../form/form-spec.md#question--dynamic-content-mapping)).
+4. **How-to PDF** — upload `../emails/LTI_Calendar_How-To.pdf` to
+   `/Capital Learning Hub/LTI/Assets/` once (the *Get how-to PDF* action reads it
+   from `/LTI/Assets/LTI_Calendar_How-To.pdf`). If it's missing, **every** send
+   fails.
 
 Then **Save**, **Turn on** the flow, and run one end-to-end test (scan → submit
-your own email → confirm the `.ics` arrives with exactly one attachment).
+your own email → confirm the email arrives with **two** attachments — the `.ics`
+and the how-to PDF).
 
 ---
 
