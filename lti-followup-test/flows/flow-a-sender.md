@@ -8,6 +8,36 @@ the operator.
 Read this alongside [`flow-a-sender.json`](./flow-a-sender.json), which is the
 same flow expressed as a Logic Apps / Power Automate workflow definition.
 
+> **As-built status (2026-07-05):** the flow has been built in Power Automate and
+> its structure matches this spec — trigger, the numbered steps, and the
+> Try/Catch scopes below all correspond to the deployed flow. The remaining work
+> is the tenant-specific configuration in *Get response details* / *Get file
+> content using path* (Form ID, question IDs, SharePoint site — see the TODOs
+> in each step) and an end-to-end test run.
+
+---
+
+## As-built action list
+
+The deployed flow, in order (designer display names):
+
+1. **When a new response is submitted** *(trigger — Microsoft Forms; splits on
+   each response)*
+2. **Get response details** — retrieves the form answers
+3. **Compose filename** — builds the `.ics` filename from the form fields
+4. **Try** *(scope)*
+   - **Get file content using path** — fetches the `.ics` from SharePoint by the
+     composed filename
+   - **Send advisor email** — emails the adviser with the `.ics` attached
+5. **Catch** *(scope — runs only if Try fails/times out)*
+   - **Filter failed actions** — isolates the failed action(s) in Try
+   - **Compose error** — extracts the error message
+   - **Send diagnostic email** — failure notification to the operator with debug
+     context
+   - **Terminate** — ends the run with a Failed status
+
+The sections below detail each step's inputs and expressions.
+
 ---
 
 ## At a glance
