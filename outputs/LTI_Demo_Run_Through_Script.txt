@@ -1,236 +1,230 @@
-LTI MATERIALS RUN-THROUGH — LIVE DEMO SCRIPT
+LTI MATERIALS RUN-THROUGH — THOUGHT-PROCESS SCRIPT
 ============================================================
 
 Companion to: LTI_Presentation_Script.txt
 Starts at:    Slide 6 — "Now, the flow in action."
 Runtime:      ~8-10 minutes
 Flow:         PREPARE -> DELIVER -> FOLLOW UP
-              (same three steps as the slide behind you)
+
+Principle for this section: the screen shows WHAT it is —
+you only ever say WHY it's built that way. Never read the
+material aloud. Open it, give the room two seconds to look,
+then explain the decision behind it.
 
 SETUP CHECKLIST (before the session)
-  [ ] Pre-Workshop Diagnostic form open in a browser tab
-  [ ] Post-Workshop Survey form open in a second tab
-  [ ] The four toolkit PDFs open, in order: Tip Sheet, Talking
-      Points, Client Booklet, Steps for Success
-  [ ] Engagement Calendar tool open (LTI_Engagement_Calendar_QR)
-  [ ] QR code tested with your own phone that morning
-  [ ] Printed copies of the four toolkit pieces to hold up / pass
-      around (optional but strong)
+  [ ] Pre-Workshop Diagnostic + Post-Workshop Survey open in tabs
+  [ ] The four toolkit PDFs open in order
+  [ ] Engagement Calendar tool open
+  [ ] QR tested with your own phone that morning
+  [ ] Printed toolkit copies to pass around (optional but strong)
 
 
 ------------------------------------------------------------
 PART 1 — PREPARE  ·  the pre-workshop survey
 ------------------------------------------------------------
-(~2 minutes. Switch from the deck to the Forms tab.)
+(~2 minutes. Open the diagnostic. Pause. Then talk about
+decisions, not questions.)
 
-SHOW: the Pre-Workshop Diagnostic cover page.
+OPEN the Pre-Workshop Diagnostic. Let them read the cover. Then:
 
-SAY:
-  This is the first thing an adviser touches — before the workshop,
-  not after. It's a Microsoft Form, four questions, about two
-  minutes. Everything is tap, not type.
+  The first design decision was where the experience starts. Not
+  in the room — before it. If an adviser's first contact with
+  this material is the moment they sit down, they arrive as a
+  spectator. I wanted them to arrive having already named their
+  own problem.
 
-SCROLL to Question 1 (what do clients say when they hesitate).
+  Second decision: everything is tap, not type. The moment you
+  ask an adviser to write sentences, completion collapses. Two
+  minutes, phone-friendly, done in the lift on the way up.
 
-SAY:
-  Question one: "What do clients often say when they hesitate to
-  invest?" — cash feels safer, markets are too risky, waiting for
-  better timing, investing feels complicated. Notice these are the
-  exact objections the workshop and every material afterwards is
-  built around. The adviser is naming their own problem before we
-  ever present a solution.
+SCROLL slowly through the questions while you talk:
 
-SCROLL to Question 2 (what do you usually do first).
+  Third — and this is the one I care most about — every answer
+  option is plausible. There's no obviously "correct" choice to
+  perform. That matters because this looks like a survey, but
+  it's really a diagnostic: one of these questions quietly tests
+  whether an adviser's instinct is to respond to a client concern
+  with data, or to first ask what's driving it. If the right
+  answer were obvious, everyone would pick it and I'd learn
+  nothing. Because all four feel reasonable, people answer
+  honestly — and the honest answers tell me exactly what the
+  room needs.
 
-SAY:
-  Question two is the quiet diagnostic: "When clients raise these
-  concerns, what do you usually do first?" Share market data,
-  explain the product, address the concern straight away — or ask
-  what is driving the concern before responding. Every option
-  sounds reasonable, so the answers are honest. Most people don't
-  pick "ask first" — and that gap is exactly what the workshop
-  teaches into.
-
-SCROLL to Question 4 (confidence self-rating grid).
-
-SAY:
-  And question four is a confidence baseline — three statements,
-  rated from Not Confident to Very Confident. Hold that thought,
-  because we measure these exact three statements again after the
-  workshop. That's how we show the shift.
+  Last decision here: I end with a confidence self-rating, and I
+  deliberately ask the identical questions again after the
+  workshop. One survey tells you opinions. Two identical
+  measurements tell you whether anything changed. That
+  before-and-after is the evidence this whole experience stands on.
 
 TRANSITION:
-  "So the adviser walks in warmed up, and we walk in knowing the
-  room. Then the workshop happens. Here's what they leave with."
+  "So that's the front door. Now the part I rebuilt the most —
+  what advisers actually leave with."
 
 
 ------------------------------------------------------------
 PART 2 — DELIVER  ·  the advisor toolkit (4 pieces)
 ------------------------------------------------------------
-(~4 minutes. One beat per document. If you printed copies, hold
-each one up as you open it.)
+(~4 minutes. One decision-story per document. Open each,
+two-second pause, then the why.)
 
 --- 2a. CLIENT CONVERSATION TIP SHEET (~1 min) ---
 
-SHOW: the one-pager.
+OPEN it. Pause. Then:
 
-SAY:
-  First, the Tip Sheet — the whole method on one page.
+  The constraint I set myself here was brutal: one page. Not
+  because paper is expensive — because a second page is where
+  method goes to die. If an adviser can't find the response
+  while the client is still talking, the material has failed.
 
-  Across the top: the four-box framework — Acknowledge,
-  Perspective, Confidence, Opportunity. Then every common
-  objection as a row: "investing is unnecessary", "long-term
-  investing is risky", "the timing is not right", "it's too
-  difficult", "my friends say..." — each with the likely barrier,
-  how to respond, and a simple line to use, word for word.
+  The structure came from a real observation: advisers don't
+  struggle with knowledge, they struggle in the moment. So it's
+  organised by what the client SAYS — the objection in the
+  client's own words — not by investment topic. You look up the
+  sentence you just heard, not a chapter.
 
-POINT at one "simple line to use" and read it aloud:
-  "Cash can feel safe, but over time it may not keep up with what
-  you need it to do."
-
-POINT at the bottom strip:
-  And it ends with action — confirm the goal, pick one proof
-  point, agree a small next step, set follow-up. Start with the
-  client's worry and goal, not the product.
+  And I wrote the response lines word-for-word on purpose. Not
+  because advisers can't write their own — but because in a live
+  conversation, having A line beats composing THE line. They'll
+  make it their own by week two. The sheet just gets them through
+  conversation one.
 
 --- 2b. ADVISOR TALKING POINTS (~1 min) ---
 
-SHOW: flick through 2-3 pages; stop on "The cost of missing the
-market's best days".
+OPEN it, flick two pages. Then:
 
-SAY:
-  Second, the Talking Points — the workshop's strongest charts,
-  re-cut for client conversations. Every page has the same three
-  boxes: three talking points, one question to ask your client,
-  and one advisor next step.
+  These charts existed before I touched anything — they're the
+  strongest part of the workshop. The problem was their shape: a
+  chart in a deck is something you present AT someone. I wanted
+  something an adviser can USE.
 
-  Take this page: a thousand dollars fully invested became
-  $2,959 — miss the best 40 days and you're at $941, below where
-  you started. The line to remember: market timing requires two
-  correct decisions — when to leave AND when to return.
+  So the design rule for every page is the same triple: three
+  things you can say, one question you ask the client, one thing
+  YOU do next. Say, ask, do. The chart earns its place only if it
+  converts into a move in a conversation.
 
-READ the "Ask your client" line aloud:
-  "What would help you stay invested through a period of market
-  volatility?"
-
-SAY:
-  Chart, question, next step. That's a client conversation, not a
-  presentation.
+  The "ask your client" line is the one I fought for hardest —
+  because the diagnostic showed most advisers respond to concerns
+  with information. Every page here forces the opposite habit:
+  the chart sets up a question, not a lecture.
 
 --- 2c. CLIENT BOOKLET (~1 min) ---
 
-SHOW: the cover — "Investing for the long term: Four ideas worth
-holding on to".
+OPEN the cover. Then:
 
-SAY:
-  Third — and this one is client-facing. The adviser hands this
-  directly to the client. Four ideas, one per spread:
+  Everything else you've seen is for the adviser. This one exists
+  because at some point the adviser needs something to physically
+  put in a client's hands — and nothing in the workshop was
+  client-safe. Different audience, different rules: no jargon, no
+  framework language, nothing to study. Four ideas, one per
+  spread, each anchored on a single number, because clients
+  remember one number per idea and nothing more.
 
-    1. "Safe" cash carries a quiet risk — even Singapore's modest
-       1.74% inflation quietly erodes cash over decades.
-    2. Time does the heavy lifting — steady investing since 1994
-       grew to roughly $760k, most of it growth, not contributions.
-    3. Don't miss the best days — the same $2,959-versus-$941
-       story, in client language.
-    4. Declines are normal and usually shorter — the average bull
-       ran +234% over 73 months; the average bear, -33% over 13.
-
-  And it closes with "Turn four ideas into one plan" — three
-  questions the client answers WITH the adviser. The booklet ends
-  where the adviser's next meeting begins.
+  The ending was a deliberate choice: it doesn't end with a
+  conclusion, it ends with three questions the client can only
+  really answer WITH their adviser. A brochure that ends with
+  answers gets filed. One that ends with questions books the next
+  meeting. That's the whole trick of it.
 
 --- 2d. STEPS FOR SUCCESS (~1 min) ---
 
-SHOW: the one-pager.
+OPEN it. Then:
 
-SAY:
-  Fourth, Steps for Success — because none of this matters if it's
-  forgotten by Friday. This is an eight-week reinforcement
-  sequence: Day 0, set your cue. Day 3, pick one real client line.
-  Week 1, practise Acknowledge. Week 2, add Perspective. Week 3,
-  move to Opportunity. Week 4, log one win. Week 6, run the full
-  four-box flow in a real conversation. Week 8, choose the one
-  habit you keep.
+  This piece exists because of the most predictable failure in
+  all workshop training: everything is forgotten by Friday. I
+  didn't want more content — I wanted a behaviour to survive
+  contact with a busy diary.
 
-  One small action per touchpoint, three minutes each. And notice
-  the note at the top: "import the calendar file — when a reminder
-  appears, spend 3 minutes on the matching action."
+  So it's built like a habit programme, not a curriculum: one
+  action per touchpoint, sized at three minutes, over eight
+  weeks. Each action is one rep of the method in a REAL client
+  conversation — because the workshop can only ever rehearse;
+  the habit forms in the field.
+
+  And notice it assumes nobody re-reads instructions: the
+  sequence is designed to arrive as calendar reminders. Which is
+  the perfect segue —
 
 TRANSITION:
-  "Which raises the obvious question — who remembers to send all
-  of this at the right time? Nobody. So nobody has to."
+  "— because the honest question about all of this is: who
+  actually remembers to send the right thing at the right time?
+  Nobody. So I made 'nobody' the design requirement."
 
 
 ------------------------------------------------------------
 PART 3 — FOLLOW UP  ·  the engagement calendar (+ the scan)
 ------------------------------------------------------------
-(~3 minutes. Switch to the Engagement Calendar tool. This is the
-peak of the demo — don't rush the scan moment.)
+(~3 minutes. Open the tool. This is the peak — slow down.)
 
-SHOW: the tool's touchpoint view.
+OPEN the touchpoint view. Then:
 
-SAY:
-  This is the Engagement Calendar. The follow-up journey is
-  already built — three touchpoints:
+  Two decisions define this tool. The first is how FEW
+  touchpoints there are. My first draft had twelve — it felt
+  thorough, and it was wrong. Twelve reminders is noise; noise
+  gets muted; muted means zero. I cut it to three, and the test
+  for what survived was simple: each touchpoint had to carry the
+  entire method in one action. Day zero, one real concern. Week
+  one, one full response. Month one, one kept habit. Iteration
+  here wasn't adding — it was deleting.
 
-    DAY 0   — Prepare, then capture one real client concern
-    WEEK 1  — Build one full response in your next conversation
-    MONTH 1 — Keep one habit and reinforce the core message
+  The second decision: the follow-up lives in the adviser's OWN
+  calendar, not in another portal or newsletter. Emails get
+  archived; portals need remembering. A calendar reminder is the
+  one notification that interrupts a working day at the moment
+  it's meant to.
 
-  Each touchpoint carries its materials from a resource library —
-  the same four pieces you just saw. A consultant can adjust the
-  sequence, or just use it as-is.
+SHOW the export briefly:
 
-CLICK Export calendar (or show the export button).
+  And it's built once, exported forever — a consultant doesn't
+  assemble follow-ups per workshop; the journey with all its
+  materials travels as a single file.
 
-SAY:
-  One click exports the whole journey as a calendar file. The
-  reminders land in the adviser's own calendar, with the materials
-  attached. Nothing to remember, nothing to re-send.
+NOW the QR. Put it on screen:
 
-NOW the scan moment. Put the QR on screen.
+  The last problem was delivery, and it's harder than it looks:
+  how do you get a calendar file with attachments onto a
+  stranger's phone in a workshop, with no login, in seconds? My
+  first attempts failed in interesting ways — a shared link that
+  iPhones refused to trust taught me that the QR can only ever
+  point somewhere, never carry the file.
 
-SAY:
-  And here's how an adviser gets it at the end of a workshop.
-  Grab your phones — scan this code. It opens a short form,
-  name and email only. Submit it, and in about thirty seconds
-  the full LTI follow-up journey lands in your inbox.
+  The version that works is deliberately boring: the code opens a
+  short form — name and email, nothing else — and an automated
+  flow inside our own Microsoft environment emails the calendar
+  out. About thirty seconds, no external hosting, nothing for IT
+  to worry about.
 
-WHILE PHONES ARE OUT (one sentence, no more):
-  Behind the scenes, the form triggers an automated flow that
-  fetches the right calendar file and emails it — fully inside
-  our Microsoft environment, nothing hosted externally.
+  Try it — grab your phones and scan.
 
-WHEN PHONES START BUZZING: stop talking. Let the room react.
-Then:
-  That — is the whole experience. What you just did is exactly
-  what advisers do on the closing slide of the workshop.
+WHILE PHONES ARE OUT (one sentence only):
 
-CLOSE THE LOOP (optional, 20 seconds — flick to the Post-Workshop
-Survey tab):
-  And before they leave the room, the post-workshop survey re-asks
-  the same three confidence questions from the diagnostic — plus
-  which objection they now feel most prepared for, and where they
-  still want practice. Baseline before, shift after. That's how we
-  know it works — and it tells us what the next session should
-  focus on.
+  One design principle in that half-minute of waiting: I removed
+  a sign-in step from an earlier version — every extra field
+  costs participation, and I'd rather have engagement than data.
+
+WHEN PHONES BUZZ: stop talking. Let it land. Then:
+
+  What you just experienced is the adviser's last thirty seconds
+  of the workshop — and the reason the learning doesn't end when
+  the room empties.
+
+CLOSE THE LOOP (optional, 20 seconds):
+
+  And the post-workshop survey re-measures the same confidence
+  baseline from the start — so every workshop produces its own
+  before-and-after, and tells us what to fix next time.
 
 TRANSITION (back to the deck, Slide 7):
-  "So that's today, end to end: survey, toolkit, automated
-  follow-up. One more thing — where this goes next."
+  "So that's the thinking, end to end. One more thing — where
+  this goes next."
 
 
 ------------------------------------------------------------
 TIMING SUMMARY
 ------------------------------------------------------------
 
-  Part 1   Prepare — pre-workshop survey ............ ~2:00
-  Part 2   Deliver — four toolkit pieces ............ ~4:00
-             Tip Sheet ........................ 1:00
-             Talking Points ................... 1:00
-             Client Booklet ................... 1:00
-             Steps for Success ................ 1:00
-  Part 3   Follow up — calendar + QR scan ........... ~3:00
+  Part 1   Prepare — the survey decisions ........... ~2:00
+  Part 2   Deliver — one decision-story per piece ... ~4:00
+  Part 3   Follow up — the cut to 3 + the scan ...... ~3:00
 
   Total: ~8-10 minutes, then return to Slide 7.
 
@@ -240,14 +234,13 @@ IF SOMETHING FAILS — FALLBACKS
 ------------------------------------------------------------
 
   QR won't scan on the room screen
-    -> have the short link ready to read out, or show the email
-       arriving on YOUR phone via the room screen.
+    -> read out the short link, or show the email arriving on
+       YOUR phone via the room screen.
 
   Email takes longer than 30 seconds
     -> keep going; circle back when the first phone buzzes:
        "there it is."
 
   No internet / Forms down
-    -> printed toolkit pieces carry Part 2; describe Parts 1 and 3
-       over static screenshots (keep a screenshot of each form's
-       cover and the calendar tool in the deck's appendix).
+    -> the printed toolkit carries Part 2; talk Parts 1 and 3
+       over static screenshots kept in the deck's appendix.
