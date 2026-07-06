@@ -148,8 +148,9 @@ calendar landing in your inbox.
 
 LIVE DEMO — RUN SHEET:
 
-  1. PREPARE — open the pre-workshop survey; complete it on screen
-     (or have a volunteer do it on their phone).
+  1. PREPARE — put up the pre-workshop QR, exactly as a workshop
+     opens; have the room (or a volunteer) scan and complete it
+     on their phones.
 
   2. DELIVER — flick through the four toolkit pieces quickly; hold up
      printed copies if you have them.

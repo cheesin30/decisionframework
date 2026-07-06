@@ -27,15 +27,23 @@ decisions, not questions.)
 
 OPEN the Pre-Workshop Diagnostic. Let them read the cover. Then:
 
-  The first design decision was where the experience starts. Not
-  in the room — before it. If an adviser's first contact with
-  this material is the moment they sit down, they arrive as a
-  spectator. I wanted them to arrive having already named their
-  own problem.
+  The first design decision was how the workshop opens. Before a
+  single slide, the room scans a QR code and does this — two
+  minutes, on their own phones. I chose that over sending a link
+  in advance for a simple reason: pre-work sent by email doesn't
+  get done, and chasing it burns goodwill. A QR on the opening
+  slide gets a captive room and a hundred percent completion —
+  and it means every adviser has named their own problem before
+  the teaching starts. They begin as participants, not spectators.
+
+  It also quietly rehearses the mechanic: scan, form, done. The
+  workshop ENDS with the exact same gesture — so by the time the
+  closing QR appears, nobody in the room hesitates.
 
   Second decision: everything is tap, not type. The moment you
-  ask an adviser to write sentences, completion collapses. Two
-  minutes, phone-friendly, done in the lift on the way up.
+  ask an adviser to write sentences on a phone, completion
+  collapses. Every question is a tap; the whole thing fits in
+  the two minutes before we begin.
 
 SCROLL slowly through the questions while you talk:
 
