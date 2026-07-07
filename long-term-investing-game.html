@@ -35,40 +35,37 @@
                           {title, story, marketTieIn, marketMoveNextPeriod,
                           emotionalPull}. TUTORIAL is a standalone practice
                           scenario (never counts toward the game).
+                          BONDS: synthetic bond index built at load, aligned
+                          to MSCI_WORLD, so a stocks/bonds composite is
+                          possible. RISK_PROFILES: 60/40 and 70/30 equity
+                          weights the player chooses at the start.
     4. <script> LOGIC     • simulatePortfolio() — the transparent, pure
-                            function that replays a list of 5 buy/hold/sell
-                            decisions over ANY 5-year window of MSCI_WORLD.
-                            All comparison lines derive from it or its two
-                            pure siblings (buyAndHoldSeries, allCashSeries).
+                            function that replays ROUNDS buy/hold/sell
+                            decisions over ANY window, at a risk weight, with
+                            the round-3 bonus. passiveSeries()/activeFundSeries()
+                            are its siblings (hold the composite; active adds
+                            an illustrative alpha).
                           • Game-state object + phase-flow functions.
-                          • Reveal: Chart.js line chart + window slider that
-                            re-runs simulatePortfolio live on input.
+                          • Reveal: Chart.js line chart (3 lines) + window
+                            slider that re-runs the sim live on input.
                           • Share: html2canvas → PNG download.
 
-  GAME MECHANICS
-  ──────────────
-  The player starts with $50,000 FULLY invested in the index (no cash on the
-  sidelines), which is exactly where the buy-and-hold benchmark starts too.
-    • Sell 25% → moves 25% of current total value from equity into cash
-                 (clamped to available equity).
-    • Buy 25%  → moves 25% of total value from cash back into equity
-                 (clamped to available cash; disabled while fully invested).
+  GAME MECHANICS (v2)
+  ───────────────────
+  The player picks a RISK PROFILE (60/40 or 70/30 stocks/bonds) and starts
+  with $50,000 in a PASSIVE COMPOSITE fund at that mix.
+    • Sell 25% → moves 25% of total value from the fund into cash.
+    • Buy 25%  → moves 25% from cash back into the fund (disabled with no cash).
     • Hold     → no change.
-  Because the player and the "Buy & hold" benchmark begin identically at 100%
-  equity, the gap between "You" and the benchmark measures ONLY timing: you
-  can never hold more than 100% equity, so the only way to beat buy-and-hold
-  is to sell before a fall and buy back before a rise. A pure-hold player
-  ties the benchmark exactly, and (per the data) active reacting beats it in
-  well under a third of windows and loses on average — the intended lesson.
-  This is why the game is framed around the temptation to SELL in fear: that
-  is the only emotional error a fully-invested investor can actually make.
-  Each scenario represents one year. During the game, equity moves by the
-  scenario's marketMoveNextPeriod and cash earns 2%/yr. In the reveal, the
-  SAME 5 recorded decisions are replayed against the illustrative monthly
-  index series (decision k applied at month k*12 of the chosen window), so
-  the player can drag the window anywhere in 2005-2025 and watch the outcome
-  change. A bridge line + compliance disclaimer make the story-vs-replay
-  distinction and the simulated nature of the data explicit on screen.
+  The reveal overlays THREE lines built from the same composite: "Your choices"
+  (the fund + the player's timing), "Passive fund" (the composite held), and
+  "Active fund" (the composite + an illustrative manager alpha — a synthetic
+  placeholder for the real Capital Group American Balanced Fund). A holder ties
+  the passive line exactly, so the You-vs-Passive gap measures only timing; the
+  Active-minus-Passive gap is the illustrated alpha. A one-time cash BONUS is
+  injected at the start of round 3, which the player invests or keeps as cash.
+  A bridge line + compliance disclaimer make the story-vs-replay distinction
+  and the simulated nature of every line explicit on screen.
 
   OUT OF SCOPE: accounts, backend, analytics, real API calls, i18n.
   ═══════════════════════════════════════════════════════════════════════════
@@ -327,10 +324,38 @@
   .disclaimer { font-size: 11px; line-height: 1.5; color: var(--gray); margin-top: 14px; padding: 0 2px; }
 
   /* Illustrative active-line toggle */
-  .active-toggle { display: flex; align-items: center; gap: 9px; margin-top: 16px;
-    font-size: 14px; font-weight: 600; color: var(--navy); cursor: pointer; }
-  .active-toggle input { width: 18px; height: 18px; accent-color: #831574; cursor: pointer; }
-  .active-toggle .illus { font-weight: 400; font-size: 12px; color: var(--gray); }
+  /* Risk-profile picker (welcome) */
+  .risk-pick { margin: 4px 0 20px; }
+  .risk-label { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+  .risk-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .risk-opt { appearance: none; cursor: pointer; text-align: left; background: #fff;
+    border: 2px solid var(--line); border-radius: 12px; padding: 12px 14px; font: inherit;
+    transition: border-color .12s, background .12s; }
+  .risk-opt b { display: block; color: var(--navy); font-size: 15px; }
+  .risk-opt span { font-size: 12px; color: var(--gray); }
+  .risk-opt.sel { border-color: var(--accent); background: var(--accent-soft); }
+
+  /* Counterfactual tiles (outcome screen) */
+  .cf-wrap { margin: 6px 0 16px; text-align: left; }
+  .cf-head { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--gray); margin-bottom: 8px; text-align: center; }
+  .cf-row { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px;
+    background: var(--gray-light); margin-bottom: 7px; }
+  .cf-row.picked { background: #fff; outline: 2px solid var(--accent); }
+  .cf-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--gray); flex: 0 0 auto; }
+  .cf-row.picked .cf-dot { background: var(--accent); }
+  .cf-name { font-size: 13.5px; font-weight: 600; color: var(--navy); }
+  .cf-val { margin-left: auto; font-size: 14px; font-weight: 700; color: var(--ink); }
+  .cf-val em { font-style: normal; font-weight: 600; font-size: 12.5px; }
+  .cf-val em.up { color: #1c7c53; }
+  .cf-val em.down { color: var(--red); }
+
+  /* Decisions-so-far row + alpha line (reveal) */
+  .decision-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 8px 0 2px; }
+  .dchip { font-size: 11.5px; font-weight: 700; border-radius: 999px; padding: 3px 10px; color: #fff; }
+  .dchip.buy { background: #008074; } .dchip.hold { background: #083469; } .dchip.sell { background: #b3402e; }
+  .alpha-line { font-size: 13.5px; color: #fff; opacity: .95; margin: -2px 0 12px; }
+  .alpha-line b { color: #E9C4E6; }
 
   /* Compliant fund tie-in (no performance claim) */
   .handoff { margin-top: 16px; background: var(--gray-light); border-radius: 12px;
@@ -358,14 +383,21 @@
   <!-- ═══ PHASE 1 · WELCOME ═══ -->
   <section class="phase active" id="phase-welcome">
     <div class="card">
-      <h1>You have $50,000 invested.<br>Over the next 5 years, life is going to test you.</h1>
+      <h1>You have $50,000 in a passive fund.<br>Over the next 6 years, life is going to test you.</h1>
       <p class="lede">Not with charts. With phone calls from your dad. With your neighbor's new Tesla. With a baby, a layoff, a wedding.</p>
-      <div class="stat-row">
-        <div class="stat"><b>$50,000</b><span>in a global index fund</span></div>
-        <div class="stat"><b>100%</b><span>invested — nothing on the sidelines</span></div>
-        <div class="stat"><b>5</b><span>decisions ahead of you</span></div>
+      <div class="risk-pick">
+        <div class="risk-label">First, pick the fund your $50,000 sits in:</div>
+        <div class="risk-opts">
+          <button type="button" class="risk-opt" data-risk="60/40"><b>Balanced</b><span>60% stocks · 40% bonds</span></button>
+          <button type="button" class="risk-opt" data-risk="70/30"><b>Growth</b><span>70% stocks · 30% bonds</span></button>
+        </div>
       </div>
-      <p class="muted" style="margin-bottom:22px">Each time life knocks, you choose: <b>Hold</b> and stay invested, or <b>Sell</b> — pulling 25% of your money out into cash. Once you've stepped out, you can <b>Buy</b> back in. At the end, you'll see how your instincts compared to simply staying invested. Takes about 4 minutes. This is an educational simulation using illustrative data — not investment advice.</p>
+      <div class="stat-row">
+        <div class="stat"><b>$50,000</b><span>in a passive composite fund</span></div>
+        <div class="stat"><b>6</b><span>decisions ahead of you</span></div>
+        <div class="stat"><b>≈5 min</b><span>to play</span></div>
+      </div>
+      <p class="muted" style="margin-bottom:22px">Each time life knocks, you choose: <b>Hold</b> and stay invested, or <b>Sell</b> — pulling 25% of your money out into cash. Once you've stepped out, you can <b>Buy</b> back in. At the end you'll compare your choices to the passive fund and to an actively managed one. This is an educational simulation using illustrative data — not investment advice.</p>
       <button class="btn btn-primary" id="btnStart">Start with a practice round →</button>
     </div>
   </section>
@@ -384,7 +416,7 @@
         <button class="btn btn-sell" id="btnSell">Sell 25%<small id="sellNote"></small></button>
       </div>
       <div class="hint" id="tutorialHint" hidden>
-        💡 <b>How it works:</b> You start fully invested. <b>Sell</b> pulls 25% of your money out of the market into cash. <b>Hold</b> stays put. Once you've sold, <b>Buy</b> moves money back in. There's no "right answer" shown yet — go with your gut.
+        💡 <b>How it works:</b> Your $50,000 sits in the fund. <b>Sell</b> moves 25% out to cash, <b>Hold</b> keeps it invested, and once you've sold, <b>Buy</b> moves money back in. Go with your gut — right after each choice you'll see exactly how Buy, Hold and Sell would each have played out.
       </div>
     </div>
   </section>
@@ -395,21 +427,37 @@
       <div class="outcome-emoji" id="ocEmoji">📈</div>
       <div class="outcome-market" id="ocMarket"></div>
       <p class="outcome-you" id="ocYou"></p>
+      <!-- Counterfactual tiles: what each of Buy/Hold/Sell would have done. -->
+      <div class="cf-wrap">
+        <div class="cf-head">What each choice would have done this round</div>
+        <div id="ocChoices"></div>
+      </div>
       <div class="pull-chip" id="ocPullChip" hidden></div>
       <button class="btn btn-primary" id="btnContinue">Continue →</button>
+    </div>
+  </section>
+
+  <!-- ═══ PHASE 2¾ · ROUND-3 CASH INJECTION ("you got a bonus") ═══ -->
+  <section class="phase" id="phase-bonus">
+    <div class="card" style="text-align:center">
+      <div class="outcome-emoji">🎉</div>
+      <h2 style="text-align:center">A bonus just landed: <span id="bonusAmt">$15,000</span></h2>
+      <p class="story" style="text-align:center">Unexpected money. You can put it to work in your portfolio now, or keep it aside as cash to deploy when a moment feels right.</p>
+      <div class="decision-grid" style="grid-template-columns:1fr 1fr">
+        <button class="btn btn-buy"  id="btnBonusInvest">Invest it now<small>straight into your fund</small></button>
+        <button class="btn btn-sell" id="btnBonusCash">Keep it as cash<small>deploy later with Buy</small></button>
+      </div>
     </div>
   </section>
 
   <!-- ═══ PHASE 3 · THE REVEAL ═══ -->
   <section class="phase" id="phase-reveal">
     <div class="card">
-      <h2>The reveal: your 5 decisions vs. simply staying invested</h2>
-      <!-- Bridge line: the story rounds ran on one simulated market path, and
-           the replay below runs the same decisions through a different
-           (illustrative 20-year) series — so the player's dollar figure will
-           change. Saying so explicitly keeps the tool honest and heads off
-           the "why did my number change?" question mid-demo. -->
-      <p class="muted">In the game, your five choices turned $50,000 into <b id="bridgeStory"></b> along one simulated market path. Below, those same five instincts are replayed through an illustrative 20-year market history modeled on the MSCI World Index. Drag the slider to start your 5-year journey in any year — including 2008.</p>
+      <h2>The reveal: your choices vs. the passive &amp; active funds</h2>
+      <!-- Bridge line: the story rounds ran on one simulated path; the replay
+           below runs the same decisions through the dated 20-year series — so
+           the dollar figure changes. Saying so keeps the tool honest. -->
+      <p class="muted">In the game, your six choices in a <b id="bridgeProfile"></b> fund turned $50,000 into <b id="bridgeStory"></b> along one simulated path. Below, those same choices are replayed through an illustrative 20-year history (stocks modeled on the MSCI World Index, plus a bond index). Drag the slider to start your 6-year journey in any year — including 2008.</p>
 
       <!-- #shareCapture is the html2canvas export target: chart + summary
            together, so the visual proof travels with the numbers. The
@@ -422,37 +470,33 @@
              The visually-hidden <table> below is the full data alternative. -->
         <div class="chart-box"><canvas id="revealChart" role="img" aria-label="Loading chart…"></canvas></div>
         <table id="chartTable" class="sr-only" aria-label="Portfolio value at the start and end of the selected window"></table>
-        <p class="legend-note"><span style="color:#008074;font-weight:700">━ You</span> &nbsp;·&nbsp; <span style="color:var(--navy);font-weight:700">━ Buy &amp; hold</span> &nbsp;·&nbsp; <span style="color:#8FADB2;font-weight:700">┄ All cash (2%)</span> <span id="activeLegend" hidden>&nbsp;·&nbsp; <span style="color:#831574;font-weight:700">┄ Active (illustrative)</span></span></p>
-        <p class="marker-note">The markers on your line show each yearly decision — <b style="color:#b3402e">◆ sold</b>, <b style="color:#008074">▲ bought</b>, <b style="color:var(--navy)">● held</b>.</p>
+        <p class="legend-note"><span style="color:#008074;font-weight:700">━ Your choices</span> &nbsp;·&nbsp; <span style="color:var(--navy);font-weight:700">━ Passive fund</span> &nbsp;·&nbsp; <span style="color:#831574;font-weight:700">┅ Active fund (illustrative)</span></p>
+        <p class="marker-note">The markers on your line show each decision — <b style="color:#b3402e">◆ sold</b>, <b style="color:#008074">▲ bought</b>, <b style="color:var(--navy)">● held</b>.</p>
+        <div class="decision-row" id="decisionRow"></div>
 
         <div class="slider-block">
-          <label>Your 5-year window <output id="windowLabel"></output></label>
-          <input type="range" id="windowSlider" min="0" max="0" step="1" value="0" aria-label="Choose the 5-year window">
+          <label>Your 6-year window <output id="windowLabel"></output></label>
+          <input type="range" id="windowSlider" min="0" max="0" step="1" value="0" aria-label="Choose the 6-year window">
           <div class="slider-hint">◀ drag me — try starting right before the 2008 crash ▶</div>
         </div>
 
         <div class="summary" id="summaryCard">
           <h3>Your result · <span id="sumWindow"></span></h3>
           <div class="final-grid">
-            <div class="final-cell" id="cellYou"><span>Your decisions</span><b id="sumYou"></b><span class="win-badge">✓ Highest</span></div>
-            <div class="final-cell" id="cellHold"><span>Buy &amp; hold</span><b id="sumHold"></b><span class="win-badge">✓ Highest</span></div>
-            <div class="final-cell" id="cellCash"><span>All cash at 2%</span><b id="sumCash"></b><span class="win-badge">✓ Highest</span></div>
+            <div class="final-cell" id="cellYou"><span>Your choices</span><b id="sumYou"></b><span class="win-badge">✓ Highest</span></div>
+            <div class="final-cell" id="cellPassive"><span>Passive fund</span><b id="sumPassive"></b><span class="win-badge">✓ Highest</span></div>
+            <div class="final-cell" id="cellActive"><span>Active fund</span><b id="sumActive"></b><span class="win-badge">✓ Highest</span></div>
           </div>
           <p class="gap-line" id="sumGap"></p>
-          <p class="takeaway">"Across 5-year windows in this 20-year history, staying invested typically outperformed timing the market."<span id="sumStat" style="display:block;font-style:normal;font-size:13px;opacity:.8;margin-top:6px"></span></p>
+          <p class="alpha-line" id="sumAlpha"></p>
+          <p class="takeaway">"Across 6-year windows in this 20-year history, staying invested typically outperformed timing the market."<span id="sumStat" style="display:block;font-style:normal;font-size:13px;opacity:.8;margin-top:6px"></span></p>
           <p class="principle">Long-term perspective is the foundation of <b>The Capital System</b>.</p>
         </div>
 
         <!-- Compliance disclaimer. Lives inside #shareCapture on purpose so
              it travels with every exported/shared PNG, not just the page. -->
-        <p class="disclaimer">For illustrative and educational purposes only. All lines shown are simulated, modeled on the historical behavior of the MSCI World Index; the "Active (illustrative)" line is a hypothetical lower-volatility approach and does NOT represent any actual fund, strategy, or Capital Group product or its performance. Hypothetical results do not reflect fees, expenses or taxes. Past performance is not predictive of results in future periods. This experience is not investment, tax or legal advice; investors should consider their own circumstances and consult a financial professional.</p>
+        <p class="disclaimer">For illustrative and educational purposes only. All lines shown are simulated: the passive fund is modeled on a blend of the MSCI World Index (stocks) and an illustrative bond index; the "Active fund" line is a hypothetical actively managed version of the same mix — a placeholder for this proof of concept that does NOT represent any actual fund, strategy, or Capital Group product (including the American Balanced Fund) or its performance. Hypothetical results do not reflect fees, expenses or taxes. Past performance is not predictive of results in future periods. This experience is not investment, tax or legal advice; investors should consider their own circumstances and consult a financial professional.</p>
       </div>
-
-      <!-- Optional illustrative overlay. Kept OFF by default and clearly labelled
-           as hypothetical — it teaches the concept of a lower-volatility active
-           approach without depicting any real fund (see activeSeries + the
-           disclaimer above). -->
-      <label class="active-toggle"><input type="checkbox" id="activeToggle"> Show an actively managed approach <span class="illus">(illustrative concept — not a real fund)</span></label>
 
       <!-- Compliant fund tie-in: a soft handoff, NOT a performance claim. -->
       <div class="handoff">
@@ -689,101 +733,103 @@ const TUTORIAL = {
    SIMULATION — pure, transparent functions. Everything the reveal shows
    comes from these three. No hidden adjustments.
    ═══════════════════════════════════════════════════════════════════════ */
-const START_TOTAL  = 50000;   // total starting money
-const START_EQUITY = 50000;   // 100% invested in the index fund at the start
-const START_CASH   = 0;       // no cash on the sidelines — matches the benchmark
-const CASH_RATE    = 0.02;    // yield on any cash you move to the sidelines, annual
+const START_TOTAL  = 50000;   // total starting money, 100% in the passive fund
+const CASH_RATE    = 0.02;    // yield on any cash moved to the sidelines, annual
 const ACTION_SIZE  = 0.25;    // Buy/Sell moves 25% of current total value
-const WINDOW_MONTHS = 60;     // 5-year decision window
-const MONTHLY_CASH = Math.pow(1 + CASH_RATE, 1 / 12); // 2%/yr compounded monthly
+const ROUNDS       = 6;       // six life-event decisions per game
+const WINDOW_MONTHS = ROUNDS * 12; // 72-month (6-year) replay window
+const BONUS_ROUND  = 3;       // a cash bonus arrives at the start of this round (1-based)
+const BONUS_AMOUNT = 15000;   // size of that bonus
+const MONTHLY_CASH = Math.pow(1 + CASH_RATE, 1 / 12);
+
+// Risk profiles: the equity weight of the passive composite fund the money
+// sits in. Bonds make up the remainder.
+const RISK_PROFILES = {
+  "60/40": { equity: 0.60, label: "Balanced", sub: "60% stocks · 40% bonds" },
+  "70/30": { equity: 0.70, label: "Growth",   sub: "70% stocks · 30% bonds" }
+};
+
+/* ── Synthetic BOND index, monthly, aligned to MSCI_WORLD dates ──────────
+   Illustrative only. Steady and low-volatility, with a flight-to-safety
+   rally in the 2008/2020 equity crashes and a drawdown in the 2022 rate
+   shock — so a stocks/bonds blend behaves believably. Deterministic. */
+const BONDS = (function buildBonds() {
+  const out = []; let v = 100;
+  for (let i = 0; i < MSCI_WORLD.length; i++) {
+    const ym = MSCI_WORLD[i].date, y = +ym.slice(0, 4), mo = +ym.slice(5);
+    let r = 0.0030;                                     // ~3.7%/yr base
+    if (y === 2008 && mo >= 9) r = 0.010;              // flight to safety
+    else if (y === 2020 && (mo === 2 || mo === 3)) r = 0.014;
+    else if (y === 2022) r = -0.0115;                  // rate shock (~ -13%/yr)
+    else if (y === 2023 && mo <= 3) r = -0.002;
+    v *= 1 + r; out.push({ date: ym, value: +v.toFixed(3) });
+  }
+  return out;
+})();
+
+/** Monthly return of the rebalanced composite fund at equity weight w. */
+function compositeMonthlyReturn(w, idx) {
+  const eqR = MSCI_WORLD[idx].value / MSCI_WORLD[idx - 1].value - 1;
+  const bdR = BONDS[idx].value / BONDS[idx - 1].value - 1;
+  return w * eqR + (1 - w) * bdR;
+}
 
 /**
- * Replay 5 buy/hold/sell decisions over a 5-year window of index history.
+ * "Your choices" line: replay the player's ROUNDS decisions over a window.
+ * The invested bucket earns the composite return; cash earns 2%. A one-time
+ * bonus is injected at the start of round BONUS_ROUND (into the fund or cash
+ * per the player's choice).
  *
- * @param {string[]} decisions  five of "buy" | "hold" | "sell";
- *                              decision k is applied at month k*12 of the window
- * @param {number}   startIdx   index into MSCI_WORLD where the window begins
- * @returns {number[]} 61 monthly total portfolio values (start month included)
+ * @param {string[]} decisions  "buy"|"hold"|"sell" per round (length ROUNDS)
+ * @param {number}   startIdx   window start index into MSCI_WORLD
+ * @param {number}   w          equity weight (risk profile)
+ * @param {string}   bonusInto  "fund" | "cash" — where the round-3 bonus lands
+ * @returns {number[]} WINDOW_MONTHS+1 monthly total values
  */
-function simulatePortfolio(decisions, startIdx) {
-  let equity = START_EQUITY;
-  let cash   = START_CASH;
+function simulatePortfolio(decisions, startIdx, w, bonusInto) {
+  let fund = START_TOTAL, cash = 0;
   const values = [];
-
   for (let m = 0; m <= WINDOW_MONTHS; m++) {
-    // grow equity by the index's move since last month
-    if (m > 0) {
-      equity *= MSCI_WORLD[startIdx + m].value / MSCI_WORLD[startIdx + m - 1].value;
-      cash   *= MONTHLY_CASH;
-    }
-    // apply this year's decision at the start of each of the 5 years
+    if (m > 0) { fund *= 1 + compositeMonthlyReturn(w, startIdx + m); cash *= MONTHLY_CASH; }
     if (m % 12 === 0 && m < WINDOW_MONTHS) {
-      const total = equity + cash;
-      const d = decisions[m / 12];
-      if (d === "buy") {
-        const amt = Math.min(ACTION_SIZE * total, cash);
-        cash -= amt; equity += amt;
-      } else if (d === "sell") {
-        const amt = Math.min(ACTION_SIZE * total, equity);
-        equity -= amt; cash += amt;
+      const round = m / 12;                          // 0-based round index
+      if (round === BONUS_ROUND - 1) {               // the bonus arrives first
+        if (bonusInto === "cash") cash += BONUS_AMOUNT; else fund += BONUS_AMOUNT;
       }
+      const total = fund + cash, d = decisions[round];
+      if (d === "buy")  { const a = Math.min(ACTION_SIZE * total, cash); cash -= a; fund += a; }
+      else if (d === "sell") { const a = Math.min(ACTION_SIZE * total, fund); fund -= a; cash += a; }
     }
-    values.push(equity + cash);
+    values.push(fund + cash);
   }
   return values;
 }
 
 /**
- * Buy-and-hold benchmark: the full $50,000 left fully invested in the index
- * for five years, untouched.
- *
- * Because the player also STARTS 100% invested, the benchmark and the player
- * begin from the identical position. That makes the comparison a pure test
- * of TIMING: the only way "You" can differ from buy-and-hold is by selling
- * out and/or buying back in response to the life events. A player who holds
- * every round ties this line exactly; and since you can never hold MORE than
- * 100% equity, you can only beat it by successfully stepping out before a
- * fall and back in before a rise — which the data shows is rare. There is no
- * allocation/risk confound: "more stock in a rising market" is off the table.
+ * Passive fund benchmark: the same composite, held untouched the whole way
+ * (plus the same round-3 bonus, invested). A player who holds every round
+ * ties this line exactly, so the gap between "You" and this line measures
+ * only the effect of the player's timing — never allocation.
  */
-function buyAndHoldSeries(startIdx) {
-  // Equivalent to simulatePortfolio with five "hold" decisions, but kept as
-  // its own function so the benchmark's meaning stays legible.
-  return simulatePortfolio(["hold", "hold", "hold", "hold", "hold"], startIdx);
-}
-
-/** All-cash counterfactual: did nothing, sat in savings at 2%. */
-function allCashSeries() {
-  const values = [];
-  for (let m = 0; m <= WINDOW_MONTHS; m++) {
-    values.push(START_TOTAL * Math.pow(MONTHLY_CASH, m));
-  }
-  return values;
+function passiveSeries(startIdx, w) {
+  return simulatePortfolio(Array(ROUNDS).fill("hold"), startIdx, w, "fund");
 }
 
 /**
- * ILLUSTRATIVE ONLY — NOT A REAL FUND OR STRATEGY.
+ * Active fund — SYNTHETIC, ILLUSTRATIVE PLACEHOLDER FOR THE POC.
  *
- * A hypothetical "actively managed" line for the optional overlay. It takes
- * the index's monthly moves at a lower beta (0.90) plus a small steady
- * value-add, net — i.e. a lower-VOLATILITY path: it cushions the crashes and
- * lags the raging bulls, ending near buy-and-hold with a smoother ride. This
- * illustrates the CONCEPT of active/defensive management. It deliberately
- * does NOT uniformly beat the index (that would be a performance claim), and
- * it does not represent any actual Capital Group fund or its returns. The
- * checkbox is off by default and the disclaimer spells this out.
+ * The same composite mix plus a modest, steady manager value-add ("alpha"),
+ * held throughout (plus the round-3 bonus). Kept as its own function so the
+ * data source can later be swapped for the real Capital Group American
+ * Balanced Fund. It does NOT represent any actual fund or its performance.
  */
-// beta 0.90 + a small per-month value-add tuned so the line beats buy-and-hold
-// in only ~46% of windows — it cushions crashes but lags strong bulls, so it
-// reads as a DIFFERENT risk profile, not a reliably-better one (which would be
-// an implicit performance claim).
-const ACTIVE_BETA = 0.90, ACTIVE_ALPHA = 0.0006;
-function activeSeries(startIdx) {
+const ACTIVE_ALPHA_M = 0.0011;   // ~+1.35%/yr illustrative net value-add
+function activeFundSeries(startIdx, w) {
   let v = START_TOTAL;
   const values = [v];
   for (let m = 1; m <= WINDOW_MONTHS; m++) {
-    const idxRet = MSCI_WORLD[startIdx + m].value / MSCI_WORLD[startIdx + m - 1].value - 1;
-    v *= (1 + ACTIVE_BETA * idxRet + ACTIVE_ALPHA);
+    v *= 1 + compositeMonthlyReturn(w, startIdx + m) + ACTIVE_ALPHA_M;
+    if (m === (BONUS_ROUND - 1) * 12) v += BONUS_AMOUNT;   // bonus at round-3 checkpoint
     values.push(v);
   }
   return values;
@@ -794,11 +840,15 @@ function activeSeries(startIdx) {
    ═══════════════════════════════════════════════════════════════════════ */
 const state = {
   phase: "welcome",
-  scenarios: [],      // 5 randomly drawn events for this run
-  step: -1,           // -1 = tutorial, 0..4 = real scenarios
-  decisions: [],      // recorded "buy"/"hold"/"sell" for the 5 real events
-  equity: START_EQUITY,
-  cash: START_CASH,
+  risk: "60/40",         // chosen risk profile key
+  equityWeight: 0.60,    // derived from risk
+  scenarios: [],         // ROUNDS randomly drawn events for this run
+  step: -1,              // -1 = tutorial, 0..ROUNDS-1 = real scenarios
+  decisions: [],         // recorded "buy"/"hold"/"sell" per round
+  fund: START_TOTAL,     // value in the composite fund
+  cash: 0,               // value on the sidelines
+  bonusInto: "fund",     // where the round-3 bonus was placed
+  bonusHandled: false,   // has the bonus interstitial been shown yet
   chart: null
 };
 
@@ -811,7 +861,7 @@ const REDUCED_MOTION = window.matchMedia && window.matchMedia("(prefers-reduced-
    randomizer surprising them. Any non-demo session stays fully random. */
 const DEMO_MODE = new URLSearchParams(location.search).has("demo");
 // A curated fear/greed arc for the scripted demo (indices into SCENARIOS).
-const DEMO_SCENARIO_IDS = [0, 12, 14, 1, 6]; // dad panic, all-time high, pandemic, Tesla FOMO, inheritance
+const DEMO_SCENARIO_IDS = [0, 12, 14, 1, 6, 17]; // dad panic, all-time high, pandemic, Tesla FOMO, inheritance, election
 
 function showPhase(id) {
   document.querySelectorAll(".phase").forEach((p) => p.classList.remove("active"));
@@ -822,35 +872,35 @@ function showPhase(id) {
   window.scrollTo({ top: 0, behavior: REDUCED_MOTION ? "auto" : "smooth" });
 }
 
-function drawFiveScenarios() {
+function drawScenarios() {
   if (DEMO_MODE) return DEMO_SCENARIO_IDS.map((i) => SCENARIOS[i]);
   const pool = SCENARIOS.slice();
   for (let i = pool.length - 1; i > 0; i--) {   // Fisher-Yates shuffle
     const j = Math.floor(Math.random() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
-  return pool.slice(0, 5);
+  return pool.slice(0, ROUNDS);
 }
 
 function updateTracker() {
-  const total = state.equity + state.cash;
+  const total = state.fund + state.cash;
   $("trackerValue").textContent = fmt(total);
   $("trackerSplit").textContent =
-    Math.round(100 * state.equity / total) + "% invested";
+    Math.round(100 * state.fund / total) + "% invested";
   $("tracker").classList.add("show");
 }
 
 function renderProgress() {
   const bar = $("progressBar");
   bar.innerHTML = "";
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < ROUNDS; i++) {
     const dot = document.createElement("span");
     dot.className = "dot" + (i < state.step ? " done" : i === state.step ? " now" : "");
     bar.appendChild(dot);
   }
   const label = document.createElement("span");
   label.className = "label";
-  label.textContent = state.step < 0 ? "Practice" : `Year ${state.step + 1} of 5`;
+  label.textContent = state.step < 0 ? "Practice" : `Year ${state.step + 1} of ${ROUNDS}`;
   bar.appendChild(label);
 }
 
@@ -868,9 +918,9 @@ function renderScenario() {
 
   // decision buttons show live dollar amounts; Buy greys out while fully
   // invested (no cash to deploy), Sell greys out if nothing is left in.
-  const total = state.equity + state.cash;
+  const total = state.fund + state.cash;
   const buyAmt  = Math.min(ACTION_SIZE * total, state.cash);
-  const sellAmt = Math.min(ACTION_SIZE * total, state.equity);
+  const sellAmt = Math.min(ACTION_SIZE * total, state.fund);
   $("buyNote").textContent  = buyAmt  > 0 ? "move " + fmt(buyAmt)  + " in"  : "you're fully invested";
   $("sellNote").textContent = sellAmt > 0 ? "move " + fmt(sellAmt) + " out" : "nothing invested";
   $("btnBuy").disabled  = buyAmt  <= 0;
@@ -880,62 +930,113 @@ function renderScenario() {
   showPhase("phase-scenario");
 }
 
-/** Handle a Buy/Hold/Sell click, advance one simulated year, show outcome. */
+// Illustrative bond year used for the STORY rounds (the reveal uses the real
+// dated bond series instead). Keeps the blended fund return believable.
+const BOND_STORY_YR = 3;
+
+/** Apply one action to a {fund, cash} state and advance one story year. */
+function applyRound(fund, cash, action, equityMovePct, w) {
+  const total = fund + cash;
+  if (action === "buy")  { const a = Math.min(ACTION_SIZE * total, cash); cash -= a; fund += a; }
+  else if (action === "sell") { const a = Math.min(ACTION_SIZE * total, fund); fund -= a; cash += a; }
+  const fundReturn = (w * equityMovePct + (1 - w) * BOND_STORY_YR) / 100;
+  fund *= 1 + fundReturn;
+  cash *= 1 + CASH_RATE;
+  return { fund, cash, total: fund + cash };
+}
+
+/** Handle a Buy/Hold/Sell click, advance one story year, show the outcome. */
 function decide(action) {
   const isTutorial = state.step < 0;
   const sc = isTutorial ? TUTORIAL : state.scenarios[state.step];
+  const w = state.equityWeight;
+  const move = sc.marketMoveNextPeriod;             // this is a STOCKS move
+  const fundYr = (w * move + (1 - w) * BOND_STORY_YR); // the blended fund year, %
 
-  // Tutorial runs on a sandbox copy so it never touches the real portfolio.
-  let eq = state.equity, cash = state.cash;
-  const totalBefore = eq + cash;
-  if (action === "buy") {
-    const amt = Math.min(ACTION_SIZE * totalBefore, cash);
-    cash -= amt; eq += amt;
-  } else if (action === "sell") {
-    const amt = Math.min(ACTION_SIZE * totalBefore, eq);
-    eq -= amt; cash += amt;
-  }
-  // one year passes: equity follows the scenario's market move, cash earns 2%
-  eq   *= 1 + sc.marketMoveNextPeriod / 100;
-  cash *= 1 + CASH_RATE;
-  const totalAfter = eq + cash;
+  const before = state.fund + state.cash;
+  // Counterfactuals: what each of the three choices would have produced this
+  // round, from the SAME starting position (feedback: "show the shift").
+  const results = {
+    buy:  applyRound(state.fund, state.cash, "buy",  move, w),
+    hold: applyRound(state.fund, state.cash, "hold", move, w),
+    sell: applyRound(state.fund, state.cash, "sell", move, w)
+  };
+  const chosen = results[action];
 
   if (!isTutorial) {
     state.decisions.push(action);
-    state.equity = eq;
-    state.cash = cash;
+    state.fund = chosen.fund;
+    state.cash = chosen.cash;
     updateTracker();
   }
 
-  // "what the market did next" — one sentence, then their own number
-  const move = sc.marketMoveNextPeriod;
+  // Headline: distinguish the STOCK move from the investor's BLENDED result,
+  // which answers the "it doesn't look like 18%" feedback directly.
   $("ocEmoji").textContent = move >= 10 ? "📈" : move >= 0 ? "🌤️" : "📉";
-  $("ocMarket").textContent = "What the market did next: " +
-    (move >= 0 ? "climbed +" + move + "%" : "fell " + move + "%") +
-    " over the following year.";
-  const verb = { buy: "bought more", hold: "held steady", sell: "sold" }[action];
-  $("ocYou").textContent =
-    (isTutorial ? "Practice result: you " : "You ") + verb +
-    ", and your $" + Math.round(totalBefore).toLocaleString() +
-    " became " + fmt(totalAfter) +
+  $("ocMarket").innerHTML = "Stocks " +
+    (move >= 0 ? "climbed <b>+" + move + "%</b>" : "fell <b>" + move + "%</b>") +
+    " · bonds " + (BOND_STORY_YR >= 0 ? "+" + BOND_STORY_YR : BOND_STORY_YR) + "% over the year.";
+  const cashPct = Math.round(100 * state.cash / (state.fund + state.cash));
+  $("ocYou").innerHTML =
+    (isTutorial ? "Practice: you " : "You ") +
+    { buy: "bought more", hold: "held steady", sell: "sold" }[action] +
+    ". Your " + RISK_PROFILES[state.risk].sub + " fund returned <b>" +
+    (fundYr >= 0 ? "+" : "") + fundYr.toFixed(1) + "%</b>" +
+    (cashPct > 0 ? " on the invested part (the rest sat in cash at 2%)" : "") +
+    ", so " + fmt(before) + " became " + fmt(chosen.total) +
     (isTutorial ? ". Got it? Now it counts." : ".");
 
-  // Reveal what emotional lever that scenario pulled only AFTER the choice
-  // is locked in — naming the bias beforehand would just teach the player
-  // to suppress their gut reaction instead of showing it to them honestly.
+  // Three radio-style tiles: what Buy / Hold / Sell each did this round.
+  renderCounterfactuals(before, results, action);
+
+  // Reveal the emotional lever only AFTER the choice is locked in.
   $("ocPullChip").hidden = false;
   $("ocPullChip").textContent = "That moment tested: " + sc.emotionalPull;
 
   showPhase("phase-outcome");
 }
 
+/** Populate the Buy/Hold/Sell counterfactual tiles on the outcome screen. */
+function renderCounterfactuals(before, results, chosen) {
+  const order = ["buy", "hold", "sell"];
+  const noun = { buy: "Buy 25%", hold: "Hold", sell: "Sell 25%" };
+  const box = $("ocChoices");
+  box.innerHTML = "";
+  order.forEach((act) => {
+    const delta = results[act].total - before;
+    const row = document.createElement("div");
+    row.className = "cf-row" + (act === chosen ? " picked" : "");
+    row.innerHTML =
+      '<span class="cf-dot"></span>' +
+      '<span class="cf-name">' + noun[act] + (act === chosen ? " · your call" : "") + '</span>' +
+      '<span class="cf-val">' + fmt(results[act].total) +
+        ' <em class="' + (delta >= 0 ? "up" : "down") + '">(' +
+        (delta >= 0 ? "+" : "") + fmt(delta).replace("$-", "-$") + ')</em></span>';
+    box.appendChild(row);
+  });
+}
+
 function nextStep() {
   state.step++;
-  if (state.step >= 5) {
-    enterReveal();
-  } else {
-    renderScenario();
-  }
+  if (state.step >= ROUNDS) { enterReveal(); return; }
+  // Cash-injection bonus arrives at the start of round BONUS_ROUND.
+  if (state.step === BONUS_ROUND - 1 && !state.bonusHandled) { showBonus(); return; }
+  renderScenario();
+}
+
+/* ── Round-3 cash injection ("you got a bonus") ──────────────────────────
+   Unlocks the Buy action and reflects a real windfall: invest it into the
+   portfolio, or keep it aside as cash to deploy later. */
+function showBonus() {
+  $("bonusAmt").textContent = fmt(BONUS_AMOUNT);
+  showPhase("phase-bonus");
+}
+function chooseBonus(into) {
+  state.bonusInto = into;
+  state.bonusHandled = true;
+  if (into === "cash") state.cash += BONUS_AMOUNT; else state.fund += BONUS_AMOUNT;
+  updateTracker();
+  renderScenario();
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -959,14 +1060,12 @@ const DEFAULT_START = MAX_START;
 function enterReveal() {
   // Bridge line: show what the story rounds produced before switching to the
   // historical replay, so the change in dollar figures is explicit.
-  $("bridgeStory").textContent = fmt(state.equity + state.cash);
+  $("bridgeStory").textContent = fmt(state.fund + state.cash);
+  $("bridgeProfile").textContent = state.risk + " (" + RISK_PROFILES[state.risk].sub + ")";
   $("tracker").classList.remove("show");
   const slider = $("windowSlider");
   slider.max = MAX_START;
   slider.value = DEFAULT_START;
-  // Reset the illustrative overlay to off for each fresh reveal.
-  $("activeToggle").checked = false;
-  $("activeLegend").hidden = true;
   buildChart();
   renderReveal(+slider.value);
   showPhase("phase-reveal");
@@ -977,15 +1076,12 @@ function buildChart() {
   state.chart = new Chart($("revealChart"), {
     type: "line",
     data: { labels: [], datasets: [
-      { label: "You", data: [], borderColor: "#008074", backgroundColor: "rgba(0,128,116,.12)",
+      { label: "Your choices", data: [], borderColor: "#008074", backgroundColor: "rgba(0,128,116,.12)",
         borderWidth: 3, pointRadius: 0, pointHitRadius: 12, tension: .25, fill: false },
-      { label: "Buy & hold", data: [], borderColor: "#083469", backgroundColor: "rgba(8,52,105,.10)",
+      { label: "Passive fund", data: [], borderColor: "#083469",
         borderWidth: 3, pointRadius: 0, pointHitRadius: 12, tension: .25, fill: false },
-      { label: "All cash (2%)", data: [], borderColor: "#8FADB2", borderDash: [6, 5],
-        borderWidth: 2, pointRadius: 0, pointHitRadius: 12, tension: 0, fill: false },
-      // Illustrative active line — hidden until the checkbox is ticked.
-      { label: "Active (illustrative)", data: [], borderColor: "#831574", borderDash: [3, 3],
-        borderWidth: 2, pointRadius: 0, pointHitRadius: 12, tension: .25, fill: false, hidden: true }
+      { label: "Active fund (illustrative)", data: [], borderColor: "#831574", borderDash: [5, 4],
+        borderWidth: 3, pointRadius: 0, pointHitRadius: 12, tension: .25, fill: false }
     ]},
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -997,7 +1093,6 @@ function buildChart() {
           backgroundColor: "#083469", titleFont: { weight: "600" },
           callbacks: {
             label: (c) => " " + c.dataset.label + ": " + fmt(c.parsed.y),
-            // On the "You" line, name the decision made at that year.
             afterBody: (items) => {
               const i = items[0].dataIndex;
               if (i % 12 === 0 && i < WINDOW_MONTHS) {
@@ -1020,9 +1115,10 @@ function buildChart() {
 
 /** Re-run the simulation for a window start and repaint chart + summary. */
 function renderReveal(startIdx) {
-  const you  = simulatePortfolio(state.decisions, startIdx);
-  const hold = buyAndHoldSeries(startIdx);
-  const cash = allCashSeries();
+  const w = state.equityWeight, b = state.bonusInto;
+  const you  = simulatePortfolio(state.decisions, startIdx, w, b);
+  const pass = passiveSeries(startIdx, w);
+  const act  = activeFundSeries(startIdx, w);
   const labels = [];
   for (let m = 0; m <= WINDOW_MONTHS; m++) {
     const [y, mo] = MSCI_WORLD[startIdx + m].date.split("-");
@@ -1030,13 +1126,10 @@ function renderReveal(startIdx) {
   }
   state.chart.data.labels = labels;
   state.chart.data.datasets[0].data = you;
-  state.chart.data.datasets[1].data = hold;
-  state.chart.data.datasets[2].data = cash;
-  state.chart.data.datasets[3].data = activeSeries(startIdx);
+  state.chart.data.datasets[1].data = pass;
+  state.chart.data.datasets[2].data = act;
 
-  // Mark each yearly decision on the "You" line so the story choices are
-  // visible against the outcome: sell = red diamond, buy = teal triangle,
-  // hold = navy dot. Non-decision months stay invisible (radius 0).
+  // Mark each yearly decision on the "Your choices" line.
   const decColor = { buy: "#008074", sell: "#b3402e", hold: "#083469" };
   const decShape = { buy: "triangle", sell: "rectRot", hold: "circle" };
   const pr = [], ps = [], pbg = [];
@@ -1053,53 +1146,63 @@ function renderReveal(startIdx) {
   });
   state.chart.update();
 
-  // summary card
-  const fy = you[you.length - 1], fh = hold[hold.length - 1], fc = cash[cash.length - 1];
+  // summary card — Your choices vs Passive fund vs Active fund
+  const fy = you[you.length - 1], fp = pass[pass.length - 1], fa = act[act.length - 1];
   $("windowLabel").textContent = windowTitle(startIdx);
   $("sumWindow").textContent = windowTitle(startIdx);
-  $("sumYou").textContent  = fmt(fy);
-  $("sumHold").textContent = fmt(fh);
-  $("sumCash").textContent = fmt(fc);
-  $("cellYou").classList.toggle("win", fy >= fh && fy >= fc);
-  $("cellHold").classList.toggle("win", fh > fy && fh >= fc);
-  $("cellCash").classList.toggle("win", fc > fy && fc > fh);
+  $("sumYou").textContent     = fmt(fy);
+  $("sumPassive").textContent = fmt(fp);
+  $("sumActive").textContent  = fmt(fa);
+  $("cellYou").classList.toggle("win", fy >= fp && fy >= fa);
+  $("cellPassive").classList.toggle("win", fp > fy && fp >= fa);
+  $("cellActive").classList.toggle("win", fa > fy && fa > fp);
 
-  const gapPct = ((fy - fh) / fh) * 100;
+  const gapPct = ((fy - fp) / fp) * 100;
   if (Math.abs(gapPct) < 0.05) {
-    // A pure-hold player ties the benchmark exactly — say so rather than
-    // showing a meaningless "+0.0%".
-    $("sumGap").innerHTML = "You finished <b class=\"pos\">even</b> with buy-and-hold — leaving it alone and your choices landed in the same place here. Drag the slider to see where they diverge.";
+    $("sumGap").innerHTML = "You finished <b class=\"pos\">even</b> with the passive fund — your choices landed exactly where simply holding it would have. Drag the slider to see where they diverge.";
   } else if (gapPct > 0) {
-    $("sumGap").innerHTML = "Your timing beat buy-and-hold by <b class=\"pos\">+" + gapPct.toFixed(1) + "%</b> in this window — try dragging the slider and see how often that survives.";
+    $("sumGap").innerHTML = "Your timing beat the passive fund by <b class=\"pos\">+" + gapPct.toFixed(1) + "%</b> in this window — drag the slider and see how often that survives.";
   } else {
-    $("sumGap").innerHTML = "Your timing ended <b class=\"neg\">" + gapPct.toFixed(1) + "%</b> behind simply leaving it alone.";
+    $("sumGap").innerHTML = "Your timing ended <b class=\"neg\">" + gapPct.toFixed(1) + "%</b> behind simply holding the passive fund.";
   }
 
-  // ── Accessibility: keep the canvas's aria-label and the hidden data table
-  //    in sync with the chart, so screen-reader users get the same story. ──
-  const winner = fy >= fh && fy >= fc ? "your decisions"
-               : fh >= fc ? "buy-and-hold" : "all cash";
+  // Alpha of the illustrative active fund over the passive fund.
+  const alpha = fa - fp, alphaPct = (fa / fp - 1) * 100;
+  $("sumAlpha").innerHTML = "The active fund added <b>" + fmt(alpha).replace("$-", "-$") +
+    " (" + (alphaPct >= 0 ? "+" : "") + alphaPct.toFixed(1) + "%)</b> over the passive fund here — its illustrative alpha.";
+
+  // decisions-so-far row
+  const dr = $("decisionRow"); dr.innerHTML = "";
+  state.decisions.forEach((d, i) => {
+    const chip = document.createElement("span");
+    chip.className = "dchip " + d;
+    chip.textContent = (i + 1) + " · " + { buy: "Buy", hold: "Hold", sell: "Sell" }[d];
+    dr.appendChild(chip);
+  });
+
+  // ── Accessibility ──
+  const winner = fy >= fp && fy >= fa ? "your choices" : fa >= fp ? "the active fund" : "the passive fund";
   $("revealChart").setAttribute("aria-label",
     "Line chart of portfolio value over " + windowTitle(startIdx) + ", all starting at " +
-    fmt(START_TOTAL) + ". Ending values: your decisions " + fmt(fy) +
-    ", buy-and-hold " + fmt(fh) + ", all cash " + fmt(fc) + ". Highest: " + winner + ".");
+    fmt(START_TOTAL) + " in a " + state.risk + " fund. Ending values: your choices " + fmt(fy) +
+    ", passive fund " + fmt(fp) + ", active fund " + fmt(fa) + ". Highest: " + winner + ".");
   $("windowSlider").setAttribute("aria-valuetext", windowTitle(startIdx));
   $("chartTable").innerHTML =
     "<caption>Portfolio value, " + windowTitle(startIdx) + "</caption>" +
-    "<tr><th>Strategy</th><th>Start</th><th>End</th></tr>" +
-    "<tr><td>Your decisions</td><td>" + fmt(you[0]) + "</td><td>" + fmt(fy) + "</td></tr>" +
-    "<tr><td>Buy &amp; hold</td><td>" + fmt(hold[0]) + "</td><td>" + fmt(fh) + "</td></tr>" +
-    "<tr><td>All cash at 2%</td><td>" + fmt(cash[0]) + "</td><td>" + fmt(fc) + "</td></tr>";
+    "<tr><th>Line</th><th>Start</th><th>End</th></tr>" +
+    "<tr><td>Your choices</td><td>" + fmt(you[0]) + "</td><td>" + fmt(fy) + "</td></tr>" +
+    "<tr><td>Passive fund</td><td>" + fmt(pass[0]) + "</td><td>" + fmt(fp) + "</td></tr>" +
+    "<tr><td>Active fund (illustrative)</td><td>" + fmt(act[0]) + "</td><td>" + fmt(fa) + "</td></tr>";
 
-  // honest supporting stat: how often buy-and-hold wins across ALL windows
-  let holdWins = 0, windows = 0;
-  for (let s = 0; s <= MAX_START; s += 3) {   // every 3 months keeps it snappy
+  // honest supporting stat: how often the passive fund matches/beats the player
+  let passWins = 0, windows = 0;
+  for (let s = 0; s <= MAX_START; s += 3) {
     windows++;
-    const u = simulatePortfolio(state.decisions, s);
-    if (buyAndHoldSeries(s)[WINDOW_MONTHS] >= u[WINDOW_MONTHS]) holdWins++;
+    const u = simulatePortfolio(state.decisions, s, w, b);
+    if (passiveSeries(s, w)[WINDOW_MONTHS] >= u[WINDOW_MONTHS]) passWins++;
   }
-  $("sumStat").textContent = "With your exact 5 decisions, buy-and-hold matches or beats you in " +
-    Math.round(100 * holdWins / windows) + "% of the 5-year windows in this simulated 2005–2025 history.";
+  $("sumStat").textContent = "With your exact " + ROUNDS + " decisions, simply holding the passive fund matches or beats your timing in " +
+    Math.round(100 * passWins / windows) + "% of the 6-year windows in this simulated 2005–2025 history.";
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -1134,32 +1237,38 @@ async function shareResult() {
    WIRING + RESET
    ═══════════════════════════════════════════════════════════════════════ */
 function startGame() {
-  state.scenarios = drawFiveScenarios();
+  state.equityWeight = RISK_PROFILES[state.risk].equity;
+  state.scenarios = drawScenarios();
   state.step = -1;
   state.decisions = [];
-  state.equity = START_EQUITY;
-  state.cash = START_CASH;
+  state.fund = START_TOTAL;
+  state.cash = 0;
+  state.bonusInto = "fund";
+  state.bonusHandled = false;
   renderScenario();
 }
+
+// Risk-profile picker on the welcome screen.
+function selectRisk(key) {
+  state.risk = key;
+  state.equityWeight = RISK_PROFILES[key].equity;
+  document.querySelectorAll(".risk-opt").forEach((el) =>
+    el.classList.toggle("sel", el.dataset.risk === key));
+}
+document.querySelectorAll(".risk-opt").forEach((el) =>
+  el.addEventListener("click", () => selectRisk(el.dataset.risk)));
+selectRisk(state.risk);
 
 $("btnStart").addEventListener("click", startGame);
 $("btnBuy").addEventListener("click", () => decide("buy"));
 $("btnHold").addEventListener("click", () => decide("hold"));
 $("btnSell").addEventListener("click", () => decide("sell"));
 $("btnContinue").addEventListener("click", nextStep);
+$("btnBonusInvest").addEventListener("click", () => chooseBonus("fund"));
+$("btnBonusCash").addEventListener("click", () => chooseBonus("cash"));
 $("windowSlider").addEventListener("input", (e) => renderReveal(+e.target.value));
 $("btnShare").addEventListener("click", shareResult);
-$("btnAgain").addEventListener("click", startGame);   // re-randomizes 5 new scenarios
-
-// Illustrative active-line overlay: toggle the hidden dataset + its legend entry.
-$("activeToggle").addEventListener("change", (e) => {
-  const on = e.target.checked;
-  if (state.chart) {
-    state.chart.data.datasets[3].hidden = !on;
-    state.chart.update();
-  }
-  $("activeLegend").hidden = !on;
-});
+$("btnAgain").addEventListener("click", startGame);   // re-randomizes scenarios
 </script>
 </body>
 </html>
