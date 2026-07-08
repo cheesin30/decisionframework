@@ -74,7 +74,9 @@ naming convention** section below — it is the most important thing in this rep
 | `emails/how-to-guide.html` | Source for the how-to PDF (rendered to PDF with headless Chromium). |
 | `emails/LTI_Calendar_How-To.pdf` | The "how to open the calendar file" guide (phone + desktop) attached to every adviser email — upload once to SharePoint `/LTI/Assets/`. |
 | `qr/qr-setup.md` | How to generate the QR for each session, plus three worked examples (DBS, AIA, HSBC). |
-| `docs/RUNBOOK.md` | Operating manual: what the system does, the three most common failures and their fixes, how to add a new workshop session, and the production handover steps. |
+| `docs/RUNBOOK.md` | Operating manual: what the system does, the most common failures and their fixes, how to add a new workshop session, and the production handover steps. |
+| `docs/troubleshooting-guide.html` | Source for the technical troubleshooting PDF (rendered with headless Chromium). |
+| `docs/LTI_Flow_Troubleshooting.pdf` | Printable technical troubleshooting reference for the flow — how to read a failed run, symptom→cause→fix catalogue, connection fixes, and how to resubmit. Share with consultants/support. |
 
 ---
 

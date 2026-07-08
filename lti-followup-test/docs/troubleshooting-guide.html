@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>LTI Follow-up — Power Automate Troubleshooting Guide</title>
+<!--
+  Source for LTI_Flow_Troubleshooting.pdf — technical troubleshooting reference
+  for Flow A (LTI Follow-up Sender). Rendered to PDF with headless Chromium (A4):
+    /opt/pw-browsers/chromium-1194/chrome-linux/chrome --headless --disable-gpu \
+      --no-sandbox --no-pdf-header-footer \
+      --print-to-pdf=LTI_Flow_Troubleshooting.pdf troubleshooting-guide.html
+-->
+<style>
+  @page { size: A4; margin: 13mm 14mm 15mm; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+    color: #1c2833; font-size: 9.6pt; line-height: 1.42;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .band { background: #003DA5; color: #fff; padding: 16px 20px; border-radius: 8px; }
+  .band .eyebrow { font-size: 8pt; letter-spacing: 2px; text-transform: uppercase; font-weight: bold; opacity: .85; margin: 0 0 5px; }
+  .band h1 { font-size: 18pt; margin: 0; line-height: 1.12; }
+  .band p { margin: 7px 0 0; font-size: 9pt; opacity: .93; }
+  h2 { font-size: 12pt; color: #003DA5; margin: 18px 0 6px; padding-bottom: 3px; border-bottom: 2px solid #eef4fb; }
+  h2 .n { display:inline-block; min-width: 20px; }
+  h3 { font-size: 10pt; margin: 12px 0 3px; color: #1c2833; }
+  p { margin: 5px 0; }
+  code { font-family: "Courier New", monospace; font-size: 8.8pt; background: #f2f5f8; padding: 1px 4px; border-radius: 3px; color: #0a3a63; }
+  .pipeline { font-family: "Courier New", monospace; font-size: 8.6pt; background: #f4f6f8; border: 1px solid #e3e8ee; border-radius: 8px; padding: 12px 14px; line-height: 1.5; white-space: pre-wrap; }
+  table { width: 100%; border-collapse: collapse; margin: 6px 0 4px; font-size: 8.9pt; }
+  th, td { border: 1px solid #dbe2ea; padding: 5px 8px; text-align: left; vertical-align: top; }
+  th { background: #003DA5; color: #fff; font-size: 8.4pt; letter-spacing: .3px; }
+  tr:nth-child(even) td { background: #f7f9fb; }
+  td strong { color: #003DA5; }
+  .callout { margin: 9px 0; padding: 9px 13px; background: #eef4fb; border-left: 4px solid #003DA5; border-radius: 0 6px 6px 0; font-size: 9pt; }
+  .warn { background: #fff6ec; border-left-color: #d99019; }
+  .danger { background: #fdeeed; border-left-color: #b42318; }
+  ol, ul { margin: 5px 0; padding-left: 20px; }
+  li { padding: 1px 0; }
+  .kv { width: 100%; border-collapse: collapse; font-size: 8.9pt; }
+  .kv td { border: 1px solid #dbe2ea; padding: 5px 8px; }
+  .kv td:first-child { background: #f4f6f8; font-weight: bold; width: 150px; }
+  footer { margin-top: 18px; padding-top: 8px; border-top: 1px solid #e3e8ee; color: #5d6b78; font-size: 7.8pt; }
+  .avoid { break-inside: avoid; }
+  h2 { break-after: avoid; }
+  .pagebreak { break-before: page; }
+</style>
+</head>
+<body>
+  <div class="band">
+    <p class="eyebrow">Capital Group · Capital Learning · Internal</p>
+    <h1>LTI Follow-up — Power Automate Troubleshooting Guide</h1>
+    <p>How to diagnose and fix a failed <strong>LTI Follow-up Sender</strong> flow run. For consultants and anyone supporting the workshop follow-up system.</p>
+  </div>
+
+  <h2>1. What the flow does (in 20 seconds)</h2>
+  <p>When an adviser submits the LTI follow-up Form, the flow rebuilds the exact
+  <code>.ics</code> filename from the Firm + Date baked into the QR, fetches that
+  file (and a static how-to PDF) from SharePoint, and emails them to the adviser.
+  If any step fails, a <strong>diagnostic email</strong> is sent to the operator
+  and the run is marked <strong>Failed</strong> (red) in run history.</p>
+  <div class="pipeline">Trigger: When a new response is submitted (Forms)
+   -> Get response details
+   -> Compose filename        {Firm}_LTI_Follow_Up_{yyyy-MM-dd}.ics
+   -> Try (scope)
+        -> Get file content using path   ( .ics from /LTI/Generated ICS/ )
+        -> Get how-to PDF                ( /LTI/Assets/LTI_Calendar_How-To.pdf )
+        -> Send advisor email            ( 2 attachments )
+   -> Catch (scope, runs only if Try fails)
+        -> Filter failed actions -> Compose error
+        -> Send diagnostic email -> Terminate (Failed)</div>
+
+  <h2>2. First response: read the failed run</h2>
+  <ol>
+    <li>Go to <strong>make.powerautomate.com</strong> → <strong>My flows</strong>
+      → <strong>LTI Follow-up Sender</strong> → <strong>Run history</strong>
+      (or open the flow inside <strong>Solutions</strong> if imported that way).</li>
+    <li>Open the most recent <strong>Failed</strong> (red) run.</li>
+    <li>The failed action is highlighted red. Click it → expand
+      <strong>Inputs</strong> and <strong>Outputs</strong> / <strong>error</strong>
+      to see the message.</li>
+    <li>Cross-check against the <strong>diagnostic email</strong> the run sent to
+      the operator — it already contains the key facts:</li>
+  </ol>
+  <table class="kv avoid">
+    <tr><td>Constructed filename</td><td>The exact <code>.ics</code> name the flow tried to fetch — compare this to the real file in SharePoint.</td></tr>
+    <tr><td>Firm</td><td>The Firm value from the QR (case-sensitive; may contain underscores).</td></tr>
+    <tr><td>Workshop date</td><td>The date value from the QR (must be <code>yyyy-MM-dd</code>).</td></tr>
+    <tr><td>Adviser email</td><td>Where the pack was meant to go — check for typos.</td></tr>
+    <tr><td>Timestamp (SGT)</td><td>When it failed (Asia/Singapore).</td></tr>
+    <tr><td>Error message</td><td>The raw error from the failed action.</td></tr>
+  </table>
+
+  <h2>3. Failure catalogue — symptom → cause → fix</h2>
+  <table class="avoid">
+    <tr><th style="width:23%">Where it fails</th><th style="width:32%">Likely cause</th><th style="width:45%">Fix</th></tr>
+    <tr>
+      <td><strong>Get file content using path</strong><br>(the <code>.ics</code>) — <em>most common</em></td>
+      <td>Filename mismatch: the constructed name doesn't match any file in <code>/LTI/Generated&nbsp;ICS/</code>. Usually Firm capitalisation, a missing/extra underscore, or wrong date format.</td>
+      <td>Open the diagnostic email's <strong>Constructed filename</strong> and compare it letter-for-letter with the real file. Confirm the <code>.ics</code> exists in <code>/LTI/Generated ICS/</code>. Firm is <strong>case-sensitive</strong> (<code>DBS</code> ≠ <code>dbs</code>) and may contain <code>_</code>; date is <code>yyyy-MM-dd</code>. Fix the QR's pre-fill values to match the filename, then have the adviser resubmit (§5).</td>
+    </tr>
+    <tr>
+      <td><strong>Get how-to PDF</strong> — <em>blocks every send</em></td>
+      <td>The static guide is missing from <code>/LTI/Assets/</code> or was renamed.</td>
+      <td>Upload <code>LTI_Calendar_How-To.pdf</code> to <code>/Capital Learning Hub/LTI/Assets/</code> with exactly that name. One-time fix; then resubmit failed runs.</td>
+    </tr>
+    <tr>
+      <td><strong>Send advisor email</strong></td>
+      <td>Invalid recipient (typo in the adviser's email), or the Outlook connection lost authorisation.</td>
+      <td>Check <strong>Adviser email</strong> in the diagnostic. If it's a typo, the adviser must resubmit with the correct address. If the error mentions auth/401/403, re-authenticate the Office 365 connection (§4).</td>
+    </tr>
+    <tr>
+      <td><strong>Get response details</strong></td>
+      <td>Forms connection lost authorisation, or the Form/question IDs changed.</td>
+      <td>Re-authenticate the Microsoft Forms connection (§4). If the Form was edited, confirm the question IDs still match the flow (see form-spec mapping).</td>
+    </tr>
+    <tr>
+      <td><strong>Trigger never fires</strong> (no run at all)</td>
+      <td>Flow is turned Off, or the Forms trigger connection is broken.</td>
+      <td>Confirm the flow is <strong>On</strong>. Open the trigger, re-select the Form, re-authenticate Forms. Submit a test response.</td>
+    </tr>
+    <tr>
+      <td><strong>Any SharePoint/Outlook action</strong> with <code>429</code> / throttled</td>
+      <td>Temporary rate limiting under high volume.</td>
+      <td>Usually transient — <strong>Resubmit</strong> the failed run (§5). If persistent, space out sends.</td>
+    </tr>
+    <tr>
+      <td><strong>Wrong pack delivered</strong> (adviser got an <code>.ics</code>, but wrong firm/date)</td>
+      <td>Not a flow error — the QR had the wrong Firm/Date baked in.</td>
+      <td>Check the QR's pre-fill URL parameters; regenerate the QR from the correct filename. One unique QR per firm-per-session.</td>
+    </tr>
+  </table>
+
+  <h2 class="pagebreak">4. Connection &amp; permission problems</h2>
+  <p>The flow uses three connections. An expired or wrong-account connection is a
+  common cause of sudden, repeated failures across many runs.</p>
+  <table class="avoid">
+    <tr><th style="width:26%">Connection</th><th style="width:30%">Needs</th><th style="width:44%">If broken</th></tr>
+    <tr><td><strong>Microsoft Forms</strong></td><td>Access to the LTI Workshop Follow-up form.</td><td>Get response details / trigger fail. Re-authenticate.</td></tr>
+    <tr><td><strong>SharePoint</strong></td><td><strong>Read</strong> access to <code>/Capital Learning Hub/LTI/</code> (both <code>Generated ICS/</code> and <code>Assets/</code>).</td><td>Get file content actions fail. Re-authenticate; confirm the account can see the folders.</td></tr>
+    <tr><td><strong>Office 365 Outlook</strong></td><td>Sends as the connection owner. <strong>Test phase:</strong> <code>cheesin.foong@capitalgroup.com</code>.</td><td>Send email fails. Re-authenticate; confirm it's the intended sender.</td></tr>
+  </table>
+  <p><strong>To fix a connection:</strong> make.powerautomate.com → gear /
+  <strong>Connections</strong> (or <strong>Data → Connections</strong>). Find the
+  one with a red status → <strong>⋯ → Fix connection</strong> /
+  <strong>Reconnect</strong> and sign in. Then resubmit the failed runs.</p>
+  <div class="callout warn"><strong>Sender note.</strong> During the test phase the
+  email sends from <code>cheesin.foong@capitalgroup.com</code>. In production this
+  becomes the Capital Learning shared mailbox (the send action changes to
+  <em>Send an email from a shared mailbox (V2)</em>). If the sender looks wrong,
+  check which action/connection is in use before changing anything.</div>
+
+  <h2>5. Re-running a failed submission (so the adviser still gets their pack)</h2>
+  <p>After you fix the cause, you usually don't need the adviser to scan again:</p>
+  <ol>
+    <li>Open the failed run in <strong>Run history</strong>.</li>
+    <li>Click <strong>Resubmit</strong> (top of the run) — this replays the flow
+      with the <em>same</em> original form submission (same adviser, Firm, date).</li>
+    <li>Confirm it turns green and the adviser receives the email with
+      <strong>two</strong> attachments (the <code>.ics</code> + the how-to PDF).</li>
+  </ol>
+  <div class="callout danger"><strong>When a resubmit will NOT help:</strong> if the
+  failure was a wrong <em>value</em> from the QR (wrong Firm/date) or a typo in the
+  adviser's email address, resubmitting replays the same bad data. Fix the QR /
+  ask the adviser to submit again with the correct details instead.</div>
+
+  <h2>6. The filename contract (root cause of most failures)</h2>
+  <p>The flow and the calendar tool must agree on one filename, exactly:</p>
+  <div class="pipeline">{Firm}_LTI_Follow_Up_{yyyy-MM-dd}.ics      e.g.  DBS_LTI_Follow_Up_2026-06-30.ics</div>
+  <ul>
+    <li><strong>Firm</strong> is the slugified firm name from the calendar tool —
+      case-sensitive, and it can contain underscores (e.g. <code>DBS_Private_Bank</code>).
+      The <em>generated filename is the source of truth</em>: copy the Firm segment
+      verbatim into the QR, don't retype it.</li>
+    <li><strong>Date</strong> is <code>yyyy-MM-dd</code> with hyphens —
+      <code>2026-06-30</code>, never <code>30-06-2026</code> or <code>2026/06/30</code>.</li>
+  </ul>
+  <div class="callout"><strong>Composed by:</strong>
+  <code>concat(Firm, '_LTI_Follow_Up_', WorkshopDate, '.ics')</code> — Firm and
+  Date are passed through untouched, so whatever the QR baked in is exactly what
+  gets fetched.</div>
+
+  <h2>7. Escalation</h2>
+  <p>If a run keeps failing after the fixes above, capture: the <strong>run URL</strong>
+  from run history, the failed action name, the raw <strong>error message</strong>,
+  and the diagnostic email. Then escalate to the flow owner
+  (<code>cheesin.foong@capitalgroup.com</code> during the test phase). See the full
+  <code>RUNBOOK.md</code> in the project repo for step-by-step failure notes and the
+  production-handover checklist.</p>
+
+  <footer>
+    Capital Group · Capital Learning — internal troubleshooting reference for the
+    LTI Follow-up Sender Power Automate flow. Source: docs/troubleshooting-guide.html.
+    Keep in sync with flows/flow-a-sender.md and docs/RUNBOOK.md.
+  </footer>
+</body>
+</html>

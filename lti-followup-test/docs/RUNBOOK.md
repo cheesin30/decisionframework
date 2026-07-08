@@ -2,18 +2,24 @@
 
 Operating manual for the Capital Learning team.
 
+> **Printable technical version:** for a consultant-facing, step-by-step
+> troubleshooting reference (how to read a failed run, symptom→cause→fix table,
+> connection fixes, resubmitting), see **`LTI_Flow_Troubleshooting.pdf`** in this
+> folder (source: `troubleshooting-guide.html`).
+
 ---
 
 ## What the system does
 
 After an LTI workshop, an adviser scans a QR on the closing slide, enters only
 their name and email in a Microsoft Form, and within ~30 seconds receives an
-email with a single calendar (`.ics`) file attached — a three-touchpoint
-follow-up sequence with talking points built into each event. Power Automate
-(**Flow A**) does the work: it rebuilds the file's name from the firm and date
-baked into the QR, fetches that pre-generated `.ics` from SharePoint, and emails
-it to the adviser. The `.ics` files themselves are produced separately by the
-existing LTI Engagement Calendar tool.
+email with a calendar (`.ics`) file plus a short how-to PDF attached — a
+three-touchpoint follow-up sequence with talking points built into each event.
+Power Automate (**Flow A**) does the work: it rebuilds the file's name from the
+firm and date baked into the QR, fetches that pre-generated `.ics` (and the
+static how-to guide) from SharePoint, and emails them to the adviser. The `.ics`
+files themselves are produced separately by the existing LTI Engagement Calendar
+tool.
 
 ---
 
