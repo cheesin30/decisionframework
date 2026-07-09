@@ -457,7 +457,7 @@
       <!-- Bridge line: the story rounds ran on one simulated path; the replay
            below runs the same decisions through the dated 20-year series — so
            the dollar figure changes. Saying so keeps the tool honest. -->
-      <p class="muted">In the game, your six choices in a <b id="bridgeProfile"></b> fund turned $50,000 into <b id="bridgeStory"></b> along one simulated path. Below, those same choices are replayed through an illustrative 20-year history (stocks modeled on the MSCI World Index, plus a bond index). Drag the slider to start your 6-year journey in any year — including 2008.</p>
+      <p class="muted">In the game, your six choices in a <b id="bridgeProfile"></b> fund turned $50,000 into <b id="bridgeStory"></b> along one simulated path. Below, those same choices are replayed through 20 years of history for your chosen profile<span id="bridgeSource"></span>. Drag the slider to start your 6-year journey in any year — including 2008.</p>
 
       <!-- #shareCapture is the html2canvas export target: chart + summary
            together, so the visual proof travels with the numbers. The
@@ -470,7 +470,7 @@
              The visually-hidden <table> below is the full data alternative. -->
         <div class="chart-box"><canvas id="revealChart" role="img" aria-label="Loading chart…"></canvas></div>
         <table id="chartTable" class="sr-only" aria-label="Portfolio value at the start and end of the selected window"></table>
-        <p class="legend-note"><span style="color:#008074;font-weight:700">━ Your choices</span> &nbsp;·&nbsp; <span style="color:var(--navy);font-weight:700">━ Passive fund</span> &nbsp;·&nbsp; <span style="color:#831574;font-weight:700">┅ Active fund (illustrative)</span></p>
+        <p class="legend-note"><span style="color:#008074;font-weight:700">━ Your choices</span> &nbsp;·&nbsp; <span style="color:var(--navy);font-weight:700">━ Passive fund</span> &nbsp;·&nbsp; <span style="color:#831574;font-weight:700">┅ <span id="activeLegendLabel">Active fund</span></span></p>
         <p class="marker-note">The markers on your line show each decision — <b style="color:#b3402e">◆ sold</b>, <b style="color:#008074">▲ bought</b>, <b style="color:var(--navy)">● held</b>.</p>
         <div class="decision-row" id="decisionRow"></div>
 
@@ -493,9 +493,10 @@
           <p class="principle">Long-term perspective is the foundation of <b>The Capital System</b>.</p>
         </div>
 
-        <!-- Compliance disclaimer. Lives inside #shareCapture on purpose so
-             it travels with every exported/shared PNG, not just the page. -->
-        <p class="disclaimer">For illustrative and educational purposes only. All lines shown are simulated: the passive fund is modeled on a blend of the MSCI World Index (stocks) and an illustrative bond index; the "Active fund" line is a hypothetical actively managed version of the same mix — a placeholder for this proof of concept that does NOT represent any actual fund, strategy, or Capital Group product (including the American Balanced Fund) or its performance. Hypothetical results do not reflect fees, expenses or taxes. Past performance is not predictive of results in future periods. This experience is not investment, tax or legal advice; investors should consider their own circumstances and consult a financial professional.</p>
+        <!-- Compliance disclaimer. Text is set per risk profile in renderReveal
+             (real fund performance vs illustrative). Lives inside #shareCapture
+             so it travels with every exported/shared PNG. -->
+        <p class="disclaimer" id="revealDisclaimer"></p>
       </div>
 
       <!-- Compliant fund tie-in: a soft handoff, NOT a performance claim. -->
@@ -767,11 +768,128 @@ const BONDS = (function buildBonds() {
   return out;
 })();
 
-/** Monthly return of the rebalanced composite fund at equity weight w. */
-function compositeMonthlyReturn(w, idx) {
+/* ── REAL American Balanced Fund data (used for the 60/40 profile) ─────────
+   Monthly index levels (base 100 @ 2005-01) from "AMBAL Composite Returns -
+   0526_3121", Jan 2005–Dec 2025. AMBAL_NET = the fund composite NET OF FEES
+   (col F); AMBAL_BENCH = its 60% S&P 500 / 40% Bloomberg US Agg benchmark
+   (col G). These were TRANSCRIBED FROM SCREENSHOTS for this proof of concept —
+   VERIFY AGAINST THE SOURCE SPREADSHEET AND OBTAIN COMPLIANCE REVIEW BEFORE
+   ANY EXTERNAL/CLIENT USE. Showing real net-of-fee fund performance is
+   promotional material subject to standardized-performance and disclosure
+   rules. */
+/* AMBAL_NET: American Balanced Fund composite, net of fees (col F), index level base 100 @ 2005-01. */
+const AMBAL_NET = [
+  {date:"2005-01",value:100},{date:"2005-02",value:101.24},{date:"2005-03",value:99.853},{date:"2005-04",value:98.8645},{date:"2005-05",value:101.0099},{date:"2005-06",value:101.2624},
+  {date:"2005-07",value:102.9332},{date:"2005-08",value:102.645},{date:"2005-09",value:101.9265},{date:"2005-10",value:101.213},{date:"2005-11",value:103.3992},{date:"2005-12",value:103.5853},
+  {date:"2006-01",value:105.4084},{date:"2006-02",value:105.2503},{date:"2006-03",value:106.2081},{date:"2006-04",value:107.0471},{date:"2006-05",value:105.3236},{date:"2006-06",value:105.3447},
+  {date:"2006-07",value:105.9557},{date:"2006-08",value:107.8205},{date:"2006-09",value:109.7828},{date:"2006-10",value:112.209},{date:"2006-11",value:113.7575},{date:"2006-12",value:114.5993},
+  {date:"2007-01",value:115.5276},{date:"2007-02",value:114.5918},{date:"2007-03",value:115.1533},{date:"2007-04",value:118.3776},{date:"2007-05",value:121.3252},{date:"2007-06",value:120.6094},
+  {date:"2007-07",value:118.74},{date:"2007-08",value:120.8061},{date:"2007-09",value:123.6209},{date:"2007-10",value:124.7335},{date:"2007-11",value:121.7025},{date:"2007-12",value:120.8628},
+  {date:"2008-01",value:117.6358},{date:"2008-02",value:114.542},{date:"2008-03",value:113.4309},{date:"2008-04",value:116.1759},{date:"2008-05",value:117.3144},{date:"2008-06",value:110.0174},
+  {date:"2008-07",value:109.5993},{date:"2008-08",value:110.7939},{date:"2008-09",value:104.1019},{date:"2008-10",value:91.6097},{date:"2008-11",value:87.185},{date:"2008-12",value:88.8154},
+  {date:"2009-01",value:83.6552},{date:"2009-02",value:77.5149},{date:"2009-03",value:82.4371},{date:"2009-04",value:88.0676},{date:"2009-05",value:91.7488},{date:"2009-06",value:91.8681},
+  {date:"2009-07",value:96.93},{date:"2009-08",value:99.6247},{date:"2009-09",value:101.8264},{date:"2009-10",value:101.2765},{date:"2009-11",value:106.0264},{date:"2009-12",value:106.4187},
+  {date:"2010-01",value:105.1523},{date:"2010-02",value:106.8978},{date:"2010-03",value:110.6178},{date:"2010-04",value:111.7793},{date:"2010-05",value:105.5755},{date:"2010-06",value:102.7883},
+  {date:"2010-07",value:108.2464},{date:"2010-08",value:106.1139},{date:"2010-09",value:112.0351},{date:"2010-10",value:115.1945},{date:"2010-11",value:114.0426},{date:"2010-12",value:119.1061},
+  {date:"2011-01",value:121.3929},{date:"2011-02",value:124.0757},{date:"2011-03",value:124.237},{date:"2011-04",value:126.8584},{date:"2011-05",value:126.0211},{date:"2011-06",value:124.6601},
+  {date:"2011-07",value:123.8249},{date:"2011-08",value:119.7139},{date:"2011-09",value:113.7282},{date:"2011-10",value:122.201},{date:"2011-11",value:121.5656},{date:"2011-12",value:122.3922},
+  {date:"2012-01",value:126.7249},{date:"2012-02",value:130.2985},{date:"2012-03",value:132.709},{date:"2012-04",value:132.8019},{date:"2012-05",value:126.7727},{date:"2012-06",value:131.083},
+  {date:"2012-07",value:132.9968},{date:"2012-08",value:134.5662},{date:"2012-09",value:136.9211},{date:"2012-10",value:136.1954},{date:"2012-11",value:137.1624},{date:"2012-12",value:138.3557},
+  {date:"2013-01",value:143.1843},{date:"2013-02",value:144.072},{date:"2013-03",value:147.4289},{date:"2013-04",value:150.5544},{date:"2013-05",value:152.7977},{date:"2013-06",value:150.2613},
+  {date:"2013-07",value:154.8893},{date:"2013-08",value:150.8932},{date:"2013-09",value:155.6312},{date:"2013-10",value:160.9538},{date:"2013-11",value:164.2212},{date:"2013-12",value:166.7174},
+  {date:"2014-01",value:162.6995},{date:"2014-02",value:167.5968},{date:"2014-03",value:168.7867},{date:"2014-04",value:169.4618},{date:"2014-05",value:172.1224},{date:"2014-06",value:173.9985},
+  {date:"2014-07",value:171.1797},{date:"2014-08",value:176.5719},{date:"2014-09",value:174.612},{date:"2014-10",value:177.0042},{date:"2014-11",value:180.4735},{date:"2014-12",value:179.6433},
+  {date:"2015-01",value:177.0924},{date:"2015-02",value:183.3083},{date:"2015-03",value:180.5587},{date:"2015-04",value:182.3643},{date:"2015-05",value:182.7837},{date:"2015-06",value:179.4205},
+  {date:"2015-07",value:182.6321},{date:"2015-08",value:174.5232},{date:"2015-09",value:172.6034},{date:"2015-10",value:182.5454},{date:"2015-11",value:183.0383},{date:"2015-12",value:180.8418},
+  {date:"2016-01",value:176.2122},{date:"2016-02",value:176.0536},{date:"2016-03",value:183.5535},{date:"2016-04",value:185.6644},{date:"2016-05",value:186.3328},{date:"2016-06",value:188.7179},
+  {date:"2016-07",value:191.7563},{date:"2016-08",value:191.5837},{date:"2016-09",value:191.4304},{date:"2016-10",value:189.6501},{date:"2016-11",value:192.3811},{date:"2016-12",value:194.3241},
+  {date:"2017-01",value:197.6665},{date:"2017-02",value:201.6198},{date:"2017-03",value:201.9827},{date:"2017-04",value:203.7601},{date:"2017-05",value:206.409},{date:"2017-06",value:206.12},
+  {date:"2017-07",value:209.8714},{date:"2017-08",value:210.7109},{date:"2017-09",value:212.9655},{date:"2017-10",value:216.2452},{date:"2017-11",value:219.2078},{date:"2017-12",value:221.9917},
+  {date:"2018-01",value:228.8956},{date:"2018-02",value:221.1818},{date:"2018-03",value:218.6824},{date:"2018-04",value:219.2291},{date:"2018-05",value:221.4872},{date:"2018-06",value:222.7275},
+  {date:"2018-07",value:227.3602},{date:"2018-08",value:229.0427},{date:"2018-09",value:229.4092},{date:"2018-10",value:219.8658},{date:"2018-11",value:223.8454},{date:"2018-12",value:213.6828},
+  {date:"2019-01",value:223.7045},{date:"2019-02",value:226.5903},{date:"2019-03",value:229.9892},{date:"2019-04",value:234.497},{date:"2019-05",value:226.0551},{date:"2019-06",value:235.7755},
+  {date:"2019-07",value:237.1194},{date:"2019-08",value:236.6452},{date:"2019-09",value:238.5857},{date:"2019-10",value:242.2599},{date:"2019-11",value:247.2262},{date:"2019-12",value:251.9977},
+  {date:"2020-01",value:251.3425},{date:"2020-02",value:241.5904},{date:"2020-03",value:222.1182},{date:"2020-04",value:239.2657},{date:"2020-05",value:245.5105},{date:"2020-06",value:247.9411},
+  {date:"2020-07",value:256.0984},{date:"2020-08",value:262.0143},{date:"2020-09",value:257.5077},{date:"2020-10",value:252.6408},{date:"2020-11",value:269.9467},{date:"2020-12",value:276.4254},
+  {date:"2021-01",value:274.3522},{date:"2021-02",value:278.3029},{date:"2021-03",value:286.0119},{date:"2021-04",value:294.1632},{date:"2021-05",value:299.1934},{date:"2021-06",value:300.7193},
+  {date:"2021-07",value:303.8468},{date:"2021-08",value:308.1007},{date:"2021-09",value:298.149},{date:"2021-10",value:308.942},{date:"2021-11",value:305.729},{date:"2021-12",value:316.5824},
+  {date:"2022-01",value:305.7236},{date:"2022-02",value:300.8932},{date:"2022-03",value:303.0295},{date:"2022-04",value:286.0295},{date:"2022-05",value:290.2913},{date:"2022-06",value:272.2642},
+  {date:"2022-07",value:284.2983},{date:"2022-08",value:275.286},{date:"2022-09",value:255.4929},{date:"2022-10",value:268.4975},{date:"2022-11",value:283.2917},{date:"2022-12",value:275.2462},
+  {date:"2023-01",value:286.0909},{date:"2023-02",value:276.5641},{date:"2023-03",value:282.1784},{date:"2023-04",value:285.6492},{date:"2023-05",value:283.3069},{date:"2023-06",value:292.5144},
+  {date:"2023-07",value:298.2769},{date:"2023-08",value:293.8922},{date:"2023-09",value:283.2827},{date:"2023-10",value:278.7218},{date:"2023-11",value:296.9502},{date:"2023-12",value:310.4614},
+  {date:"2024-01",value:312.4173},{date:"2024-02",value:320.1652},{date:"2024-03",value:328.7136},{date:"2024-04",value:317.7346},{date:"2024-05",value:326.9489},{date:"2024-06",value:335.7765},
+  {date:"2024-07",value:341.6862},{date:"2024-08",value:347.0848},{date:"2024-09",value:352.8117},{date:"2024-10",value:348.6132},{date:"2024-11",value:358.3744},{date:"2024-12",value:353.0346},
+  {date:"2025-01",value:362.8843},{date:"2025-02",value:361.7231},{date:"2025-03",value:351.2693},{date:"2025-04",value:349.9345},{date:"2025-05",value:363.477},{date:"2025-06",value:379.6154},
+  {date:"2025-07",value:382.6903},{date:"2025-08",value:388.4307},{date:"2025-09",value:399.5398},{date:"2025-10",value:406.0123},{date:"2025-11",value:413.1581},{date:"2025-12",value:413.7365}
+];
+
+/* AMBAL_BENCH: 60% S&P 500 / 40% Bloomberg US Agg benchmark (col G), index level base 100 @ 2005-01. */
+const AMBAL_BENCH = [
+  {date:"2005-01",value:100},{date:"2005-02",value:101.03},{date:"2005-03",value:99.7469},{date:"2005-04",value:99.1484},{date:"2005-05",value:101.4685},{date:"2005-06",value:101.7729},
+  {date:"2005-07",value:103.6761},{date:"2005-08",value:103.645},{date:"2005-09",value:103.7176},{date:"2005-10",value:102.3485},{date:"2005-11",value:104.856},{date:"2005-12",value:105.2754},
+  {date:"2006-01",value:106.9493},{date:"2006-02",value:107.2701},{date:"2006-03",value:107.6455},{date:"2006-04",value:108.4313},{date:"2006-05",value:106.5121},{date:"2006-06",value:106.6932},
+  {date:"2006-07",value:107.6641},{date:"2006-08",value:109.8604},{date:"2006-09",value:111.9477},{date:"2006-10",value:114.4329},{date:"2006-11",value:116.2753},{date:"2006-12",value:116.9846},
+  {date:"2007-01",value:118.0258},{date:"2007-02",value:117.3649},{date:"2007-03",value:118.1512},{date:"2007-04",value:121.5421},{date:"2007-05",value:123.7177},{date:"2007-06",value:122.3321},
+  {date:"2007-07",value:120.4604},{date:"2007-08",value:122.1348},{date:"2007-09",value:125.2492},{date:"2007-10",value:126.89},{date:"2007-11",value:124.6187},{date:"2007-12",value:124.2448},
+  {date:"2008-01",value:120.6044},{date:"2008-02",value:118.325},{date:"2008-03",value:118.183},{date:"2008-04",value:121.5394},{date:"2008-05",value:122.1228},{date:"2008-06",value:115.9067},
+  {date:"2008-07",value:115.2808},{date:"2008-08",value:116.7218},{date:"2008-09",value:109.8586},{date:"2008-10",value:97.7522},{date:"2008-11",value:94.8196},{date:"2008-12",value:96.8393},
+  {date:"2009-01",value:91.6003},{date:"2009-02",value:85.6096},{date:"2009-03",value:90.5835},{date:"2009-04",value:95.9551},{date:"2009-05",value:99.4575},{date:"2009-06",value:99.8056},
+  {date:"2009-07",value:104.9755},{date:"2009-08",value:107.6839},{date:"2009-09",value:110.5483},{date:"2009-10",value:109.5313},{date:"2009-11",value:114.044},{date:"2009-12",value:114.6484},
+  {date:"2010-01",value:112.8713},{date:"2010-02",value:115.14},{date:"2010-03",value:119.2505},{date:"2010-04",value:120.8723},{date:"2010-05",value:115.4935},{date:"2010-06",value:112.5946},
+  {date:"2010-07",value:117.8077},{date:"2010-08",value:115.2277},{date:"2010-09",value:121.45},{date:"2010-10",value:124.4012},{date:"2010-11",value:124.1275},{date:"2010-12",value:128.5713},
+  {date:"2011-01",value:130.4613},{date:"2011-02",value:133.2793},{date:"2011-03",value:133.3459},{date:"2011-04",value:136.3862},{date:"2011-05",value:136.168},{date:"2011-06",value:134.6429},
+  {date:"2011-07",value:133.8485},{date:"2011-08",value:130.2747},{date:"2011-09",value:125.1549},{date:"2011-10",value:133.4151},{date:"2011-11",value:133.1883},{date:"2011-12",value:134.5868},
+  {date:"2012-01",value:138.6782},{date:"2012-02",value:142.27},{date:"2012-03",value:144.774},{date:"2012-04",value:144.8753},{date:"2012-05",value:140.1813},{date:"2012-06",value:143.6718},
+  {date:"2012-07",value:145.6688},{date:"2012-08",value:147.679},{date:"2012-09",value:150.0566},{date:"2012-10",value:148.511},{date:"2012-11",value:149.1199},{date:"2012-12",value:149.8506},
+  {date:"2013-01",value:154.0914},{date:"2013-02",value:155.6631},{date:"2013-03",value:159.2122},{date:"2013-04",value:161.6959},{date:"2013-05",value:162.8116},{date:"2013-06",value:160.4997},
+  {date:"2013-07",value:165.4912},{date:"2013-08",value:162.2807},{date:"2013-09",value:165.9482},{date:"2013-10",value:171.0594},{date:"2013-11",value:173.9332},{date:"2013-12",value:176.1769},
+  {date:"2014-01",value:173.5695},{date:"2014-02",value:178.7072},{date:"2014-03",value:179.4935},{date:"2014-04",value:180.8935},{date:"2014-05",value:184.2581},{date:"2014-06",value:186.5798},
+  {date:"2014-07",value:184.8446},{date:"2014-08",value:190.0942},{date:"2014-09",value:187.9842},{date:"2014-10",value:191.4807},{date:"2014-11",value:195.1188},{date:"2014-12",value:194.9042},
+  {date:"2015-01",value:193.0331},{date:"2015-02",value:198.9592},{date:"2015-03",value:197.4471},{date:"2015-04",value:198.2961},{date:"2015-05",value:199.6445},{date:"2015-06",value:196.4502},
+  {date:"2015-07",value:199.4755},{date:"2015-08",value:192.1348},{date:"2015-09",value:189.81},{date:"2015-10",value:199.4334},{date:"2015-11",value:199.573},{date:"2015-12",value:197.4176},
+  {date:"2016-01",value:192.6204},{date:"2016-02",value:193.0056},{date:"2016-03",value:201.575},{date:"2016-04",value:202.3611},{date:"2016-05",value:204.5668},{date:"2016-06",value:206.3465},
+  {date:"2016-07",value:211.4433},{date:"2016-08",value:211.5279},{date:"2016-09",value:211.5067},{date:"2016-10",value:208.5456},{date:"2016-11",value:211.215},{date:"2016-12",value:213.8341},
+  {date:"2017-01",value:216.4429},{date:"2017-02",value:222.1786},{date:"2017-03",value:222.2897},{date:"2017-04",value:224.3348},{date:"2017-05",value:226.9147},{date:"2017-06",value:227.6635},
+  {date:"2017-07",value:230.8736},{date:"2017-08",value:232.1203},{date:"2017-09",value:234.5576},{date:"2017-10",value:237.8883},{date:"2017-11",value:242.1465},{date:"2017-12",value:244.2047},
+  {date:"2018-01",value:251.4576},{date:"2018-02",value:244.9448},{date:"2018-03",value:241.834},{date:"2018-04",value:241.6647},{date:"2018-05",value:245.8455},{date:"2018-06",value:246.6322},
+  {date:"2018-07",value:252.1568},{date:"2018-08",value:257.7295},{date:"2018-09",value:257.9357},{date:"2018-10",value:246.5349},{date:"2018-11",value:250.1343},{date:"2018-12",value:238.428},
+  {date:"2019-01",value:250.8978},{date:"2019-02",value:255.6649},{date:"2019-03",value:260.5992},{date:"2019-04",value:266.9578},{date:"2019-05",value:258.6821},{date:"2019-06",value:270.9178},
+  {date:"2019-07",value:273.4915},{date:"2019-08",value:273.7376},{date:"2019-09",value:276.2286},{date:"2019-10",value:280.151},{date:"2019-11",value:286.2023},{date:"2019-12",value:291.2967},
+  {date:"2020-01",value:293.4814},{date:"2020-02",value:281.0965},{date:"2020-03",value:259.5926},{date:"2020-04",value:281.3984},{date:"2020-05",value:289.9529},{date:"2020-06",value:294.1572},
+  {date:"2020-07",value:305.8647},{date:"2020-08",value:318.0687},{date:"2020-09",value:310.7531},{date:"2020-10",value:305.2528},{date:"2020-11",value:326.4984},{date:"2020-12",value:334.2038},
+  {date:"2021-01",value:331.2294},{date:"2021-02",value:334.8067},{date:"2021-03",value:341.9381},{date:"2021-04",value:353.9743},{date:"2021-05",value:355.9212},{date:"2021-06",value:361.9007},
+  {date:"2021-07",value:368.6682},{date:"2021-08",value:375.1199},{date:"2021-09",value:363.3411},{date:"2021-10",value:378.5651},{date:"2021-11",value:377.4294},{date:"2021-12",value:387.2048},
+  {date:"2022-01",value:371.8328},{date:"2022-02",value:363.5037},{date:"2022-03",value:367.5749},{date:"2022-04",value:342.7636},{date:"2022-05",value:344.0318},{date:"2022-06",value:324.8348},
+  {date:"2022-07",value:345.9815},{date:"2022-08",value:333.5954},{date:"2022-09",value:309.4097},{date:"2022-10",value:322.8381},{date:"2022-11",value:338.3989},{date:"2022-12",value:326.0812},
+  {date:"2023-01",value:342.3853},{date:"2023-02",value:333.8257},{date:"2023-03",value:344.5749},{date:"2023-04",value:348.6409},{date:"2023-05",value:348.0482},{date:"2023-06",value:361.3436},
+  {date:"2023-07",value:368.2091},{date:"2023-08",value:363.7538},{date:"2023-09",value:349.6402},{date:"2023-10",value:343.032},{date:"2023-11",value:368.039},{date:"2023-12",value:383.7175},
+  {date:"2024-01",value:387.171},{date:"2024-02",value:397.3923},{date:"2024-03",value:406.5323},{date:"2024-04",value:392.4663},{date:"2024-05",value:406.7913},{date:"2024-06",value:417.0831},
+  {date:"2024-07",value:424.0067},{date:"2024-08",value:432.614},{date:"2024-09",value:440.4876},{date:"2024-10",value:433.7041},{date:"2024-11",value:450.792},{date:"2024-12",value:441.4155},
+  {date:"2025-01",value:449.7141},{date:"2025-02",value:450.1638},{date:"2025-03",value:434.9933},{date:"2025-04",value:433.9058},{date:"2025-05",value:449.0491},{date:"2025-06",value:465.5292},
+  {date:"2025-07",value:471.3018},{date:"2025-08",value:479.2668},{date:"2025-09",value:491.8715},{date:"2025-10",value:499.9874},{date:"2025-11",value:501.9873},{date:"2025-12",value:501.8869}
+];
+
+/* Monthly returns from the real dated series. */
+function benchMonthlyReturn(idx) { return AMBAL_BENCH[idx].value / AMBAL_BENCH[idx - 1].value - 1; }
+function ambalNetMonthlyReturn(idx) { return AMBAL_NET[idx].value / AMBAL_NET[idx - 1].value - 1; }
+
+/**
+ * Per-profile monthly returns for the composite the investor holds and the
+ * active fund, at month index `idx`:
+ *   • 60/40 → the REAL American Balanced Fund: composite = its benchmark
+ *             (col G, passive), active = the fund net of fees (col F).
+ *   • 70/30 → illustrative synthetic (no real fund for this mix): composite =
+ *             0.7 stocks + 0.3 bonds, active = composite + a small alpha.
+ */
+function profileReturns(riskKey, idx) {
+  if (riskKey === "60/40") {
+    return { composite: benchMonthlyReturn(idx), active: ambalNetMonthlyReturn(idx) };
+  }
+  const w = RISK_PROFILES[riskKey].equity;
   const eqR = MSCI_WORLD[idx].value / MSCI_WORLD[idx - 1].value - 1;
   const bdR = BONDS[idx].value / BONDS[idx - 1].value - 1;
-  return w * eqR + (1 - w) * bdR;
+  const comp = w * eqR + (1 - w) * bdR;
+  return { composite: comp, active: comp + ACTIVE_ALPHA_M };
 }
 
 /**
@@ -781,16 +899,16 @@ function compositeMonthlyReturn(w, idx) {
  * per the player's choice).
  *
  * @param {string[]} decisions  "buy"|"hold"|"sell" per round (length ROUNDS)
- * @param {number}   startIdx   window start index into MSCI_WORLD
- * @param {number}   w          equity weight (risk profile)
+ * @param {number}   startIdx   window start index
+ * @param {string}   riskKey    "60/40" | "70/30" — selects the composite source
  * @param {string}   bonusInto  "fund" | "cash" — where the round-3 bonus lands
  * @returns {number[]} WINDOW_MONTHS+1 monthly total values
  */
-function simulatePortfolio(decisions, startIdx, w, bonusInto) {
+function simulatePortfolio(decisions, startIdx, riskKey, bonusInto) {
   let fund = START_TOTAL, cash = 0;
   const values = [];
   for (let m = 0; m <= WINDOW_MONTHS; m++) {
-    if (m > 0) { fund *= 1 + compositeMonthlyReturn(w, startIdx + m); cash *= MONTHLY_CASH; }
+    if (m > 0) { fund *= 1 + profileReturns(riskKey, startIdx + m).composite; cash *= MONTHLY_CASH; }
     if (m % 12 === 0 && m < WINDOW_MONTHS) {
       const round = m / 12;                          // 0-based round index
       if (round === BONUS_ROUND - 1) {               // the bonus arrives first
@@ -811,24 +929,23 @@ function simulatePortfolio(decisions, startIdx, w, bonusInto) {
  * ties this line exactly, so the gap between "You" and this line measures
  * only the effect of the player's timing — never allocation.
  */
-function passiveSeries(startIdx, w) {
-  return simulatePortfolio(Array(ROUNDS).fill("hold"), startIdx, w, "fund");
+function passiveSeries(startIdx, riskKey) {
+  return simulatePortfolio(Array(ROUNDS).fill("hold"), startIdx, riskKey, "fund");
 }
 
 /**
- * Active fund — SYNTHETIC, ILLUSTRATIVE PLACEHOLDER FOR THE POC.
- *
- * The same composite mix plus a modest, steady manager value-add ("alpha"),
- * held throughout (plus the round-3 bonus). Kept as its own function so the
- * data source can later be swapped for the real Capital Group American
- * Balanced Fund. It does NOT represent any actual fund or its performance.
+ * Active fund line, held throughout (plus the round-3 bonus).
+ *   • 60/40 → the REAL American Balanced Fund composite, net of fees.
+ *   • 70/30 → a synthetic illustrative approach (composite + a small alpha),
+ *             since there is no real fund series for this mix.
+ * See profileReturns() and the compliance note on the AMBAL data above.
  */
-const ACTIVE_ALPHA_M = 0.0011;   // ~+1.35%/yr illustrative net value-add
-function activeFundSeries(startIdx, w) {
+const ACTIVE_ALPHA_M = 0.0011;   // ~+1.35%/yr illustrative value-add (70/30 only)
+function activeFundSeries(startIdx, riskKey) {
   let v = START_TOTAL;
   const values = [v];
   for (let m = 1; m <= WINDOW_MONTHS; m++) {
-    v *= 1 + compositeMonthlyReturn(w, startIdx + m) + ACTIVE_ALPHA_M;
+    v *= 1 + profileReturns(riskKey, startIdx + m).active;
     if (m === (BONUS_ROUND - 1) * 12) v += BONUS_AMOUNT;   // bonus at round-3 checkpoint
     values.push(v);
   }
@@ -1062,6 +1179,9 @@ function enterReveal() {
   // historical replay, so the change in dollar figures is explicit.
   $("bridgeStory").textContent = fmt(state.fund + state.cash);
   $("bridgeProfile").textContent = state.risk + " (" + RISK_PROFILES[state.risk].sub + ")";
+  $("bridgeSource").textContent = state.risk === "60/40"
+    ? " — the real American Balanced Fund and its 60/40 benchmark"
+    : " (illustrative data)";
   $("tracker").classList.remove("show");
   const slider = $("windowSlider");
   slider.max = MAX_START;
@@ -1115,10 +1235,14 @@ function buildChart() {
 
 /** Re-run the simulation for a window start and repaint chart + summary. */
 function renderReveal(startIdx) {
-  const w = state.equityWeight, b = state.bonusInto;
-  const you  = simulatePortfolio(state.decisions, startIdx, w, b);
-  const pass = passiveSeries(startIdx, w);
-  const act  = activeFundSeries(startIdx, w);
+  const rk = state.risk, b = state.bonusInto;
+  const real = rk === "60/40";  // 60/40 uses the real American Balanced Fund data
+  const you  = simulatePortfolio(state.decisions, startIdx, rk, b);
+  const pass = passiveSeries(startIdx, rk);
+  const act  = activeFundSeries(startIdx, rk);
+  // Label the active line honestly for the profile in use.
+  state.chart.data.datasets[2].label = real ? "American Balanced Fund (net)" : "Active fund (illustrative)";
+  $("activeLegendLabel").textContent = real ? "American Balanced Fund (net)" : "Active fund (illustrative)";
   const labels = [];
   for (let m = 0; m <= WINDOW_MONTHS; m++) {
     const [y, mo] = MSCI_WORLD[startIdx + m].date.split("-");
@@ -1166,10 +1290,15 @@ function renderReveal(startIdx) {
     $("sumGap").innerHTML = "Your timing ended <b class=\"neg\">" + gapPct.toFixed(1) + "%</b> behind simply holding the passive fund.";
   }
 
-  // Alpha of the illustrative active fund over the passive fund.
+  // Active fund vs passive over this window — the real (or illustrative) alpha.
+  // Stated sign-aware: net-of-fee active can and does trail its benchmark in
+  // many windows, and we show that honestly rather than implying it always wins.
   const alpha = fa - fp, alphaPct = (fa / fp - 1) * 100;
-  $("sumAlpha").innerHTML = "The active fund added <b>" + fmt(alpha).replace("$-", "-$") +
-    " (" + (alphaPct >= 0 ? "+" : "") + alphaPct.toFixed(1) + "%)</b> over the passive fund here — its illustrative alpha.";
+  const fundName = real ? "The American Balanced Fund (net of fees)" : "The active fund";
+  const suffix = real ? " — its net-of-fees result vs its 60/40 benchmark." : " — its illustrative alpha.";
+  $("sumAlpha").innerHTML = alphaPct >= 0
+    ? fundName + " added <b>" + fmt(alpha) + " (+" + alphaPct.toFixed(1) + "%)</b> over the passive fund here" + suffix
+    : fundName + " trailed the passive fund by <b>" + fmt(Math.abs(alpha)) + " (" + alphaPct.toFixed(1) + "%)</b> here" + suffix;
 
   // decisions-so-far row
   const dr = $("decisionRow"); dr.innerHTML = "";
@@ -1192,17 +1321,22 @@ function renderReveal(startIdx) {
     "<tr><th>Line</th><th>Start</th><th>End</th></tr>" +
     "<tr><td>Your choices</td><td>" + fmt(you[0]) + "</td><td>" + fmt(fy) + "</td></tr>" +
     "<tr><td>Passive fund</td><td>" + fmt(pass[0]) + "</td><td>" + fmt(fp) + "</td></tr>" +
-    "<tr><td>Active fund (illustrative)</td><td>" + fmt(act[0]) + "</td><td>" + fmt(fa) + "</td></tr>";
+    "<tr><td>" + (real ? "American Balanced Fund (net)" : "Active fund (illustrative)") + "</td><td>" + fmt(act[0]) + "</td><td>" + fmt(fa) + "</td></tr>";
 
   // honest supporting stat: how often the passive fund matches/beats the player
   let passWins = 0, windows = 0;
   for (let s = 0; s <= MAX_START; s += 3) {
     windows++;
-    const u = simulatePortfolio(state.decisions, s, w, b);
-    if (passiveSeries(s, w)[WINDOW_MONTHS] >= u[WINDOW_MONTHS]) passWins++;
+    const u = simulatePortfolio(state.decisions, s, rk, b);
+    if (passiveSeries(s, rk)[WINDOW_MONTHS] >= u[WINDOW_MONTHS]) passWins++;
   }
   $("sumStat").textContent = "With your exact " + ROUNDS + " decisions, simply holding the passive fund matches or beats your timing in " +
-    Math.round(100 * passWins / windows) + "% of the 6-year windows in this simulated 2005–2025 history.";
+    Math.round(100 * passWins / windows) + "% of the 6-year windows in this 2005–2025 history.";
+
+  // Profile-aware disclaimer: real fund performance vs illustrative.
+  $("revealDisclaimer").textContent = real
+    ? "The passive fund and “American Balanced Fund (net)” lines use the American Balanced Fund composite return, net of fees, and its 60% S&P 500 / 40% Bloomberg US Aggregate benchmark (monthly, 2005–2025), transcribed from source data for this proof of concept and pending verification. Past performance does not guarantee future results; net-of-fee returns already reflect fund expenses. “Your choices” is hypothetical and applies your in-game timing to the benchmark. For educational use only; not investment advice or an offer of any fund. Verify data and obtain compliance review before external use."
+    : "For illustrative and educational purposes only. The 70/30 lines are simulated (stocks modeled on the MSCI World Index blended with an illustrative bond index); the “Active fund” line is a hypothetical approach and does NOT represent any actual fund or Capital Group product. Hypothetical results do not reflect fees, expenses or taxes. Past performance is not predictive of future results. Not investment, tax or legal advice.";
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
