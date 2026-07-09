@@ -902,6 +902,15 @@ function startGame() {
   state.step = -1; state.decisions = []; state.fund = START; state.cash = 0; state.cursor = 0;
   renderScenario();
 }
+// Replay returns to the welcome screen so the risk profile can be reselected.
+function playAgain() {
+  if (state.chart) { state.chart.destroy(); state.chart = null; }
+  state.step = -1; state.decisions = []; state.fund = START; state.cash = 0; state.cursor = 0;
+  $("trackerValue").textContent = fmt(START);
+  $("trackerSplit").textContent = "";
+  $("tracker").classList.remove("show");
+  showPhase("phase-welcome");
+}
 
 document.querySelectorAll(".risk-opt").forEach((el) => el.addEventListener("click", () => selectRisk(el.dataset.risk)));
 selectRisk(state.risk);
@@ -911,7 +920,7 @@ $("btnHold").addEventListener("click", () => decide("hold"));
 $("btnSell").addEventListener("click", () => decide("sell"));
 $("btnContinue").addEventListener("click", nextStep);
 $("btnShare").addEventListener("click", shareResult);
-$("btnAgain").addEventListener("click", startGame);
+$("btnAgain").addEventListener("click", playAgain);
 </script>
 </body>
 </html>

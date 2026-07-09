@@ -1382,6 +1382,21 @@ function startGame() {
   renderScenario();
 }
 
+// Replay returns to the welcome screen so the risk profile can be reselected.
+function playAgain() {
+  if (state.chart) { state.chart.destroy(); state.chart = null; }
+  state.step = -1;
+  state.decisions = [];
+  state.fund = START_TOTAL;
+  state.cash = 0;
+  state.bonusInto = "fund";
+  state.bonusHandled = false;
+  $("trackerValue").textContent = fmt(START_TOTAL);
+  $("trackerSplit").textContent = "";
+  $("tracker").classList.remove("show");
+  showPhase("phase-welcome");
+}
+
 // Risk-profile picker on the welcome screen.
 function selectRisk(key) {
   state.risk = key;
@@ -1402,7 +1417,7 @@ $("btnBonusInvest").addEventListener("click", () => chooseBonus("fund"));
 $("btnBonusCash").addEventListener("click", () => chooseBonus("cash"));
 $("windowSlider").addEventListener("input", (e) => renderReveal(+e.target.value));
 $("btnShare").addEventListener("click", shareResult);
-$("btnAgain").addEventListener("click", startGame);   // re-randomizes scenarios
+$("btnAgain").addEventListener("click", playAgain);   // back to welcome to reselect risk
 </script>
 </body>
 </html>
