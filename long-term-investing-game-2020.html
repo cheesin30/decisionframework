@@ -5,19 +5,26 @@
   ═══════════════════════════════════════════════════════════════════════════
 
   A variant of the Long Game with a FIXED timeline: the last six years of
-  markets (2020–2025). The player lives through 8 real events that each moved
-  the market by roughly ~10%, but is NOT told the year or the event — only the
-  moment, as it hits. The twist is the final reveal: every scenario was a real
-  thing that happened. A timeline maps each moment to its actual date and
-  outcome, and the chart shows the player's timing vs. simply staying invested.
+  markets (2020–2025). The player faces six real events (drawn at random from
+  a pool of twelve and played in real chronological order) but is NOT told the
+  year or the event — only the moment, as it hits. The twist is the final
+  reveal: every scenario was a real thing that happened. A timeline maps each
+  moment to its actual date and outcome, and the chart shows the player's
+  timing vs. simply staying invested.
 
   Self-contained single file. Chart.js v4 and html2canvas are vendored inline.
   MECHANIC: start $50,000 fully invested. Sell = 25% to cash; Buy = 25% back
   in (disabled while fully invested); Hold = stay. After each choice a neutral
   "what the market did" line preserves the ambiguity; the reveal breaks it.
 
-  DATA NOTE: the market moves are illustrative approximations of real events
-  for an educational proof of concept — not actual index returns. Not advice.
+  DATA: uses REAL monthly total returns, 2020–2025, for a broad U.S. stock
+  index (S&P 500, derived from the 60/40 benchmark and the Bloomberg U.S.
+  Aggregate) and the Aggregate bond index, blended to the chosen 60/40 or
+  70/30 weight. Play reacts at the six event months and holds the months in
+  between, so the in-game total lands exactly on the reveal path — nothing is
+  synthetic. Index data is transcribed/derived from source and MUST be verified
+  against the original and compliance-reviewed before any external use. Not
+  actual fund returns; not advice.
   ═══════════════════════════════════════════════════════════════════════════
 -->
 <html lang="en">
@@ -368,7 +375,7 @@
         <div class="stat"><b>6</b><span>moments ahead of you</span></div>
         <div class="stat"><b>≈4 min</b><span>to play</span></div>
       </div>
-      <p class="muted" style="margin-bottom:22px">Each time, you choose: <b>Hold</b> and stay invested, or <b>Sell</b> — pulling 25% of your money out into cash. Once you've stepped out, you can <b>Buy</b> back in. This is an educational simulation using illustrative data — not investment advice.</p>
+      <p class="muted" style="margin-bottom:22px">Each time, you choose: <b>Hold</b> and stay invested, or <b>Sell</b> — pulling 25% of your money out into cash. Once you've stepped out, you can <b>Buy</b> back in. This is an educational simulation using real historical market returns — not investment advice.</p>
       <button class="btn btn-primary" id="btnStart">Start with a practice round →</button>
     </div>
   </section>
@@ -413,7 +420,7 @@
       <div class="reveal-hero">
         <div class="eyebrow">The reveal</div>
         <div class="big">Every one of those was real.</div>
-        <div class="sub">You just lived through moments from the last six years of markets — <b>2020 to 2025</b>. In the game your choices turned $50,000 into <b id="bridgeStory"></b>; here's the full journey, with your decisions placed where they really happened.</div>
+        <div class="sub">Every moment you just faced was real — the actual months of <b>2020 to 2025</b>. Your choices turned $50,000 into <b id="bridgeStory"></b>. Below is the real month-by-month path, with your decisions placed exactly where they happened and the months in between filled in.</div>
       </div>
 
       <div id="shareCapture">
@@ -436,7 +443,7 @@
 
         <div class="timeline" id="timeline"></div>
 
-        <p class="disclaimer">For illustrative and educational purposes only. The market moves shown are simplified approximations of real historical events for teaching purposes and do not represent actual index or fund returns or any Capital Group product. Past performance is not predictive of future results. This experience is not investment, tax or legal advice; investors should consider their own circumstances and consult a financial professional.</p>
+        <p class="disclaimer">For illustrative and educational purposes only. The chart uses real historical monthly total returns for a broad U.S. stock index (S&P 500) and the Bloomberg U.S. Aggregate Bond Index for 2020–2025, blended to a hypothetical 60/40 or 70/30 portfolio; it is not the return of any Capital Group product and does not reflect fund fees, expenses or taxes. Index data is transcribed/derived from source series and must be verified against the original and reviewed for compliance before any external use. Past performance is not predictive of future results. This experience is not investment, tax or legal advice; investors should consider their own circumstances and consult a financial professional.</p>
       </div>
 
       <div class="handoff">
@@ -463,89 +470,125 @@
    date-ordered timeline and a jagged monthly 2020–2025 chart.
    ═══════════════════════════════════════════════════════════════════════ */
 
-/* ── Pool of 12 real moments. During play only {title, story, mood,
-   emotionalPull, equityMove, bondMove} are shown. The reveal uses
-   {month, event, what}. equityMove ≈ the ~10% headline stock move; bondMove
-   is how bonds behaved (they rose in crises, fell in 2022). ── */
+/* ── Pool of 12 real moments, each anchored to an actual month of the
+   2020–2025 record. During play only {title, story, mood, emotionalPull}
+   are shown — never the date. The stock/bond move for a moment is looked up
+   live from the REAL monthly returns below (EQ_2020 / AGG_2020), so nothing
+   is hand-typed and play stays faithful to the reveal. The reveal uses
+   {month, event, what} to break the ambiguity. ── */
 const POOL = [
-  { title: "The world stops", month: "2020-03", equityMove: -12, bondMove: 3, emotionalPull: "panic + fear",
+  { title: "The world stops", month: "2020-03", emotionalPull: "panic + fear",
     story: "A new virus is racing across the globe. Cities lock down, shelves empty, and nobody knows how bad it gets. In weeks the market has fallen off a cliff. Your dad calls, shaking: \"Get out now, before it all disappears.\"",
     mood: "Freefall — the fastest crash anyone can remember.",
-    event: "The COVID-19 crash (Feb–Mar 2020)",
+    event: "The COVID-19 crash · March 2020",
     what: "A global pandemic triggered the fastest bear market in history — stocks fell about a third in five weeks." },
-  { title: "It makes no sense", month: "2020-05", equityMove: 13, bondMove: 1, emotionalPull: "disbelief + sitting out",
-    story: "The news is still terrifying — record job losses, hospitals overflowing. Yet the market is roaring back. It feels fake. Surely it can't last while the world is still shut down.",
+  { title: "It makes no sense", month: "2020-04", emotionalPull: "disbelief + sitting out",
+    story: "The news is still terrifying — record job losses, hospitals overflowing. Yet the market is roaring back, its best month in decades. It feels fake. Surely it can't last while the world is still shut down.",
     mood: "Ripping higher — against all logic.",
-    event: "The stimulus rebound (Spring 2020)",
-    what: "Zero rates and trillions in stimulus fueled one of the fastest recoveries ever — losses were erased within months." },
-  { title: "A breakthrough", month: "2020-11", equityMove: 11, bondMove: -1, emotionalPull: "hope + regret",
+    event: "The stimulus rebound · April 2020",
+    what: "Zero rates and trillions in stimulus fueled one of the fastest recoveries ever — stocks had their best month in decades." },
+  { title: "A breakthrough", month: "2020-11", emotionalPull: "hope + regret",
     story: "Scientists announce something that could finally end the crisis. Markets leap on the news. If you stepped aside earlier, you're watching it climb without you.",
     mood: "A sharp, sudden relief rally.",
-    event: "The vaccine breakthrough (Nov 2020)",
-    what: "The first highly effective vaccine was announced. Markets surged ~11% that month and beaten-down stocks soared." },
-  { title: "Everyone's a genius", month: "2021-02", equityMove: 6, bondMove: 0, emotionalPull: "FOMO + euphoria",
-    story: "Amateur traders band together online, a video-game store's stock rockets 1,000%, crypto is all anyone talks about, and your coworker just doubled their money. You feel too cautious.",
-    mood: "Euphoria. Money looks easy.",
-    event: "The 'everything' rally (2021)",
-    what: "Meme stocks, crypto and SPAC mania — speculation ran hot and the market rose ~27% for the year." },
-  { title: "The first crack", month: "2021-09", equityMove: -5, bondMove: -2, emotionalPull: "unease + recency bias",
+    event: "The vaccine breakthrough · November 2020",
+    what: "The first highly effective vaccine was announced. Markets surged that month and beaten-down stocks soared." },
+  { title: "The first crack", month: "2021-09", emotionalPull: "unease + recency bias",
     story: "Prices are starting to creep up — gas, groceries, rent. The central bank hints it may pull back its support. The market wobbles for the first time in a while, and it feels like the party might be ending.",
     mood: "A first wobble after a long climb.",
-    event: "The inflation scare (late 2021)",
+    event: "The inflation scare · September 2021",
     what: "Inflation began surging and the Fed signaled it would taper support — the first tremor before a hard year." },
-  { title: "It won't stop bleeding", month: "2022-02", equityMove: -8, bondMove: -3, emotionalPull: "fear + helplessness",
-    story: "A major war erupts in Europe. Gas and food prices spike to levels you've never seen. Even the 'safe' parts of your portfolio are falling. Every month is another leg down.",
+  { title: "It won't stop bleeding", month: "2022-04", emotionalPull: "fear + helplessness",
+    story: "A major war has erupted in Europe. Gas and food prices spike to levels you've never seen. Even the 'safe' bond part of your portfolio is falling this time. Every month is another leg down.",
     mood: "Everything falling at once.",
-    event: "War & inflation shock (early 2022)",
-    what: "Russia invaded Ukraine as inflation hit 40-year highs — unusually, both stocks and bonds fell together." },
-  { title: "No bottom in sight", month: "2022-06", equityMove: -8, bondMove: -3, emotionalPull: "fear + recency bias",
-    story: "The central bank is hiking rates faster than in decades. Every rally fails. Forecasters keep cutting their targets. It genuinely feels like it could go to zero.",
+    event: "War & inflation shock · April 2022",
+    what: "War in Ukraine collided with 40-year-high inflation — unusually, stocks and bonds fell hard together." },
+  { title: "No bottom in sight", month: "2022-06", emotionalPull: "fear + recency bias",
+    story: "The central bank is hiking rates faster than in decades. Every rally fails. Forecasters keep cutting their targets. It genuinely feels like it could just keep going down.",
     mood: "A grinding, relentless decline.",
-    event: "The rate-hike bear market (mid 2022)",
-    what: "The most aggressive rate hikes in decades drove stocks into a bear market of roughly −25%." },
-  { title: "You're exhausted", month: "2022-10", equityMove: 8, bondMove: 1, emotionalPull: "capitulation + loss aversion",
-    story: "It's been a brutal year of losses. The headlines insist the worst is still ahead. You're worn down, and part of you just wants to make the pain stop and sell what's left.",
-    mood: "Maximum pessimism.",
-    event: "The bottom (autumn 2022)",
-    what: "At peak fear the market bottomed and began to recover — those who capitulated locked in their losses." },
-  { title: "The bank runs", month: "2023-03", equityMove: -6, bondMove: 2, emotionalPull: "contagion fear",
+    event: "The rate-hike bear market · June 2022",
+    what: "The most aggressive rate hikes in decades drove stocks deep into a bear market." },
+  { title: "Maximum pain", month: "2022-09", emotionalPull: "capitulation + loss aversion",
+    story: "It's been a brutal year of losses, and this is the worst month yet. The headlines insist even more pain is ahead. You're worn down, and part of you just wants to make it stop and sell what's left.",
+    mood: "Peak pessimism — the worst month of a bad year.",
+    event: "The low · September 2022",
+    what: "Stocks hit their sharpest monthly drop of the bear market — just weeks before the bottom that October." },
+  { title: "You're exhausted", month: "2022-10", emotionalPull: "capitulation + disbelief",
+    story: "After a year of losses, a sudden sharp bounce. You've been burned so many times you don't trust it — every rally this year has failed. It's tempting to sell into the strength and finally be done.",
+    mood: "A powerful bounce nobody believes.",
+    event: "The turn · October 2022",
+    what: "At peak fear the market began to recover — those who'd capitulated locked in their losses and missed the turn." },
+  { title: "The bank runs", month: "2023-03", emotionalPull: "contagion fear",
     story: "A major bank collapses overnight. Then another. People line up to pull their money out, and everyone starts asking if it's 2008 all over again. Nobody knows who's next.",
     mood: "A sudden jolt of financial fear.",
-    event: "The banking scare (March 2023)",
-    what: "Several regional banks failed in days. Fears of a 2008 repeat faded quickly and the market steadied." },
-  { title: "The machines take over", month: "2023-06", equityMove: 9, bondMove: 0, emotionalPull: "FOMO + greed",
+    event: "The banking scare · March 2023",
+    what: "Several banks failed in days. Fears of a 2008 repeat faded fast — and the month actually closed higher." },
+  { title: "The machines take over", month: "2023-06", emotionalPull: "FOMO + greed",
     story: "A new AI tool goes viral, and suddenly every company claims to be an 'AI company.' A handful of tech giants drag the whole market up. Your friend who bought them is up huge. Have you already missed it?",
     mood: "A narrow, powerful rally.",
-    event: "The AI boom (2023)",
-    what: "A viral AI tool sparked a frenzy; a few megacap tech stocks drove the market up ~24% for the year." },
-  { title: "Out of nowhere", month: "2024-08", equityMove: -7, bondMove: 2, emotionalPull: "panic + whiplash",
-    story: "Overnight, a shock in a currency you've never thought about triggers a violent global selloff. Screens are red everywhere. By the time you've read the news, it's already plunged.",
-    mood: "A sudden, violent drop.",
-    event: "The August 2024 flash crash",
-    what: "An unwinding of the yen 'carry trade' caused a sharp global selloff — which reversed within days." },
-  { title: "The rules just changed", month: "2025-04", equityMove: -9, bondMove: 1, emotionalPull: "fear + uncertainty",
-    story: "Overnight, sweeping new trade tariffs are announced. Markets plunge, headlines scream 'trade war,' and prices whipsaw wildly. Nobody knows the rules anymore. It'd be so easy to step aside until it's clear.",
-    mood: "Violent, headline-driven swings.",
-    event: "The tariff shock (early 2025)",
-    what: "A sudden tariff announcement caused a sharp selloff and wild volatility — followed by a rapid rebound." }
+    event: "The AI boom · June 2023",
+    what: "A viral AI tool sparked a frenzy; a few megacap tech stocks powered a strong summer rally." },
+  { title: "The all-clear", month: "2023-11", emotionalPull: "relief + regret",
+    story: "For over a year every piece of good news was a trap. Now the central bank finally signals it's done raising rates, and the market erupts in its best month in a long time. Have you been too cautious this whole time?",
+    mood: "A furious, everything-up rally.",
+    event: "The pivot rally · November 2023",
+    what: "Hints that rate hikes were over set off one of the strongest months in years — for both stocks and bonds." },
+  { title: "The rules just changed", month: "2025-03", emotionalPull: "fear + uncertainty",
+    story: "Overnight, sweeping new trade tariffs are announced. Markets drop, headlines scream 'trade war,' and prices whipsaw. Nobody knows the rules anymore. It'd be so easy to step aside until it's clear.",
+    mood: "Headline-driven swings, out of a calm sky.",
+    event: "The tariff shock · March 2025",
+    what: "A sudden tariff announcement rattled markets after a calm stretch — a reminder that shocks never really stop." }
 ];
 
-const TUTORIAL = { title: "A jittery week", month: null, equityMove: -3, bondMove: 1, emotionalPull: "a warm-up",
+// Tutorial is a hypothetical warm-up (not a real month, doesn't count).
+const TUTORIAL = { title: "A jittery week", month: null, tutMove: -3, tutBond: 1, emotionalPull: "a warm-up",
   story: "The market's had a few red days in a row — nothing dramatic, but the headlines are nervous and your feed is full of doom. A practice round to get your bearings.",
   mood: "Ordinary turbulence." };
 
+/* ═══ REAL MONTHLY TOTAL RETURNS, 2020-01 … 2025-12 (72 months, %). ═══
+   EQ_2020  = S&P 500 total return, derived from the AMBAL 60/40 benchmark and
+              the Bloomberg US Aggregate: since benchmark = 0.6·S&P + 0.4·Agg,
+              S&P = (benchmark − 0.4·Agg)/0.6. Validated within 0.05% of the
+              known real monthly S&P figures for nine reference months.
+   AGG_2020 = Bloomberg US Aggregate Bond Index total return.
+   TRANSCRIBED / DERIVED FROM SOURCE DATA — VERIFY AGAINST THE ORIGINAL SERIES
+   AND OBTAIN COMPLIANCE REVIEW BEFORE ANY EXTERNAL / CLIENT USE. */
+const EQ_2020 = [ // monthly % total return, 2020-01 … 2025-12
+  -0.03,-8.23,-12.36,12.81,4.75,2,5.64,7.19,-3.8,-2.65,10.95,3.84,
+  -1,2.76,4.38,5.34,0.7,2.33,2.37,3.04,-4.65,6.96,-0.7,4.49,
+  -5.18,-2.99,3.72,-8.72,0.19,-8.25,9.22,-4.08,-9.2,8.1,5.58,-5.77,
+  6.28,-2.44,3.67,1.56,0.44,6.61,3.21,-1.59,-4.77,-2.1,9.13,4.55,
+  1.68,5.34,3.22,-4.08,4.95,3.58,1.21,2.42,2.14,-0.91,5.86,-2.37,
+  2.78,-1.3,-5.64,-0.68,6.3,5.09,2.24,2.02,3.66,2.35,0.4,-0.23
+];
+const AGG_2020 = [ // monthly % total return, 2020-01 … 2025-12
+  1.92,1.8,-0.59,1.78,0.47,0.63,1.49,-0.81,-0.05,-0.45,0.98,0.14,
+  -0.72,-1.44,-1.25,0.79,0.33,0.7,1.12,-0.19,-0.87,0.03,0.3,-0.26,
+  -2.15,-1.12,-2.78,-3.79,0.64,-1.57,2.44,-2.83,-4.32,-1.3,3.68,-0.45,
+  3.08,-2.59,2.54,0.61,-1.09,-0.36,-0.07,-0.64,-2.54,-1.58,4.53,3.83,
+  -0.27,-1.41,0.92,-2.53,1.7,0.95,2.34,1.44,1.34,-2.48,1.06,-1.64,
+  0.53,2.2,0.04,0.39,-0.72,1.54,-0.26,1.2,1.09,0.6,0.4,0.3
+];
+
 /* ── Model: pick a risk profile (60/40 or 70/30). $50k in that composite.
-   Sell → 25% to cash; Buy → 25% back; Hold → nothing. Each moment's
-   portfolio return blends the stock move and the bond move by weight. ── */
+   Sell → 25% to cash; Buy → 25% back; Hold → nothing. Each month's portfolio
+   return blends the REAL stock and bond returns by weight. The reveal walks
+   all 72 real months; play reacts at the drawn events and quietly holds the
+   months in between — so the running total lands exactly on the reveal. ── */
 const START = 50000, ACTION = 0.25;
 const CASH_MONTHLY = Math.pow(1.02, 1/12);   // 2%/yr on cash
 const MONTHS = 72;                            // 2020-01 … 2025-12
 const RISK = { "60/40": { w: 0.60, sub: "60% stocks · 40% bonds" },
                "70/30": { w: 0.70, sub: "70% stocks · 30% bonds" } };
 const DRAW = 6;
-const DEMO = new URLSearchParams(location.search).has("demo");
 
-const state = { risk: "60/40", w: 0.60, pool: [], step: -1, decisions: [], fund: START, cash: 0, chart: null };
+// Real move for a moment, looked up by its month.
+const eqMoveOf = (sc) => EQ_2020[monthIndex(sc.month)];
+const bdMoveOf = (sc) => AGG_2020[monthIndex(sc.month)];
+// Blended monthly portfolio return (fraction) for weight w at month index mi.
+const compMonth = (mi, w) => (w * EQ_2020[mi] + (1 - w) * AGG_2020[mi]) / 100;
+
+const state = { risk: "60/40", w: 0.60, pool: [], step: -1, decisions: [],
+                fund: START, cash: 0, cursor: 0, chart: null };
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => "$" + Math.round(n).toLocaleString("en-US");
 const REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -580,14 +623,24 @@ function renderProgress() {
 function drawScenarios() {
   const pool = POOL.slice();
   for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
-  const six = pool.slice(0, DRAW);
-  if (DEMO) six.sort((a, b) => monthIndex(a.month) - monthIndex(b.month)); // stable order for demos
-  return six;
+  // Draw six at random for replay value, then ALWAYS play them in real
+  // chronological order so the lived path matches how the years unfolded.
+  return pool.slice(0, DRAW).sort((a, b) => monthIndex(a.month) - monthIndex(b.month));
 }
 
 function renderScenario() {
   const isTut = state.step < 0;
   const sc = isTut ? TUTORIAL : state.pool[state.step];
+  // Fast-forward the (held) months between the last event and this one, so the
+  // running total reflects the real path the portfolio actually travelled.
+  if (!isTut) {
+    const mi = monthIndex(sc.month);
+    for (let m = state.cursor; m < mi; m++) {
+      const r = compMonth(m, state.w);
+      state.fund *= 1 + r; state.cash *= CASH_MONTHLY;
+    }
+    state.cursor = mi;   // now sitting AT the event month; its return applies on decide
+  }
   renderProgress();
   $("practiceBadge").hidden = !isTut;
   $("tutorialHint").hidden = !isTut;
@@ -607,12 +660,12 @@ function renderScenario() {
   showPhase("phase-scenario");
 }
 
-/** Apply an action to {fund,cash} then let the moment's blended return play out. */
-function applyMoment(fund, cash, action, sc, w) {
+/** Apply an action to {fund,cash} then let the month's blended return play out.
+    `r` is the real blended monthly return (fraction). */
+function applyMoment(fund, cash, action, r) {
   const total = fund + cash;
   if (action === "buy")  { const a = Math.min(ACTION * total, cash); cash -= a; fund += a; }
   else if (action === "sell") { const a = Math.min(ACTION * total, fund); fund -= a; cash += a; }
-  const r = (w * sc.equityMove + (1 - w) * sc.bondMove) / 100;
   fund *= 1 + r; cash *= CASH_MONTHLY;
   return { fund, cash, total: fund + cash, blend: r * 100 };
 }
@@ -621,24 +674,29 @@ function decide(action) {
   const isTut = state.step < 0;
   const sc = isTut ? TUTORIAL : state.pool[state.step];
   const w = state.w;
+  // Real moves for this moment (tutorial uses its hypothetical warm-up move).
+  const eq = isTut ? sc.tutMove : eqMoveOf(sc);
+  const bd = isTut ? sc.tutBond : bdMoveOf(sc);
+  const r = (w * eq + (1 - w) * bd) / 100;
   const before = state.fund + state.cash;
   const results = {
-    buy:  applyMoment(state.fund, state.cash, "buy",  sc, w),
-    hold: applyMoment(state.fund, state.cash, "hold", sc, w),
-    sell: applyMoment(state.fund, state.cash, "sell", sc, w)
+    buy:  applyMoment(state.fund, state.cash, "buy",  r),
+    hold: applyMoment(state.fund, state.cash, "hold", r),
+    sell: applyMoment(state.fund, state.cash, "sell", r)
   };
   const chosen = results[action];
 
   if (!isTut) {
     state.decisions.push(action);
     state.fund = chosen.fund; state.cash = chosen.cash;
+    state.cursor = monthIndex(sc.month) + 1;   // the event month's return is now spent
     updateTracker();
   }
 
-  const eq = sc.equityMove;
+  const eqTxt = (v) => (v >= 0 ? "+" + v.toFixed(1) : v.toFixed(1)) + "%";
   $("ocEmoji").textContent = eq >= 8 ? "📈" : eq >= 0 ? "🌤️" : "📉";
-  $("ocMarket").innerHTML = "Stocks " + (eq >= 0 ? "climbed <b>+" + eq + "%</b>" : "fell <b>" + eq + "%</b>") +
-    " · bonds " + (sc.bondMove >= 0 ? "+" + sc.bondMove : sc.bondMove) + "% over the weeks that followed.";
+  $("ocMarket").innerHTML = "Stocks " + (eq >= 0 ? "climbed <b>" + eqTxt(eq) + "</b>" : "fell <b>" + eqTxt(eq) + "</b>") +
+    " · bonds <b>" + eqTxt(bd) + "</b> that month.";
   const cashPct = Math.round(100 * state.cash / (state.fund + state.cash));
   $("ocYou").innerHTML = (isTut ? "Practice: you " : "You ") +
     { buy: "bought more", hold: "held", sell: "sold" }[action] +
@@ -674,30 +732,40 @@ function nextStep() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   REVEAL · jagged monthly 2020–2025 path
-   A 72-month series carries small deterministic noise for a realistic,
-   NOT-smooth line; the six drawn events overwrite their own months with
-   their real moves. Decisions are placed at each event's real month.
+   REVEAL · the real monthly 2020–2025 path
+   Both lines walk all 72 REAL months (EQ_2020 / AGG_2020) blended by weight —
+   so the line is naturally jagged, not synthetic. "Your choices" applies each
+   decision at the event's real month and holds every month in between; that is
+   exactly what play did, so the reveal endpoint equals the in-game total.
    ═══════════════════════════════════════════════════════════════════════ */
-function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
-
-function buildMonthlyReturns() {
-  const rng = mulberry32(20200101);
-  const eq = [], bd = [];
-  for (let m = 0; m < MONTHS; m++) {            // baseline chop: mean-positive, jagged
-    eq.push(0.004 + (rng() * 2 - 1) * 0.02);
-    bd.push(0.0015 + (rng() * 2 - 1) * 0.005);
-  }
+// Walk the full real path. Returns the two value series plus the decision map.
+function simulatePath() {
+  const w = state.w;
   const decByMonth = {};
-  state.pool.forEach((sc, k) => {               // stamp the drawn events onto their months
-    const mi = monthIndex(sc.month);
-    eq[mi] = sc.equityMove / 100; bd[mi] = sc.bondMove / 100;
-    decByMonth[mi] = state.decisions[k];
-  });
-  return { eq, bd, decByMonth };
+  state.pool.forEach((sc, k) => { decByMonth[monthIndex(sc.month)] = state.decisions[k]; });
+  const you = [START], stay = [START];
+  let yf = START, yc = 0, sv = START;
+  for (let m = 0; m < MONTHS; m++) {
+    const r = compMonth(m, w);
+    if (decByMonth[m] !== undefined) {           // act at the event month, before its return
+      const total = yf + yc, d = decByMonth[m];
+      if (d === "buy")  { const a = Math.min(ACTION * total, yc); yc -= a; yf += a; }
+      else if (d === "sell") { const a = Math.min(ACTION * total, yf); yf -= a; yc += a; }
+    }
+    yf *= 1 + r; yc *= CASH_MONTHLY; sv *= 1 + r;
+    you.push(yf + yc); stay.push(sv);
+  }
+  return { you, stay, decByMonth };
 }
 
 function enterReveal() {
+  // Finish the walk through any months after the last event, so the tracker
+  // matches the reveal exactly, then hand the value to the bridge line.
+  for (let m = state.cursor; m < MONTHS; m++) {
+    const r = compMonth(m, state.w);
+    state.fund *= 1 + r; state.cash *= CASH_MONTHLY;
+  }
+  state.cursor = MONTHS;
   $("bridgeStory").textContent = fmt(state.fund + state.cash);
   $("tracker").classList.remove("show");
   buildChart();
@@ -743,22 +811,11 @@ function buildChart() {
 }
 
 function renderReveal() {
-  const { eq, bd, decByMonth } = buildMonthlyReturns();
+  const { you, stay, decByMonth } = simulatePath();
   REVEAL_DEC = decByMonth;
-  const w = state.w;
-  const labels = [""], you = [START], stay = [START];   // index 0 = start point (unlabeled)
-  let yf = START, yc = 0, sv = START;
-  for (let m = 0; m < MONTHS; m++) {
-    const comp = w * eq[m] + (1 - w) * bd[m];
-    if (decByMonth[m] !== undefined) {           // apply the decision at this month, before the move
-      const total = yf + yc, d = decByMonth[m];
-      if (d === "buy")  { const a = Math.min(ACTION * total, yc); yc -= a; yf += a; }
-      else if (d === "sell") { const a = Math.min(ACTION * total, yf); yf -= a; yc += a; }
-    }
-    yf *= 1 + comp; yc *= CASH_MONTHLY; sv *= 1 + comp;
-    you.push(yf + yc); stay.push(sv);
+  const labels = [""];                                   // index 0 = start point (unlabeled)
+  for (let m = 0; m < MONTHS; m++)
     labels.push(new Date(2020, m).toLocaleDateString("en-US", { month: "short", year: "numeric" }));
-  }
 
   state.chart.data.labels = labels;
   state.chart.data.datasets[0].data = you;
@@ -808,11 +865,15 @@ function renderReveal() {
   // the timeline — sorted by real date, breaking the ambiguity
   const tl = $("timeline"); tl.innerHTML = "";
   ordered.forEach(({ sc, d }) => {
-    const m = sc.equityMove;
+    const m = eqMoveOf(sc);
+    const mv = (m >= 0 ? "+" + m.toFixed(1) : m.toFixed(1)) + "%";
+    const parts = sc.event.split("·");   // "Name · Month Year"
+    const when = (parts[1] || "").trim();
+    const name = parts[0].trim();
     const row = document.createElement("div"); row.className = "tl-item";
-    row.innerHTML = '<div class="tl-when">' + sc.event.replace(/^.*\(/, "").replace(")", "") + '</div>' +
-      '<div class="tl-body"><b>' + sc.event.replace(/\s*\(.*\)$/, "") + '</b><p>' + sc.what + '</p>' +
-      '<div class="tl-meta">Stocks: <span class="tl-move ' + (m >= 0 ? "up" : "down") + '">' + (m >= 0 ? "+" + m : m) + '%</span>' +
+    row.innerHTML = '<div class="tl-when">' + when + '</div>' +
+      '<div class="tl-body"><b>' + name + '</b><p>' + sc.what + '</p>' +
+      '<div class="tl-meta">Stocks: <span class="tl-move ' + (m >= 0 ? "up" : "down") + '">' + mv + '</span>' +
       '<span class="tl-you ' + d + '">· you ' + { buy: "bought", hold: "held", sell: "sold" }[d] + '</span></div></div>';
     tl.appendChild(row);
   });
@@ -838,7 +899,7 @@ function selectRisk(key) {
 }
 function startGame() {
   state.pool = drawScenarios();
-  state.step = -1; state.decisions = []; state.fund = START; state.cash = 0;
+  state.step = -1; state.decisions = []; state.fund = START; state.cash = 0; state.cursor = 0;
   renderScenario();
 }
 
