@@ -323,6 +323,17 @@
   .handoff-link { display: inline-block; font-size: 14px; font-weight: 700; color: var(--accent); text-decoration: none; }
   .handoff-link:hover { text-decoration: underline; }
 
+  /* ── Era switcher (flip the main chart between periods) ── */
+  .era-switch { text-align: center; margin: 2px 0 12px; }
+  .era-switch-label { display: block; font-size: 12.5px; color: var(--gray); margin-bottom: 8px; max-width: 460px; margin-left: auto; margin-right: auto; }
+  .era-tabs { display: inline-flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+  .era-tab { font: inherit; font-size: 12.5px; font-weight: 700; color: var(--navy); background: var(--gray-light);
+    border: 1px solid transparent; border-radius: 999px; padding: 6px 15px; cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
+  .era-tab:hover { border-color: var(--navy); }
+  .era-tab.sel { background: var(--navy); color: #fff; }
+  .era-caption { text-align: center; font-size: 12.5px; line-height: 1.5; color: var(--gray); margin-top: 6px; }
+  .era-caption .neg { color: #b3402e; font-weight: 700; }
+
   /* ── History rhymes panel ── */
   .history { margin-top: 24px; }
   .hist-intro { text-align: center; max-width: 620px; margin: 0 auto 16px; }
@@ -450,11 +461,17 @@
         <div class="sub">Every moment you just faced was real — the actual months of <b>2020 to 2025</b>. Your choices turned $50,000 into <b id="bridgeStory"></b>. Below is the real month-by-month path, with your decisions placed exactly where they happened and the months in between filled in.</div>
       </div>
 
+      <div class="era-switch">
+        <span class="era-switch-label">Think 2020 was a fluke? Flip the chart through other crises — the story barely changes.</span>
+        <div class="era-tabs" id="eraTabs"></div>
+      </div>
+
       <div id="shareCapture">
         <div class="chart-box"><canvas id="revealChart" role="img" aria-label="Loading chart…"></canvas></div>
         <table id="chartTable" class="sr-only"></table>
-        <p class="legend-note"><span style="color:#008074;font-weight:700">━ Your choices</span> &nbsp;·&nbsp; <span style="color:var(--navy);font-weight:700">━ Stayed invested</span></p>
-        <p class="marker-note">Markers show what you did — <b style="color:#b3402e">◆ sold</b>, <b style="color:#008074">▲ bought</b>, <b style="color:var(--navy)">● held</b>. Hover any point to see your move.</p>
+        <p class="legend-note" id="legendNote"><span style="color:#008074;font-weight:700">━ Your choices</span> &nbsp;·&nbsp; <span style="color:var(--navy);font-weight:700">━ Stayed invested</span></p>
+        <p class="marker-note" id="markerNote">Markers show what you did — <b style="color:#b3402e">◆ sold</b>, <b style="color:#008074">▲ bought</b>, <b style="color:var(--navy)">● held</b>. Hover any point to see your move.</p>
+        <p class="era-caption" id="eraCaption" hidden></p>
         <div class="decision-row" id="decisionRow"></div>
 
         <div class="summary" id="summaryCard">
@@ -476,11 +493,10 @@
       <!-- ═══ HISTORY RHYMES — nothing changes across eras ═══ -->
       <section class="history">
         <div class="hist-intro">
-          <span class="hist-eyebrow">And it isn't just 2020</span>
-          <h3>Change the years. The story barely changes.</h3>
-          <p>Every era gets its crash, its panic, its “this time is different.” Here's what $50,000 did through four of the last twenty years' worst stretches — <b>staying invested</b> versus <b>sitting out the market's best months</b>, which is right where selling in fear tends to leave you.</p>
+          <span class="hist-eyebrow">The bigger picture</span>
+          <h3>Time in the market beats timing it.</h3>
+          <p>Flip the chart above through crash after crash and the shape barely changes. Here's the whole twenty-year record — and the price of stepping out for just the best few months.</p>
         </div>
-        <div class="hist-grid" id="historyGrid"></div>
         <div class="hist-stat">
           <div class="hs-cell"><b id="histHold"></b><span>stayed invested · 2005–2025</span></div>
           <div class="hs-vs">vs</div>
@@ -856,30 +872,14 @@ function buildChart() {
 
 function renderReveal() {
   const { you, stay, decByMonth } = simulatePath();
-  // Map each decision's absolute month to its chart-point index (0 = the
-  // starting anchor at the first moment), so markers and hover stay aligned.
-  const chartIdxOf = (mi) => (mi - state.startIdx) + 1;
-  REVEAL_DEC = {};
-  Object.keys(decByMonth).forEach((mi) => { REVEAL_DEC[chartIdxOf(+mi)] = decByMonth[mi]; });
   const labels = [""];                                   // index 0 = start point (unlabeled)
   for (let m = state.startIdx; m < MONTHS; m++)
     labels.push(new Date(2020, m).toLocaleDateString("en-US", { month: "short", year: "numeric" }));
-
-  state.chart.data.labels = labels;
-  state.chart.data.datasets[0].data = you;
-  state.chart.data.datasets[1].data = stay;
-
-  // decision markers on the "Your choices" line, at the event months (+1 for the START point offset)
-  const decColor = { buy: "#008074", sell: "#b3402e", hold: "#083469" };
-  const decShape = { buy: "triangle", sell: "rectRot", hold: "circle" };
-  const pr = you.map(() => 0), ps = you.map(() => "circle"), pbg = you.map(() => "transparent"), phr = you.map(() => 0);
-  Object.keys(decByMonth).forEach((mi) => {
-    const idx = chartIdxOf(+mi); const d = decByMonth[mi];
-    pr[idx] = 6; ps[idx] = decShape[d]; pbg[idx] = decColor[d]; phr[idx] = 8;
-  });
-  Object.assign(state.chart.data.datasets[0], { pointRadius: pr, pointStyle: ps, pointBackgroundColor: pbg,
-    pointBorderColor: "#fff", pointBorderWidth: 1.5, pointHoverRadius: phr });
-  state.chart.update();
+  // Stash the personal run, then let the era switcher draw the default view.
+  state.psim = { you, stay, decByMonth };
+  state.plabels = labels;
+  buildEraTabs();
+  showEra("you");
 
   const fy = you[you.length - 1], fh = stay[stay.length - 1];
   $("sumYou").textContent = fmt(fy);
@@ -964,10 +964,9 @@ const BENCH_0525 = [ // monthly % total return, 2005-02 … 2025-12 (251 months)
 ];
 const bIdx = (ym) => ((+ym.slice(0, 4) - 2005) * 12 + (+ym.slice(5) - 1)) - 1;  // 2005-02 → 0
 const HIST_ERAS = [
-  { tag: "2008",    title: "The global financial crisis",  a: "2007-06", b: "2013-06" },
-  { tag: "2011",    title: "Europe's debt crisis",         a: "2010-07", b: "2016-06" },
-  { tag: "2015–18", title: "China shock &amp; rate fears", a: "2014-01", b: "2019-12" },
-  { tag: "2020",    title: "The pandemic — you just played this", a: "2020-01", b: "2025-12" }
+  { key: "gfc",  tab: "2008",    title: "The global financial crisis", a: "2007-06", b: "2013-06" },
+  { key: "euro", tab: "2011",    title: "Europe's debt crisis",        a: "2010-07", b: "2016-06" },
+  { key: "vol",  tab: "2015–18", title: "China shock & rate fears",    a: "2014-01", b: "2019-12" }
 ];
 const HIST_MISS_K = 3;
 
@@ -981,35 +980,77 @@ function benchGrow(a, b, missK) {
   return out;
 }
 
-// Tiny two-line SVG sparkline (missed below, held above).
-function histSpark(hold, missed, w, h, pad) {
-  const all = hold.concat(missed), lo = Math.min(...all), hi = Math.max(...all), n = hold.length;
-  const X = (i) => pad + (i / (n - 1)) * (w - 2 * pad);
-  const Y = (v) => pad + (1 - (v - lo) / (hi - lo)) * (h - 2 * pad);
-  const pts = (ser) => ser.map((v, i) => X(i).toFixed(1) + "," + Y(v).toFixed(1)).join(" ");
-  return '<svg viewBox="0 0 ' + w + ' ' + h + '" class="hist-spark" preserveAspectRatio="none" aria-hidden="true">' +
-    '<polyline points="' + pts(missed) + '" fill="none" stroke="#b3402e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
-    '<polyline points="' + pts(hold) + '" fill="none" stroke="#083469" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>' +
-    '</svg>';
+// Month labels for a crisis-era window (index 0 = the unlabeled start anchor).
+function eraLabels(era) {
+  const s = bIdx(era.a), e = bIdx(era.b), out = [""];
+  for (let i = s; i <= e; i++) { const t = i + 1; out.push(new Date(2005 + Math.floor(t / 12), t % 12).toLocaleDateString("en-US", { month: "short", year: "numeric" })); }
+  return out;
 }
 
-function renderHistory() {
-  const grid = $("historyGrid"); if (!grid) return;
-  grid.innerHTML = "";
-  HIST_ERAS.forEach((era) => {
+// Build the era tab row once: the player's own run, then each crisis window.
+function buildEraTabs() {
+  const wrap = $("eraTabs"); if (!wrap || wrap.dataset.done) return;
+  wrap.innerHTML = '<button type="button" class="era-tab" data-era="you">Your 2020</button>' +
+    HIST_ERAS.map((e) => '<button type="button" class="era-tab" data-era="' + e.key + '">' + e.tab + '</button>').join("");
+  wrap.querySelectorAll(".era-tab").forEach((t) => t.addEventListener("click", () => showEra(t.dataset.era)));
+  wrap.dataset.done = "1";
+}
+
+/* Swap the MAIN reveal chart in place. "you" = the player's own run
+   (Your choices vs Stayed invested, with decision markers); any other key is
+   a crisis era (Stayed invested vs Sat out the best months, from the real
+   60/40 benchmark). Same chart, so the flip is instant. */
+function showEra(key) {
+  state.era = key;
+  const data = state.chart.data, d0 = data.datasets[0], d1 = data.datasets[1], d2 = data.datasets[2];
+  if (key === "you") {
+    const { you, stay, decByMonth } = state.psim;
+    data.labels = state.plabels;
+    Object.assign(d0, { label: "Your choices", borderColor: "#008074", borderDash: [], data: you });
+    Object.assign(d1, { label: "Stayed invested", borderColor: "#083469", borderDash: [], data: stay, hidden: false });
+    const decColor = { buy: "#008074", sell: "#b3402e", hold: "#083469" };
+    const decShape = { buy: "triangle", sell: "rectRot", hold: "circle" };
+    const chartIdxOf = (mi) => (mi - state.startIdx) + 1;
+    const pr = you.map(() => 0), ps = you.map(() => "circle"), pbg = you.map(() => "transparent"), phr = you.map(() => 0);
+    REVEAL_DEC = {};
+    Object.keys(decByMonth).forEach((mi) => { const idx = chartIdxOf(+mi), dd = decByMonth[mi];
+      pr[idx] = 6; ps[idx] = decShape[dd]; pbg[idx] = decColor[dd]; phr[idx] = 8; REVEAL_DEC[idx] = dd; });
+    Object.assign(d0, { pointRadius: pr, pointStyle: ps, pointBackgroundColor: pbg, pointBorderColor: "#fff", pointBorderWidth: 1.5, pointHoverRadius: phr });
+    if (typeof FUND_LINE_ENABLED !== "undefined" && d2) {
+      const fundActive = FUND_LINE_ENABLED && state.risk === "60/40";
+      const base = AMBAL_NET_2020[state.startIdx + 1], fund = [START];
+      for (let m = state.startIdx; m < MONTHS; m++) fund.push(START * AMBAL_NET_2020[m + 1] / base);
+      Object.assign(d2, { data: fundActive ? fund : [], hidden: !fundActive });
+      if (typeof setFundNote === "function") setFundNote(fundActive);
+    }
+    $("legendNote").innerHTML = '<span style="color:#008074;font-weight:700">━ Your choices</span> &nbsp;·&nbsp; <span style="color:var(--navy);font-weight:700">━ Stayed invested</span>';
+    if ($("markerNote")) $("markerNote").style.display = "";
+    if ($("eraCaption")) $("eraCaption").hidden = true;
+  } else {
+    const era = HIST_ERAS.find((e) => e.key === key);
     const hold = benchGrow(era.a, era.b), missed = benchGrow(era.a, era.b, HIST_MISS_K);
+    data.labels = eraLabels(era);
+    Object.assign(d0, { label: "Stayed invested", borderColor: "#083469", borderDash: [], data: hold,
+      pointRadius: 0, pointStyle: "circle", pointBackgroundColor: "transparent", pointHoverRadius: 0 });
+    Object.assign(d1, { label: "Sat out the best months", borderColor: "#b3402e", borderDash: [5, 3], data: missed, hidden: false });
+    REVEAL_DEC = {};
+    if (typeof FUND_LINE_ENABLED !== "undefined" && d2) { Object.assign(d2, { data: [], hidden: true }); if ($("fundNote")) $("fundNote").textContent = ""; }
+    $("legendNote").innerHTML = '<span style="color:var(--navy);font-weight:700">━ Stayed invested</span> &nbsp;·&nbsp; <span style="color:#b3402e;font-weight:700">╌ Sat out the best months</span>';
+    if ($("markerNote")) $("markerNote").style.display = "none";
     const fh = hold[hold.length - 1], fm = missed[missed.length - 1], gap = Math.round((fm / fh - 1) * 100);
-    const card = document.createElement("div"); card.className = "hist-card";
-    card.innerHTML =
-      '<div class="hist-card-top"><span class="hist-tag">' + era.tag + '</span><span class="hist-name">' + era.title + '</span></div>' +
-      histSpark(hold, missed, 240, 76, 4) +
-      '<div class="hist-vals"><span class="hv-hold">Stayed invested <b>' + fmt(fh) + '</b></span>' +
-      '<span class="hv-miss">Sat out its best months <b>' + fmt(fm) + '</b> <em>' + gap + '%</em></span></div>';
-    grid.appendChild(card);
-  });
+    if ($("eraCaption")) { $("eraCaption").hidden = false;
+      $("eraCaption").innerHTML = "<b>" + era.title + "</b> — $50k stayed invested became <b>" + fmt(fh) + "</b>; sitting out its best months, only <b class=\"neg\">" + fmt(fm) + " (" + gap + "%)</b>."; }
+  }
+  if ($("decisionRow")) $("decisionRow").style.display = (key === "you") ? "" : "none";
+  document.querySelectorAll("#eraTabs .era-tab").forEach((t) => t.classList.toggle("sel", t.dataset.era === key));
+  state.chart.update();
+}
+
+// Headline stat under the chart: the full-record cost of missing only the best months.
+function renderHistory() {
   const s = benchGrow("2005-02", "2025-12"), m = benchGrow("2005-02", "2025-12", 10);
-  $("histHold").textContent = fmt(s[s.length - 1]);
-  $("histMiss").textContent = fmt(m[m.length - 1]);
+  if ($("histHold")) $("histHold").textContent = fmt(s[s.length - 1]);
+  if ($("histMiss")) $("histMiss").textContent = fmt(m[m.length - 1]);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -1017,13 +1058,16 @@ function renderHistory() {
    ═══════════════════════════════════════════════════════════════════════ */
 async function shareResult() {
   const btn = $("btnShare"); btn.disabled = true; btn.textContent = "Rendering…";
+  const prevEra = state.era;                          // always share the player's own result
+  if (prevEra && prevEra !== "you") showEra("you");
   try {
     const canvas = await html2canvas($("shareCapture"), { scale: 2, backgroundColor: "#ffffff" });
     const link = document.createElement("a"); link.download = "my-2020-2025-result.png";
     link.href = canvas.toDataURL("image/png"); link.click();
     btn.textContent = "Saved! Share it 📸";
   } catch (err) { console.error(err); btn.textContent = "Couldn't render — try again"; }
-  finally { btn.disabled = false; setTimeout(() => { btn.textContent = "Share your result 📸"; }, 2500); }
+  finally { btn.disabled = false; setTimeout(() => { btn.textContent = "Share your result 📸"; }, 2500);
+    if (prevEra && prevEra !== "you") showEra(prevEra); }
 }
 
 function selectRisk(key) {
