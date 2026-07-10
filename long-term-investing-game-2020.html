@@ -341,6 +341,9 @@
   .era-tab.sel { background: var(--navy); color: #fff; border-color: var(--navy); box-shadow: 0 4px 12px rgba(8,52,105,.3); }
   .era-tab[data-era="you"] { color: var(--gray); border-style: dashed; }
   .era-tab[data-era="you"].sel { color: #fff; border-style: solid; }
+  /* Visible keyboard focus for all interactive controls. */
+  .btn:focus-visible, .era-tab:focus-visible, .risk-opt:focus-visible, .handoff-link:focus-visible {
+    outline: 3px solid var(--accent); outline-offset: 2px; }
 
   /* Era mode: distinct hero + story so nothing from the 2020 run lingers. */
   .era-hero { position: relative; }
@@ -359,16 +362,6 @@
   .hist-eyebrow { display: inline-block; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; font-weight: 800; color: var(--accent); margin-bottom: 6px; }
   .hist-intro h3 { font-size: 22px; color: var(--navy); margin-bottom: 8px; line-height: 1.22; }
   .hist-intro p { font-size: 14px; line-height: 1.55; color: var(--ink); }
-  .hist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .hist-card { border: 1px solid var(--gray-light); border-radius: 12px; padding: 12px 14px; background: #fff; }
-  .hist-card-top { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
-  .hist-tag { font-size: 12px; font-weight: 800; color: #fff; background: var(--navy); border-radius: 6px; padding: 1px 7px; }
-  .hist-name { font-size: 12.5px; font-weight: 700; color: var(--navy); }
-  .hist-spark { width: 100%; height: 76px; display: block; }
-  .hist-vals { display: flex; flex-direction: column; gap: 2px; margin-top: 8px; font-size: 11.5px; color: var(--gray); }
-  .hv-hold b { color: var(--navy); }
-  .hv-miss b { color: #b3402e; }
-  .hv-miss em { color: #b3402e; font-style: normal; font-weight: 700; }
   .hist-stat { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 18px auto 0; max-width: 560px;
     background: var(--navy); color: #fff; border-radius: 14px; padding: 16px 20px; }
   .hist-stat .hs-cell { text-align: center; }
@@ -378,7 +371,7 @@
   .hist-stat .hs-vs { font-size: 12px; opacity: .7; text-transform: uppercase; letter-spacing: .1em; }
   .hist-note { font-size: 13px; line-height: 1.55; color: var(--ink); max-width: 620px; margin: 14px auto 0; text-align: center; }
   .hist-note b { color: var(--navy); }
-  @media (max-width: 560px) { .hist-grid { grid-template-columns: 1fr; } .hist-stat { flex-direction: column; gap: 8px; } }
+  @media (max-width: 560px) { .hist-stat { flex-direction: column; gap: 8px; } }
 
 
   /* ── 2020–2025 edition extras ──────────────────────────────────────── */
@@ -950,11 +943,7 @@ function renderReveal() {
   ordered.forEach(({ d }, i) => { const c = document.createElement("span"); c.className = "dchip " + d;
     c.textContent = (i + 1) + " · " + { buy: "Buy", hold: "Hold", sell: "Sell" }[d]; dr.appendChild(c); });
 
-  // accessibility
-  $("revealChart").setAttribute("aria-label", "Portfolio value 2020 to 2025. Your choices ended at " + fmt(fy) +
-    "; staying invested ended at " + fmt(fh) + ".");
-  $("chartTable").innerHTML = "<caption>Portfolio value, 2020–2025</caption><tr><th>Line</th><th>End</th></tr>" +
-    "<tr><td>Your choices</td><td>" + fmt(fy) + "</td></tr><tr><td>Stayed invested</td><td>" + fmt(fh) + "</td></tr>";
+  // (the chart's screen-reader label + table are set per view in showEra)
 
   // the timeline — sorted by real date, breaking the ambiguity
   const tl = $("timeline"); tl.innerHTML = "";
@@ -1035,6 +1024,14 @@ function benchGrow(a, b, missK) {
   return out;
 }
 
+// Keep the chart's screen-reader label and sr-only data table in sync with
+// whichever view is showing, so it never announces stale numbers.
+function setChartA11y(title, pairs) {
+  $("revealChart").setAttribute("aria-label", title + " " + pairs.map((p) => p[0] + " ended at " + p[1]).join("; ") + ".");
+  $("chartTable").innerHTML = "<caption>" + title + "</caption><tr><th>Line</th><th>End</th></tr>" +
+    pairs.map((p) => "<tr><td>" + p[0] + "</td><td>" + p[1] + "</td></tr>").join("");
+}
+
 // Month labels for a crisis-era window (index 0 = the unlabeled start anchor).
 function eraLabels(era) {
   const s = bIdx(era.a), e = bIdx(era.b), out = [""];
@@ -1090,6 +1087,7 @@ function showEra(key, userInitiated) {
       if (typeof setFundNote === "function") setFundNote(fundActive);
     }
     $("legendNote").innerHTML = '<span style="color:#008074;font-weight:700">━ Your choices</span> &nbsp;·&nbsp; <span style="color:var(--navy);font-weight:700">━ Stayed invested</span>';
+    setChartA11y("Portfolio value, 2020 to 2025.", [["Your choices", fmt(you[you.length - 1])], ["Stayed invested", fmt(stay[stay.length - 1])]]);
   } else {
     const era = HIST_ERAS.find((e) => e.key === key);
     const hold = benchGrow(era.a, era.b), missed = benchGrow(era.a, era.b, HIST_MISS_K);
@@ -1110,6 +1108,7 @@ function showEra(key, userInitiated) {
     $("eraGap").innerHTML = "$50,000 that simply stayed invested grew to <b>" + fmt(fh) + "</b>. Sitting out just its best months left only <b class=\"neg\">" + fmt(fm) + " (" + gap + "%)</b>.";
     $("eraTake").textContent = era.take;
     $("eraAbout").textContent = era.about;
+    setChartA11y("Portfolio value, " + era.years + " (" + era.title + ").", [["Stayed invested", fmt(fh)], ["Sat out the best months", fmt(fm)]]);
   }
   document.querySelectorAll("#eraTabs .era-tab").forEach((t) => t.classList.toggle("sel", t.dataset.era === key));
   state.chart.update();
