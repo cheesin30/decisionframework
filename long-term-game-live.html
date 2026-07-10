@@ -3681,7 +3681,7 @@ $("btnAgain").addEventListener("click", playAgain);
      3. Paste the URL below, e.g. "https://YOUR-PROJECT-default-rtdb.firebaseio.com"
      4. Host this HTML file anywhere (any static host); share/QR the URL.
    ═══════════════════════════════════════════════════════════════════════ */
-const LIVE_BACKEND = { databaseURL: "" };   // ← paste your Firebase RTDB URL to go live
+const LIVE_BACKEND = { databaseURL: "https://capital-group-game-default-rtdb.asia-southeast1.firebasedatabase.app" };
 
 /* ── tiny path-object helpers shared by both transports ── */
 function pathParts(p) { return String(p || "").split("/").filter(Boolean); }
@@ -3736,12 +3736,15 @@ function FirebaseNet(code) {
     net.es = es;
   }
   net.init = async (asHost, initial) => {
-    if (asHost) await fetch(base + ".json", { method: "PUT", body: JSON.stringify(initial) });
-    listen();
-    if (!asHost) {   // confirm the room exists
-      const r = await fetch(base + "/state.json"); const st = await r.json();
-      return !!st;
+    if (asHost) {
+      await fetch(base + ".json", { method: "PUT", body: JSON.stringify(initial) });
+      net.mirror = initial;                     // seed locally — don't wait on the SSE round-trip
+    } else {
+      const r = await fetch(base + ".json"); const snap = await r.json();
+      if (!snap) return false;                  // room does not exist
+      net.mirror = snap;                        // seed locally from the full snapshot
     }
+    listen();       // the initial "put" the stream sends on connect just re-applies the same data
     return true;
   };
   net.set = (path, value) =>
@@ -3885,7 +3888,12 @@ function joinGo() {
   $("btnJoinGo").disabled = true; $("btnJoinGo").textContent = "Joining…";
   LIVE.net = makeNet(LIVE.code);
   LIVE.net.init(false).then((ok) => {
-    if (!ok && LIVE.net.local) { $("joinErr").hidden = false; $("btnJoinGo").disabled = false; $("btnJoinGo").textContent = "Join →"; return; }
+    if (!ok) {
+      $("joinErr").textContent = LIVE.net.local
+        ? "Room not found in this browser. (The demo transport only joins tabs of the same browser — set a backend for real phones.)"
+        : "Room not found. Double-check the code, or ask the host to re-share it.";
+      $("joinErr").hidden = false; $("btnJoinGo").disabled = false; $("btnJoinGo").textContent = "Join →"; return;
+    }
     selectRisk("60/40");           // one profile for the whole room — fair leaderboard
     LIVE.net.set("players/" + LIVE.pid, { n: name });
     $("joinForm").hidden = true; $("joinWait").hidden = false;
