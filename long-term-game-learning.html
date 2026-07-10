@@ -336,9 +336,18 @@
   .era-tab { font: inherit; font-size: 12.5px; font-weight: 700; color: var(--navy); background: var(--gray-light);
     border: 1px solid transparent; border-radius: 999px; padding: 6px 15px; cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
   .era-tab:hover { border-color: var(--navy); }
-  .era-tab.sel { background: var(--navy); color: #fff; }
-  .era-caption { text-align: center; font-size: 12.5px; line-height: 1.5; color: var(--gray); margin-top: 6px; }
-  .era-caption .neg { color: #b3402e; font-weight: 700; }
+  .era-tab.sel { background: var(--navy); color: #fff; box-shadow: 0 2px 8px rgba(8,52,105,.25); }
+
+  /* Era mode: distinct hero + story so nothing from the 2020 run lingers. */
+  .era-hero { position: relative; }
+  .era-badge { display: inline-block; font-size: 10.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--accent5, #831574); background: #f3e3f0; border-radius: 999px; padding: 4px 12px; margin-bottom: 12px; }
+  .era-about { text-align: left; background: var(--gray-light); border-radius: 12px; padding: 14px 16px; margin-top: 12px; }
+  .era-about b { display: block; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--navy); margin-bottom: 5px; }
+  .era-about p { font-size: 13.5px; line-height: 1.6; color: var(--ink); }
+  .mode-era { box-shadow: inset 0 4px 0 var(--accent5, #831574), 0 10px 30px rgba(8,52,105,.10); }
+  .era-fade { animation: eraFade .28s ease both; }
+  @keyframes eraFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
   /* ── History rhymes panel ── */
   .history { margin-top: 24px; }
@@ -460,15 +469,20 @@
 
   <!-- ═══ REVEAL ═══ -->
   <section class="phase" id="phase-reveal">
-    <div class="card">
-      <div class="reveal-hero">
+    <div class="card" id="revealCard">
+      <div class="reveal-hero" id="heroPersonal">
         <div class="eyebrow">The reveal</div>
         <div class="big">Every one of those was real.</div>
         <div class="sub">Every moment you just faced was real — the actual months of <b>2020 to 2025</b>. Your choices turned $50,000 into <b id="bridgeStory"></b>. Below is the real month-by-month path, with your decisions placed exactly where they happened and the months in between filled in.</div>
       </div>
+      <div class="reveal-hero era-hero" id="heroEra" hidden>
+        <span class="era-badge">Historical example · not your game</span>
+        <div class="big" id="eraBig"></div>
+        <div class="sub" id="eraSub"></div>
+      </div>
 
       <div class="era-switch">
-        <span class="era-switch-label">Think 2020 was a fluke? Flip the chart through other crises — the story barely changes.</span>
+        <span class="era-switch-label" id="eraSwitchLabel">You just lived 2020. Tap another crisis below — watch the same story play out.</span>
         <div class="era-tabs" id="eraTabs"></div>
       </div>
 
@@ -477,27 +491,41 @@
         <table id="chartTable" class="sr-only"></table>
         <p class="legend-note" id="legendNote"><span style="color:#008074;font-weight:700">━ Your choices</span> &nbsp;·&nbsp; <span style="color:var(--navy);font-weight:700">━ Stayed invested</span></p>
         <p class="marker-note" id="markerNote">Markers show what you did — <b style="color:#b3402e">◆ sold</b>, <b style="color:#008074">▲ bought</b>, <b style="color:var(--navy)">● held</b>. Hover any point to see your move.</p>
-        <p class="era-caption" id="eraCaption" hidden></p>
-        <div class="decision-row" id="decisionRow"></div>
-
-        <div class="summary" id="summaryCard">
-          <h3>Your result · 2020 – 2025</h3>
-          <div class="final-grid" style="grid-template-columns:1fr 1fr">
-            <div class="final-cell" id="cellYou"><span>Your choices</span><b id="sumYou"></b><span class="win-badge">✓ Higher</span></div>
-            <div class="final-cell" id="cellHold"><span>Stayed invested</span><b id="sumHold"></b><span class="win-badge">✓ Higher</span></div>
+        <div id="personalBlock">
+          <div class="decision-row" id="decisionRow"></div>
+          <div class="summary" id="summaryCard">
+            <h3>Your result · 2020 – 2025</h3>
+            <div class="final-grid" style="grid-template-columns:1fr 1fr">
+              <div class="final-cell" id="cellYou"><span>Your choices</span><b id="sumYou"></b><span class="win-badge">✓ Higher</span></div>
+              <div class="final-cell" id="cellHold"><span>Stayed invested</span><b id="sumHold"></b><span class="win-badge">✓ Higher</span></div>
+            </div>
+            <p class="gap-line" id="sumGap"></p>
+            <p class="takeaway" id="sumTake"></p>
+            <p class="principle">Long-term perspective is the foundation of <b>The Capital System</b>.</p>
           </div>
-          <p class="gap-line" id="sumGap"></p>
-          <p class="takeaway" id="sumTake"></p>
-          <p class="principle">Long-term perspective is the foundation of <b>The Capital System</b>.</p>
+          <div class="timeline" id="timeline"></div>
+          <p class="disclaimer">For illustrative and educational purposes only. The chart uses real historical monthly total returns for a broad U.S. stock index (S&P 500) and the Bloomberg U.S. Aggregate Bond Index for 2020–2025, blended to a hypothetical 60/40 or 70/30 portfolio; it is not the return of any Capital Group product and does not reflect fund fees, expenses or taxes. Index data is transcribed/derived from source series and must be verified against the original and reviewed for compliance before any external use. Past performance is not predictive of future results. This experience is not investment, tax or legal advice; investors should consider their own circumstances and consult a financial professional.</p>
         </div>
 
-        <div class="timeline" id="timeline"></div>
-
-        <p class="disclaimer">For illustrative and educational purposes only. The chart uses real historical monthly total returns for a broad U.S. stock index (S&P 500) and the Bloomberg U.S. Aggregate Bond Index for 2020–2025, blended to a hypothetical 60/40 or 70/30 portfolio; it is not the return of any Capital Group product and does not reflect fund fees, expenses or taxes. Index data is transcribed/derived from source series and must be verified against the original and reviewed for compliance before any external use. Past performance is not predictive of future results. This experience is not investment, tax or legal advice; investors should consider their own circumstances and consult a financial professional.</p>
+        <!-- era-only: swapped in when you flip to a historical crisis -->
+        <div id="eraBlock" hidden>
+          <div class="summary" id="eraSummary">
+            <h3 id="eraSumTitle"></h3>
+            <div class="final-grid" style="grid-template-columns:1fr 1fr">
+              <div class="final-cell win"><span>Stayed invested</span><b id="eraHold"></b><span class="win-badge">✓ Higher</span></div>
+              <div class="final-cell"><span>Sat out the best months</span><b id="eraMiss"></b></div>
+            </div>
+            <p class="gap-line" id="eraGap"></p>
+            <p class="takeaway" id="eraTake"></p>
+            <p class="principle">Long-term perspective is the foundation of <b>The Capital System</b>.</p>
+          </div>
+          <div class="era-about"><b>What happened</b><p id="eraAbout"></p></div>
+          <p class="disclaimer">Illustrative. Real 60/40 benchmark monthly total returns (60% S&amp;P 500 / 40% Bloomberg U.S. Aggregate Bond Index). “Sat out the best months” = the same portfolio with that period's best months held in cash — it shows the cost of being out of the market, not any specific trading strategy or Capital Group product. Past performance is not predictive of future results; verify data and obtain compliance review before external use.</p>
+        </div>
       </div>
 
       <!-- ═══ HISTORY RHYMES — nothing changes across eras ═══ -->
-      <section class="history">
+      <section class="history" id="historySection">
         <div class="hist-intro">
           <span class="hist-eyebrow">The bigger picture</span>
           <h3>Time in the market beats timing it.</h3>
@@ -512,7 +540,7 @@
         <p class="disclaimer" style="margin-top:10px">Illustrative, based on real 60/40 benchmark monthly total returns (60% S&amp;P 500 / 40% Bloomberg U.S. Aggregate Bond Index), 2005–2025. “Sat out the best months” = the same portfolio with that period's best months held in cash; it illustrates the cost of being out of the market, not any specific trading strategy or Capital Group product. Index data is transcribed/derived from source and must be verified and compliance-reviewed before external use. Past performance is not predictive of future results.</p>
       </section>
 
-      <div class="handoff">
+      <div class="handoff" id="handoffBlock">
         <p><b>The scariest headlines of the last six years — and staying invested still came out ahead.</b> The hardest part of investing isn't picking winners. It's holding on through the moments when every instinct — fear, regret, the urge to "do something" — tells you to sell.</p>
         <p class="muted" style="margin:0">That discipline, repeated across a lifetime of markets, is what separates long-term investors from the headlines.</p>
       </div>
@@ -970,9 +998,18 @@ const BENCH_0525 = [ // monthly % total return, 2005-02 … 2025-12 (251 months)
 ];
 const bIdx = (ym) => ((+ym.slice(0, 4) - 2005) * 12 + (+ym.slice(5) - 1)) - 1;  // 2005-02 → 0
 const HIST_ERAS = [
-  { key: "gfc",  tab: "2008",    title: "The global financial crisis", a: "2007-06", b: "2013-06" },
-  { key: "euro", tab: "2011",    title: "Europe's debt crisis",        a: "2010-07", b: "2016-06" },
-  { key: "vol",  tab: "2015–18", title: "China shock & rate fears",    a: "2014-01", b: "2019-12" }
+  { key: "gfc",  tab: "2008",    title: "The global financial crisis", years: "2007–2013", a: "2007-06", b: "2013-06",
+    sub: "The worst financial crash since the Great Depression — and you weren't even there. Watch the same choice play out.",
+    take: "Even the deepest crash in a lifetime recovered — and stepping out for its best months was the costliest move of all.",
+    about: "A housing and banking collapse pulled a balanced 60/40 portfolio down by roughly a third from its 2007 peak to the March 2009 low — then it more than made the loss back over the next four years. The investors who sold near the bottom locked in the damage; those who held on were whole again within a few years." },
+  { key: "euro", tab: "2011",    title: "Europe's debt crisis", years: "2010–2016", a: "2010-07", b: "2016-06",
+    sub: "Years of 'is the euro finished?' headlines, a U.S. downgrade, and endless double-dip fears.",
+    take: "A wall of worry that lasted years — and simply staying invested still beat trying to dodge it.",
+    about: "A rolling series of scares — Greece and the future of the euro, the first-ever downgrade of U.S. debt in 2011, repeated recession warnings — kept investors on edge for years. Every panic passed, and a balanced portfolio ground steadily higher through all of it." },
+  { key: "vol",  tab: "2015–18", title: "China shock & the 2018 selloff", years: "2014–2019", a: "2014-01", b: "2019-12",
+    sub: "A growth scare out of China, an oil crash, then a brutal end to 2018 — two gut-checks in five years.",
+    take: "Two nasty scares in five years — both looked like the end, both recovered to new highs.",
+    about: "China's 2015 slowdown and a collapse in oil prices rattled markets, then a steep fourth-quarter drop in late 2018 nearly ended the bull market. Both times stocks fell hard and the headlines turned grim — and both times they recovered and pushed on to new highs." }
 ];
 const HIST_MISS_K = 3;
 
@@ -998,18 +1035,29 @@ function buildEraTabs() {
   const wrap = $("eraTabs"); if (!wrap || wrap.dataset.done) return;
   wrap.innerHTML = '<button type="button" class="era-tab" data-era="you">Your 2020</button>' +
     HIST_ERAS.map((e) => '<button type="button" class="era-tab" data-era="' + e.key + '">' + e.tab + '</button>').join("");
-  wrap.querySelectorAll(".era-tab").forEach((t) => t.addEventListener("click", () => showEra(t.dataset.era)));
+  wrap.querySelectorAll(".era-tab").forEach((t) => t.addEventListener("click", () => showEra(t.dataset.era, true)));
   wrap.dataset.done = "1";
 }
 
-/* Swap the MAIN reveal chart in place. "you" = the player's own run
-   (Your choices vs Stayed invested, with decision markers); any other key is
-   a crisis era (Stayed invested vs Sat out the best months, from the real
-   60/40 benchmark). Same chart, so the flip is instant. */
-function showEra(key) {
+/* Swap the WHOLE reveal between the player's own run and a historical crisis.
+   "you" = the personal narrative (hero, decision markers, "Your result", your
+   timeline, the bigger-picture stat, the handoff). Any other key hides all of
+   that and shows the era's own hero, result card and story — so nothing from
+   the 2020 run lingers to confuse. Same chart canvas, so the flip is instant. */
+function showEra(key, userInitiated) {
   state.era = key;
+  const personal = key === "you";
   const data = state.chart.data, d0 = data.datasets[0], d1 = data.datasets[1], d2 = data.datasets[2];
-  if (key === "you") {
+
+  // whole-section swap
+  const setHidden = (id, h) => { const el = $(id); if (el) el.hidden = h; };
+  setHidden("heroPersonal", !personal); setHidden("heroEra", personal);
+  setHidden("personalBlock", !personal); setHidden("eraBlock", personal);
+  setHidden("historySection", !personal); setHidden("handoffBlock", !personal);
+  setHidden("markerNote", !personal); setHidden("eraSwitchLabel", false);
+  if ($("revealCard")) $("revealCard").classList.toggle("mode-era", !personal);
+
+  if (personal) {
     const { you, stay, decByMonth } = state.psim;
     data.labels = state.plabels;
     Object.assign(d0, { label: "Your choices", borderColor: "#008074", borderDash: [], data: you });
@@ -1030,8 +1078,6 @@ function showEra(key) {
       if (typeof setFundNote === "function") setFundNote(fundActive);
     }
     $("legendNote").innerHTML = '<span style="color:#008074;font-weight:700">━ Your choices</span> &nbsp;·&nbsp; <span style="color:var(--navy);font-weight:700">━ Stayed invested</span>';
-    if ($("markerNote")) $("markerNote").style.display = "";
-    if ($("eraCaption")) $("eraCaption").hidden = true;
   } else {
     const era = HIST_ERAS.find((e) => e.key === key);
     const hold = benchGrow(era.a, era.b), missed = benchGrow(era.a, era.b, HIST_MISS_K);
@@ -1042,14 +1088,26 @@ function showEra(key) {
     REVEAL_DEC = {};
     if (typeof FUND_LINE_ENABLED !== "undefined" && d2) { Object.assign(d2, { data: [], hidden: true }); if ($("fundNote")) $("fundNote").textContent = ""; }
     $("legendNote").innerHTML = '<span style="color:var(--navy);font-weight:700">━ Stayed invested</span> &nbsp;·&nbsp; <span style="color:#b3402e;font-weight:700">╌ Sat out the best months</span>';
-    if ($("markerNote")) $("markerNote").style.display = "none";
+    // era hero + result card + story
     const fh = hold[hold.length - 1], fm = missed[missed.length - 1], gap = Math.round((fm / fh - 1) * 100);
-    if ($("eraCaption")) { $("eraCaption").hidden = false;
-      $("eraCaption").innerHTML = "<b>" + era.title + "</b> — $50k stayed invested became <b>" + fmt(fh) + "</b>; sitting out its best months, only <b class=\"neg\">" + fmt(fm) + " (" + gap + "%)</b>."; }
+    $("eraBig").textContent = era.title;
+    $("eraSub").textContent = era.years + " · " + era.sub;
+    $("eraSumTitle").textContent = era.title + " · " + era.years;
+    $("eraHold").textContent = fmt(fh);
+    $("eraMiss").textContent = fmt(fm);
+    $("eraGap").innerHTML = "$50,000 that simply stayed invested grew to <b>" + fmt(fh) + "</b>. Sitting out just its best months left only <b class=\"neg\">" + fmt(fm) + " (" + gap + "%)</b>.";
+    $("eraTake").textContent = era.take;
+    $("eraAbout").textContent = era.about;
   }
-  if ($("decisionRow")) $("decisionRow").style.display = (key === "you") ? "" : "none";
   document.querySelectorAll("#eraTabs .era-tab").forEach((t) => t.classList.toggle("sel", t.dataset.era === key));
   state.chart.update();
+
+  if (userInitiated) {
+    const hero = personal ? $("heroPersonal") : $("heroEra");
+    const body = personal ? $("personalBlock") : $("eraBlock");
+    if (!REDUCED) [hero, body].forEach((el) => { if (!el) return; el.classList.remove("era-fade"); void el.offsetWidth; el.classList.add("era-fade"); });
+    if (hero) hero.scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "start" });
+  }
 }
 
 // Headline stat under the chart: the full-record cost of missing only the best months.
