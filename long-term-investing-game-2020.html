@@ -588,7 +588,7 @@ const bdMoveOf = (sc) => AGG_2020[monthIndex(sc.month)];
 const compMonth = (mi, w) => (w * EQ_2020[mi] + (1 - w) * AGG_2020[mi]) / 100;
 
 const state = { risk: "60/40", w: 0.60, pool: [], step: -1, decisions: [],
-                fund: START, cash: 0, cursor: 0, chart: null };
+                fund: START, cash: 0, cursor: 0, startIdx: 0, chart: null };
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => "$" + Math.round(n).toLocaleString("en-US");
 const REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -743,9 +743,9 @@ function simulatePath() {
   const w = state.w;
   const decByMonth = {};
   state.pool.forEach((sc, k) => { decByMonth[monthIndex(sc.month)] = state.decisions[k]; });
-  const you = [START], stay = [START];
+  const you = [START], stay = [START];   // anchor $50k at the first moment
   let yf = START, yc = 0, sv = START;
-  for (let m = 0; m < MONTHS; m++) {
+  for (let m = state.startIdx; m < MONTHS; m++) {
     const r = compMonth(m, w);
     if (decByMonth[m] !== undefined) {           // act at the event month, before its return
       const total = yf + yc, d = decByMonth[m];
@@ -803,7 +803,7 @@ function buildChart() {
       },
       scales: {
         x: { grid: { display: false }, ticks: { color: "#5f7081", maxRotation: 0, autoSkip: false,
-             callback: function(v){ const l = this.getLabelForValue(v); return /^Jan/.test(l) ? l.slice(4) : ""; } } },
+             callback: function(v){ const l = this.getLabelForValue(v); return (v === 1 || /^Jan/.test(l)) ? l.slice(4) : ""; } } },
         y: { grid: { color: "#E6ECEE" }, ticks: { color: "#5f7081", callback: (v) => "$" + Math.round(v / 1000) + "k" } }
       }
     }
@@ -812,9 +812,13 @@ function buildChart() {
 
 function renderReveal() {
   const { you, stay, decByMonth } = simulatePath();
-  REVEAL_DEC = decByMonth;
+  // Map each decision's absolute month to its chart-point index (0 = the
+  // starting anchor at the first moment), so markers and hover stay aligned.
+  const chartIdxOf = (mi) => (mi - state.startIdx) + 1;
+  REVEAL_DEC = {};
+  Object.keys(decByMonth).forEach((mi) => { REVEAL_DEC[chartIdxOf(+mi)] = decByMonth[mi]; });
   const labels = [""];                                   // index 0 = start point (unlabeled)
-  for (let m = 0; m < MONTHS; m++)
+  for (let m = state.startIdx; m < MONTHS; m++)
     labels.push(new Date(2020, m).toLocaleDateString("en-US", { month: "short", year: "numeric" }));
 
   state.chart.data.labels = labels;
@@ -826,7 +830,7 @@ function renderReveal() {
   const decShape = { buy: "triangle", sell: "rectRot", hold: "circle" };
   const pr = you.map(() => 0), ps = you.map(() => "circle"), pbg = you.map(() => "transparent"), phr = you.map(() => 0);
   Object.keys(decByMonth).forEach((mi) => {
-    const idx = +mi + 1; const d = decByMonth[mi];
+    const idx = chartIdxOf(+mi); const d = decByMonth[mi];
     pr[idx] = 6; ps[idx] = decShape[d]; pbg[idx] = decColor[d]; phr[idx] = 8;
   });
   Object.assign(state.chart.data.datasets[0], { pointRadius: pr, pointStyle: ps, pointBackgroundColor: pbg,
@@ -899,13 +903,14 @@ function selectRisk(key) {
 }
 function startGame() {
   state.pool = drawScenarios();
-  state.step = -1; state.decisions = []; state.fund = START; state.cash = 0; state.cursor = 0;
+  state.startIdx = monthIndex(state.pool[0].month);   // $50k anchored at the first moment
+  state.step = -1; state.decisions = []; state.fund = START; state.cash = 0; state.cursor = state.startIdx;
   renderScenario();
 }
 // Replay returns to the welcome screen so the risk profile can be reselected.
 function playAgain() {
   if (state.chart) { state.chart.destroy(); state.chart = null; }
-  state.step = -1; state.decisions = []; state.fund = START; state.cash = 0; state.cursor = 0;
+  state.step = -1; state.decisions = []; state.fund = START; state.cash = 0; state.cursor = 0; state.startIdx = 0;
   $("trackerValue").textContent = fmt(START);
   $("trackerSplit").textContent = "";
   $("tracker").classList.remove("show");
