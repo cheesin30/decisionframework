@@ -323,6 +323,33 @@
   .handoff-link { display: inline-block; font-size: 14px; font-weight: 700; color: var(--accent); text-decoration: none; }
   .handoff-link:hover { text-decoration: underline; }
 
+  /* ── History rhymes panel ── */
+  .history { margin-top: 24px; }
+  .hist-intro { text-align: center; max-width: 620px; margin: 0 auto 16px; }
+  .hist-eyebrow { display: inline-block; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; font-weight: 800; color: var(--accent); margin-bottom: 6px; }
+  .hist-intro h3 { font-size: 22px; color: var(--navy); margin-bottom: 8px; line-height: 1.22; }
+  .hist-intro p { font-size: 14px; line-height: 1.55; color: var(--ink); }
+  .hist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .hist-card { border: 1px solid var(--gray-light); border-radius: 12px; padding: 12px 14px; background: #fff; }
+  .hist-card-top { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+  .hist-tag { font-size: 12px; font-weight: 800; color: #fff; background: var(--navy); border-radius: 6px; padding: 1px 7px; }
+  .hist-name { font-size: 12.5px; font-weight: 700; color: var(--navy); }
+  .hist-spark { width: 100%; height: 76px; display: block; }
+  .hist-vals { display: flex; flex-direction: column; gap: 2px; margin-top: 8px; font-size: 11.5px; color: var(--gray); }
+  .hv-hold b { color: var(--navy); }
+  .hv-miss b { color: #b3402e; }
+  .hv-miss em { color: #b3402e; font-style: normal; font-weight: 700; }
+  .hist-stat { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 18px auto 0; max-width: 560px;
+    background: var(--navy); color: #fff; border-radius: 14px; padding: 16px 20px; }
+  .hist-stat .hs-cell { text-align: center; }
+  .hist-stat .hs-cell b { display: block; font-size: 26px; line-height: 1.1; }
+  .hist-stat .hs-cell span { font-size: 11px; opacity: .85; }
+  .hist-stat .hs-cell.alt b { color: #ffd66b; }
+  .hist-stat .hs-vs { font-size: 12px; opacity: .7; text-transform: uppercase; letter-spacing: .1em; }
+  .hist-note { font-size: 13px; line-height: 1.55; color: var(--ink); max-width: 620px; margin: 14px auto 0; text-align: center; }
+  .hist-note b { color: var(--navy); }
+  @media (max-width: 560px) { .hist-grid { grid-template-columns: 1fr; } .hist-stat { flex-direction: column; gap: 8px; } }
+
 
   /* ── 2020–2025 edition extras ──────────────────────────────────────── */
   .reveal-hero { text-align: center; margin-bottom: 6px; }
@@ -445,6 +472,23 @@
 
         <p class="disclaimer">For illustrative and educational purposes only. The chart uses real historical monthly total returns for a broad U.S. stock index (S&P 500) and the Bloomberg U.S. Aggregate Bond Index for 2020–2025, blended to a hypothetical 60/40 or 70/30 portfolio; it is not the return of any Capital Group product and does not reflect fund fees, expenses or taxes. Index data is transcribed/derived from source series and must be verified against the original and reviewed for compliance before any external use. Past performance is not predictive of future results. This experience is not investment, tax or legal advice; investors should consider their own circumstances and consult a financial professional.</p>
       </div>
+
+      <!-- ═══ HISTORY RHYMES — nothing changes across eras ═══ -->
+      <section class="history">
+        <div class="hist-intro">
+          <span class="hist-eyebrow">And it isn't just 2020</span>
+          <h3>Change the years. The story barely changes.</h3>
+          <p>Every era gets its crash, its panic, its “this time is different.” Here's what $50,000 did through four of the last twenty years' worst stretches — <b>staying invested</b> versus <b>sitting out the market's best months</b>, which is right where selling in fear tends to leave you.</p>
+        </div>
+        <div class="hist-grid" id="historyGrid"></div>
+        <div class="hist-stat">
+          <div class="hs-cell"><b id="histHold"></b><span>stayed invested · 2005–2025</span></div>
+          <div class="hs-vs">vs</div>
+          <div class="hs-cell alt"><b id="histMiss"></b><span>missed only the 10 best months</span></div>
+        </div>
+        <p class="hist-note"><b>6 of those 10 best months landed within six months of one of the 10 worst.</b> The rebound comes exactly when it feels most hopeless — so selling in the panic is how you miss it. Timing isn't wrong because it never works; it's wrong because the biggest days arrive without warning, right when the urge to sell is strongest.</p>
+        <p class="disclaimer" style="margin-top:10px">Illustrative, based on real 60/40 benchmark monthly total returns (60% S&amp;P 500 / 40% Bloomberg U.S. Aggregate Bond Index), 2005–2025. “Sat out the best months” = the same portfolio with that period's best months held in cash; it illustrates the cost of being out of the market, not any specific trading strategy or Capital Group product. Index data is transcribed/derived from source and must be verified and compliance-reviewed before external use. Past performance is not predictive of future results.</p>
+      </section>
 
       <div class="handoff">
         <p><b>The scariest headlines of the last six years — and staying invested still came out ahead.</b> A financial professional and Capital Group's actively managed funds can help you hold the line through moments exactly like these.</p>
@@ -881,6 +925,91 @@ function renderReveal() {
       '<span class="tl-you ' + d + '">· you ' + { buy: "bought", hold: "held", sell: "sold" }[d] + '</span></div></div>';
     tl.appendChild(row);
   });
+
+  renderHistory();
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   HISTORY RHYMES · nothing changes across volatile eras
+   Real 60/40 benchmark monthly total returns (60% S&P 500 / 40% Bloomberg US
+   Aggregate), 2005-02 … 2025-12. For each featured crisis we plot "Stayed
+   invested" against "Sat out the best months" — $50k with that era's best few
+   months held in cash, which is where selling in a panic tends to leave you
+   (the best months cluster right after the worst). Always lower, honestly.
+   Index data transcribed/derived from source — verify & compliance-review
+   before any external use.
+   ═══════════════════════════════════════════════════════════════════════ */
+const BENCH_0525 = [ // monthly % total return, 2005-02 … 2025-12 (251 months)
+  1.03,-1.27,-0.6,2.34,0.3,1.87,-0.03,0.07,-1.32,2.45,0.4,1.59,
+  0.3,0.35,0.73,-1.77,0.17,0.91,2.04,1.9,2.22,1.61,0.61,0.89,
+  -0.56,0.67,2.87,1.79,-1.12,-1.53,1.39,2.55,1.31,-1.79,-0.3,-2.93,
+  -1.89,-0.12,2.84,0.48,-5.09,-0.54,1.25,-5.88,-11.02,-3,2.13,-5.41,
+  -6.54,5.81,5.93,3.65,0.35,5.18,2.58,2.66,-0.92,4.12,0.53,-1.55,
+  2.01,3.57,1.36,-4.45,-2.51,4.63,-2.19,5.4,2.43,-0.22,3.58,1.47,
+  2.16,0.05,2.28,-0.16,-1.12,-0.59,-2.67,-3.93,6.6,-0.17,1.05,3.04,
+  2.59,1.76,0.07,-3.24,2.49,1.39,1.38,1.61,-1.03,0.41,0.49,2.83,
+  1.02,2.28,1.56,0.69,-1.42,3.11,-1.94,2.26,3.08,1.68,1.29,-1.48,
+  2.96,0.44,0.78,1.86,1.26,-0.93,2.84,-1.11,1.86,1.9,-0.11,-0.96,
+  3.07,-0.76,0.43,0.68,-1.6,1.54,-3.68,-1.21,5.07,0.07,-1.08,-2.43,
+  0.2,4.44,0.39,1.09,0.87,2.47,0.04,-0.01,-1.4,1.28,1.24,1.22,
+  2.65,0.05,0.92,1.15,0.33,1.41,0.54,1.05,1.42,1.79,0.85,2.97,
+  -2.59,-1.27,-0.07,1.73,0.32,2.24,2.21,0.08,-4.42,1.46,-4.68,5.23,
+  1.9,1.93,2.44,-3.1,4.73,0.95,0.09,0.91,1.42,2.16,1.78,0.75,
+  -4.22,-7.65,8.4,3.04,1.45,3.98,3.99,-2.3,-1.77,6.96,2.36,-0.89,
+  1.08,2.13,3.52,0.55,1.68,1.87,1.75,-3.14,4.19,-0.3,2.59,-3.97,
+  -2.24,1.12,-6.75,0.37,-5.58,6.51,-3.58,-7.25,4.34,4.82,-3.64,5,
+  -2.5,3.22,1.18,-0.17,3.82,1.9,-1.21,-3.88,-1.89,7.29,4.26,0.9,
+  2.64,2.3,-3.46,3.65,2.53,1.66,2.03,1.82,-1.54,3.94,-2.08,1.88,
+  0.1,-3.37,-0.25,3.49,3.67,1.24,1.69,2.63,1.65,0.4,-0.02
+];
+const bIdx = (ym) => ((+ym.slice(0, 4) - 2005) * 12 + (+ym.slice(5) - 1)) - 1;  // 2005-02 → 0
+const HIST_ERAS = [
+  { tag: "2008",    title: "The global financial crisis",  a: "2007-06", b: "2013-06" },
+  { tag: "2011",    title: "Europe's debt crisis",         a: "2010-07", b: "2016-06" },
+  { tag: "2015–18", title: "China shock &amp; rate fears", a: "2014-01", b: "2019-12" },
+  { tag: "2020",    title: "The pandemic — you just played this", a: "2020-01", b: "2025-12" }
+];
+const HIST_MISS_K = 3;
+
+// $50k growth over [a,b], optionally with the k best months held in cash.
+function benchGrow(a, b, missK) {
+  const s = bIdx(a), e = bIdx(b), seg = [];
+  for (let i = s; i <= e; i++) seg.push({ i, r: BENCH_0525[i] });
+  const skip = new Set(missK ? seg.slice().sort((x, y) => y.r - x.r).slice(0, missK).map(o => o.i) : []);
+  const out = [START]; let v = START;
+  for (let i = s; i <= e; i++) { v *= 1 + (skip.has(i) ? 0 : BENCH_0525[i]) / 100; out.push(v); }
+  return out;
+}
+
+// Tiny two-line SVG sparkline (missed below, held above).
+function histSpark(hold, missed, w, h, pad) {
+  const all = hold.concat(missed), lo = Math.min(...all), hi = Math.max(...all), n = hold.length;
+  const X = (i) => pad + (i / (n - 1)) * (w - 2 * pad);
+  const Y = (v) => pad + (1 - (v - lo) / (hi - lo)) * (h - 2 * pad);
+  const pts = (ser) => ser.map((v, i) => X(i).toFixed(1) + "," + Y(v).toFixed(1)).join(" ");
+  return '<svg viewBox="0 0 ' + w + ' ' + h + '" class="hist-spark" preserveAspectRatio="none" aria-hidden="true">' +
+    '<polyline points="' + pts(missed) + '" fill="none" stroke="#b3402e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<polyline points="' + pts(hold) + '" fill="none" stroke="#083469" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '</svg>';
+}
+
+function renderHistory() {
+  const grid = $("historyGrid"); if (!grid) return;
+  grid.innerHTML = "";
+  HIST_ERAS.forEach((era) => {
+    const hold = benchGrow(era.a, era.b), missed = benchGrow(era.a, era.b, HIST_MISS_K);
+    const fh = hold[hold.length - 1], fm = missed[missed.length - 1], gap = Math.round((fm / fh - 1) * 100);
+    const card = document.createElement("div"); card.className = "hist-card";
+    card.innerHTML =
+      '<div class="hist-card-top"><span class="hist-tag">' + era.tag + '</span><span class="hist-name">' + era.title + '</span></div>' +
+      histSpark(hold, missed, 240, 76, 4) +
+      '<div class="hist-vals"><span class="hv-hold">Stayed invested <b>' + fmt(fh) + '</b></span>' +
+      '<span class="hv-miss">Sat out its best months <b>' + fmt(fm) + '</b> <em>' + gap + '%</em></span></div>';
+    grid.appendChild(card);
+  });
+  const s = benchGrow("2005-02", "2025-12"), m = benchGrow("2005-02", "2025-12", 10);
+  $("histHold").textContent = fmt(s[s.length - 1]);
+  $("histMiss").textContent = fmt(m[m.length - 1]);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
