@@ -6,7 +6,7 @@
 
   Audience build of the Learning (non-sales) edition. A presenter hosts a
   room on the big screen (?live=host): room code + QR join, six host-paced
-  real moments with LIVE Buy/Hold/Sell vote bars and an emotion pulse, and a
+  real moments with LIVE Buy/Hold/Sell vote bars, and a
   final room results board (distribution vs buy-and-hold, leaderboard).
   Every participant plays their OWN $50,000 on their phone (?room=CODE) and
   gets a personal reveal plus their rank in the room. Product-agnostic.
@@ -2654,7 +2654,7 @@ var qrcode = function() {
   .era-tab[data-era="you"].sel { color: #fff; border-style: solid; }
   /* Visible keyboard focus for all interactive controls. */
   .btn:focus-visible, .era-tab:focus-visible, .risk-opt:focus-visible, .handoff-link:focus-visible,
-  .emo:focus-visible, .join-input:focus-visible {
+  .join-input:focus-visible {
     outline: 3px solid var(--accent); outline-offset: 2px; }
 
   /* ── Live room layer ── */
@@ -2664,15 +2664,9 @@ var qrcode = function() {
     width: min(320px, 100%); text-align: center; margin-bottom: 10px; }
   .joinerr { color: #b3402e; font-size: 13px; margin-bottom: 10px; }
   .wait-emoji { font-size: 42px; margin-bottom: 8px; }
-  .emotion-bar { margin: 4px 0 14px; text-align: center; }
-  .emo-label { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
-  .emo-opts { display: flex; gap: 8px; justify-content: center; }
-  .emo { font-size: 24px; line-height: 1; background: var(--gray-light); border: 2px solid transparent;
-    border-radius: 12px; padding: 9px 12px; cursor: pointer; transition: transform .12s, border-color .12s; }
-  .emo:hover { transform: scale(1.12); }
-  .emo.sel { border-color: var(--accent); background: #d9efed; }
-  .emo-hint { font-size: 12px; color: var(--gray); margin-top: 7px; }
-  .await-emotion { opacity: .4; pointer-events: none; filter: grayscale(.6); }
+  .locked-banner { background: #eaf5f4; border-left: 4px solid var(--accent); border-radius: 10px;
+    padding: 12px 14px; font-size: 14px; margin: 4px 0 12px; text-align: left; }
+  .locked-banner b { color: var(--navy); }
   .live-rank { background: var(--gray-light); border-left: 4px solid var(--accent); border-radius: 10px;
     padding: 11px 14px; font-size: 14px; margin: 0 0 14px; text-align: left; }
   .host-grid { display: flex; gap: 22px; align-items: center; justify-content: center; margin: 16px 0 8px; flex-wrap: wrap; }
@@ -2696,8 +2690,6 @@ var qrcode = function() {
   .vb-fill { height: 100%; width: 0; border-radius: 999px; transition: width .35s ease; }
   .vb-fill.buy { background: var(--accent); } .vb-fill.hold { background: var(--navy); } .vb-fill.sell { background: #b3402e; }
   .vb-val { font-size: 12.5px; color: var(--gray); text-align: right; }
-  .hr-emo { display: flex; gap: 12px; justify-content: center; margin-top: 10px; font-size: 17px; }
-  .emo-tally b { font-size: 13px; color: var(--navy); } .emo-tally.dim { opacity: .35; }
   .hr-market { background: #eaf5f4; border-left: 4px solid var(--accent); border-radius: 10px; padding: 12px 14px;
     font-size: 14.5px; margin-top: 14px; }
   .res-grid { display: flex; gap: 10px; justify-content: center; margin: 14px 0; flex-wrap: wrap; }
@@ -2821,22 +2813,12 @@ var qrcode = function() {
       <h2 id="scTitle"></h2>
       <p class="story" id="scStory"></p>
       <div class="tie-in"><b>In the markets</b><span id="scMood"></span></div>
-      <div class="emotion-bar" id="emotionBar" hidden>
-        <div class="emo-label">Quick pulse — how does this moment feel?</div>
-        <div class="emo-opts">
-          <button type="button" class="emo" data-e="1" aria-label="terrified">😱</button>
-          <button type="button" class="emo" data-e="2" aria-label="worried">😟</button>
-          <button type="button" class="emo" data-e="3" aria-label="neutral">😐</button>
-          <button type="button" class="emo" data-e="4" aria-label="confident">🙂</button>
-          <button type="button" class="emo" data-e="5" aria-label="greedy">🤑</button>
-        </div>
-        <div class="emo-hint" id="emoHint" hidden>Pick a feeling to unlock your decision.</div>
-      </div>
       <div class="decision-grid" id="decisionGridWrap">
         <button class="btn btn-buy"  id="btnBuy">Buy 25% more<small id="buyNote"></small></button>
         <button class="btn btn-hold" id="btnHold">Hold<small>stay invested</small></button>
         <button class="btn btn-sell" id="btnSell">Sell 25%<small id="sellNote"></small></button>
       </div>
+      <div class="locked-banner" id="lockedBanner" hidden aria-live="polite">✅ <b>Locked in.</b> Watch the big screen — what the market did (and your result) appears when the host reveals it.</div>
       <div class="hint" id="tutorialHint" hidden>
         💡 <b>How to play:</b> Go with your gut, the way you would in the moment. <b>Sell</b> moves money to safety, <b>Hold</b> rides it out, <b>Buy</b> leans in. Right after each choice you'll see what Buy, Hold and Sell would each have done — but never when you are.
       </div>
@@ -3004,7 +2986,6 @@ var qrcode = function() {
         <div class="vote-bar"><span class="vb-label" id="vb-buy-label">Buy 25%</span><div class="vb-track"><div class="vb-fill buy" id="vb-buy-fill"></div></div><span class="vb-val" id="vb-buy-val"></span></div>
         <div class="vote-bar"><span class="vb-label" id="vb-hold-label">Hold</span><div class="vb-track"><div class="vb-fill hold" id="vb-hold-fill"></div></div><span class="vb-val" id="vb-hold-val"></span></div>
         <div class="vote-bar"><span class="vb-label" id="vb-sell-label">Sell 25%</span><div class="vb-track"><div class="vb-fill sell" id="vb-sell-fill"></div></div><span class="vb-val" id="vb-sell-val"></span></div>
-        <div class="hr-emo" id="hrEmo"></div>
       </div>
       <div class="hr-market" id="hrMarket" hidden></div>
       <div class="reveal-actions">
@@ -3285,7 +3266,8 @@ function decide(action, silent) {
   renderCounterfactuals(before, results, action);
   $("ocPullChip").hidden = false;
   $("ocPullChip").textContent = "That moment tested: " + sc.emotionalPull;
-  showPhase("phase-outcome");
+  if (window.LIVE && LIVE.active && LIVE.role === "player" && !isTut) liveHoldOutcome();
+  else showPhase("phase-outcome");
 }
 
 function renderCounterfactuals(before, results, chosen) {
@@ -3661,11 +3643,13 @@ $("btnAgain").addEventListener("click", playAgain);
    LIVE ROOM LAYER · Slido-style audience play
    One file, two roles:
      · HOST (?live=host) — big screen: room code + QR, paces the six moments,
-       shows live Buy/Hold/Sell vote bars + an emotion pulse per round, and a
-       final room results board (distribution, leaderboard, room vs discipline).
+       shows live Buy/Hold/Sell vote bars per round, and a final room results
+       board (distribution, leaderboard, room vs discipline).
      · PLAYER (?room=CODE) — each phone runs its OWN $50,000 portfolio through
-       the same six moments; votes + emotions stream to the host; at the end
-       every phone gets its personal reveal plus its rank in the room.
+       the same six moments. A phone's outcome stays HIDDEN after choosing —
+       it appears only when the host presses "Reveal what happened", so the
+       whole room learns the result together. At the end every phone gets its
+       personal reveal plus its rank in the room.
 
    TRANSPORT — pluggable, same message shape either way:
      · Firebase Realtime Database (REST + Server-Sent Events, no SDK needed).
@@ -3756,9 +3740,8 @@ function FirebaseNet(code) {
 const makeNet = (code) => LIVE_BACKEND.databaseURL ? FirebaseNet(code) : LocalNet(code);
 
 /* ═══ shared live state ═══ */
-const EMOJI = { 1: "😱", 2: "😟", 3: "😐", 4: "🙂", 5: "🤑" };
 const LIVE = { active: false, role: null, net: null, code: null, pid: null, name: "",
-  emotion: 0, begun: false, revealed: false, finalSent: false };
+  begun: false, revealed: false, finalSent: false, pendingOutcome: false };
 window.LIVE = LIVE;   // the game script's hooks check window.LIVE (consts don't attach to window)
 const roomCode = () => { const A = "ABCDEFGHJKMNPQRSTUVWXYZ"; let s = "";
   for (let i = 0; i < 4; i++) s += A[Math.floor(Math.random() * A.length)]; return s; };
@@ -3820,16 +3803,14 @@ function renderHost() {
     const votes = (m.votes && m.votes["r" + r]) || {};
     const vs = Object.values(votes), tot = vs.length;
     $("hrVoteCount").textContent = tot + " / " + n + " locked in";
-    const counts = { buy: 0, hold: 0, sell: 0 }, emo = {};
-    vs.forEach((v) => { counts[v.a] = (counts[v.a] || 0) + 1; if (v.e) emo[v.e] = (emo[v.e] || 0) + 1; });
+    const counts = { buy: 0, hold: 0, sell: 0 };
+    vs.forEach((v) => { counts[v.a] = (counts[v.a] || 0) + 1; });
     [["buy", "Buy 25%"], ["hold", "Hold"], ["sell", "Sell 25%"]].forEach(([k, label]) => {
       const pct = tot ? Math.round(100 * counts[k] / tot) : 0;
       $("vb-" + k + "-fill").style.width = pct + "%";
       $("vb-" + k + "-label").textContent = label;
       $("vb-" + k + "-val").textContent = counts[k] + (tot ? " · " + pct + "%" : "");
     });
-    $("hrEmo").innerHTML = Object.keys(EMOJI).map((e) =>
-      '<span class="emo-tally' + (emo[e] ? "" : " dim") + '">' + EMOJI[e] + " <b>" + (emo[e] || 0) + "</b></span>").join("");
     const revealed = !!st.reveal;
     $("btnHostReveal").hidden = revealed;
     $("btnHostNext").hidden = !revealed;
@@ -3915,10 +3896,12 @@ function playerSync() {
     while (state.decisions.length < st.round) {
       state.step = state.decisions.length; renderScenario(); decide("hold", true);
     }
-    if (state.step !== st.round || state.decisions.length > st.round) {
-      if (state.decisions.length > st.round) return;      // already voted; wait for next
-      state.step = st.round; LIVE.emotion = 0; renderScenario();
+    if (state.decisions.length > st.round) {              // already voted this round
+      // outcome stays hidden until the host presses "Reveal what happened"
+      if (st.reveal && LIVE.pendingOutcome) { LIVE.pendingOutcome = false; showPhase("phase-outcome"); }
+      return;
     }
+    if (state.step !== st.round) { LIVE.pendingOutcome = false; state.step = st.round; renderScenario(); }
   } else if (st.phase === "reveal" && !LIVE.revealed) {
     if (!LIVE.begun) beginPlayer(st.sc);
     while (state.decisions.length < DRAW) { state.step = state.decisions.length; renderScenario(); decide("hold", true); }
@@ -3927,22 +3910,24 @@ function playerSync() {
   }
   renderRank();
 }
-function liveScenarioShown() {
-  $("emotionBar").hidden = false;
-  document.querySelectorAll("#emotionBar .emo").forEach((b) => b.classList.remove("sel"));
-  $("decisionGridWrap").classList.add("await-emotion");
-  $("emoHint").hidden = false;
-}
-function pickEmotion(e, btn) {
-  LIVE.emotion = e;
-  document.querySelectorAll("#emotionBar .emo").forEach((b) => b.classList.toggle("sel", b === btn));
-  $("decisionGridWrap").classList.remove("await-emotion");
-  $("emoHint").hidden = true;
+function liveScenarioShown() {   // fresh round: unlock the buttons, hide the lock banner
+  $("lockedBanner").hidden = true;
+  $("btnHold").disabled = false;   // buy/sell were already recalculated by renderScenario
 }
 function liveDecided(action) {
-  LIVE.net.set("votes/r" + state.step + "/" + LIVE.pid, { a: action, e: LIVE.emotion });
+  LIVE.net.set("votes/r" + state.step + "/" + LIVE.pid, { a: action });
   $("btnContinue").disabled = true;
   $("btnContinue").textContent = "Locked in — watch the big screen ⏳";
+}
+/* After choosing, the phone does NOT jump to its outcome — it locks in place
+   until the host presses "Reveal what happened" (or shows at once if the host
+   already revealed while this player was still deciding). */
+function liveHoldOutcome() {
+  const st = LIVE.net.mirror.state || {};
+  if (st.reveal) { LIVE.pendingOutcome = false; showPhase("phase-outcome"); return; }
+  LIVE.pendingOutcome = true;
+  ["btnBuy", "btnHold", "btnSell"].forEach((id) => { $(id).disabled = true; });
+  $("lockedBanner").hidden = false;
 }
 function liveReveal() {
   if (LIVE.finalSent) return; LIVE.finalSent = true;
@@ -3963,8 +3948,6 @@ function renderRank() {
 }
 
 /* ═══ wiring + routing ═══ */
-document.querySelectorAll("#emotionBar .emo").forEach((b) =>
-  b.addEventListener("click", () => pickEmotion(+b.dataset.e, b)));
 $("btnHost").addEventListener("click", startHost);
 $("btnJoinOpen").addEventListener("click", () => { const c = prompt("Room code (4 letters):"); if (c) openJoin(c); });
 $("btnJoinGo").addEventListener("click", joinGo);
