@@ -25,19 +25,24 @@ company computer.** No other changes — the game plays identically.
 ## What you (non-technical) actually need to do
 
 **Step 1 — Prove it to yourself first (15 minutes, your own laptop).**
-You don't need IT to see it work. On any Mac/Windows laptop:
+You don't need IT, and you don't edit any files. On any Mac/Windows laptop:
 
 1. Install **Node.js** (the free "LTS" version from nodejs.org — a normal installer).
-2. Put `server.js` and `long-term-game-live.html` in the same folder.
-3. In that file, change one line near the top of the live-room script from
-   `databaseURL: "https://…firebasedatabase.app"` to `databaseURL: "auto"`.
-4. Open a terminal in that folder and run: `node server.js`
-5. Open `http://localhost:8877/?live=host` in your browser — that's the big
-   screen. Open `http://localhost:8877/?room=CODE` (using the code it shows) in
-   another window — that's a "phone." It all runs on your machine, nothing online.
+2. Download this project (on GitHub: green **Code** button → **Download ZIP**),
+   and unzip it.
+3. Open a terminal **in the unzipped folder** and run:
+   `node live-server/server.js`
+   It prints a line like `…relay on http://localhost:8877/`.
+4. Open `http://localhost:8877/?live=host` in your browser — that's the big
+   screen; it shows a room code. Open `http://localhost:8877/?room=CODE`
+   (using that code) in a second window — that's a "phone." Vote on the phone,
+   press reveal on the big screen: it all runs on your machine, nothing online.
 
-If that works on your laptop (it does — it's been tested end-to-end), you've
-proven the whole thing runs self-contained. Now it just needs a company home.
+That's it — no file editing. When this server hands out the game page it
+automatically switches it to "talk to me" mode, so the same game file works
+against Firebase (on the public site) or against this local server, untouched.
+If it works on your laptop (it does — tested end to end), you've proven the
+whole thing runs self-contained. Now it just needs a company home.
 
 **Step 2 — Get the two approvals that actually gate this.** These matter more
 than the tech:

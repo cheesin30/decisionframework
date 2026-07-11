@@ -88,6 +88,17 @@ function broadcast(r, sub, value) {
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,PUT,OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type', 'Cache-Control': 'no-store' };
 
+// When THIS server hands out the game page, force it into self-host mode —
+// rewrite the LIVE_BACKEND line to "auto" on the fly. That means the game file
+// on disk can stay exactly as shipped (pointed at Firebase); nobody has to edit
+// a 570KB HTML file to test/run the internal deployment. Only affects pages
+// served by this relay; the static-host/Firebase copy is untouched.
+function sendHtml(res, buf) {
+  const html = buf.toString('utf8').replace(
+    /(const LIVE_BACKEND\s*=\s*\{\s*databaseURL:\s*)"[^"]*"/, '$1"auto"');
+  res.writeHead(200, { 'Content-Type': MIME['.html'] }); res.end(html);
+}
+
 function serveStatic(req, res) {
   let p = decodeURIComponent(req.url.split('?')[0]);
   if (p === '/' || p === '') p = '/long-term-game-live.html';
@@ -99,11 +110,12 @@ function serveStatic(req, res) {
       if (p === '/long-term-game-live.html') {
         return fs.readFile(path.join(STATIC_DIR, 'index.html'), (e2, d2) => {
           if (e2) { res.writeHead(404); res.end('not found'); }
-          else { res.writeHead(200, { 'Content-Type': MIME['.html'] }); res.end(d2); }
+          else { sendHtml(res, d2); }
         });
       }
       res.writeHead(p.includes('favicon') ? 204 : 404); res.end(); return;
     }
+    if (path.extname(file).toLowerCase() === '.html') { sendHtml(res, data); return; }
     res.writeHead(200, { 'Content-Type': MIME[path.extname(file).toLowerCase()] || 'application/octet-stream' });
     res.end(data);
   });
