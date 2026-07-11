@@ -92,6 +92,46 @@ event that's usually fine (and is actually a security plus).
 
 ---
 
+## Running it on a company laptop (no cloud at all)
+
+Recorded reality (Jul 2026): **Firebase and Azure are blocked / un-set-up-able
+from the company machine.** That's fine — the relay in this folder needs
+neither. The whole game can run from the company laptop itself. Two engines,
+pick whichever the laptop allows:
+
+| | Node.js edition (`server.js`) | Python edition (`server.py`) |
+|---|---|---|
+| Run with | `node live-server/server.js` | `python3 live-server/server.py` (Windows: `py live-server\server.py`) |
+| Needs installed | Node 18+ | Python 3.8+ — **already on most corporate machines** |
+| Extra packages | none | none (standard library only) |
+
+Both serve the game and the live API identically, and both **auto-switch any
+page they serve into "talk to me" mode** — you never edit the HTML. If you
+can't install anything at all: Node also ships as a no-install ZIP
+("portable"), and Python often hides pre-installed (`python3 --version` /
+`py --version` in a terminal to check).
+
+**Company-laptop gotchas, in the order you'll hit them:**
+1. **Firewall prompt** — first run, allow "node"/"python" to accept incoming
+   connections, or phones can't reach you. If policy silently blocks inbound
+   with no prompt, you'll see it as "works in a second browser window on the
+   laptop, but not from any phone."
+2. **Corporate WiFi client isolation** — many corp/guest WiFis deliberately
+   stop devices talking to each other. Same symptom as the firewall. Test with
+   one phone before the event.
+3. **The reliable fallback: a phone hotspot.** Presenter's phone becomes the
+   WiFi: laptop + audience phones all join the hotspot, laptop runs the relay,
+   QR points at the laptop's hotspot address. No corporate network involved at
+   all — this sidesteps every block above. (Hotspots cap at ~10 devices, so
+   for big rooms you need the venue WiFi or IT hosting instead.)
+4. **Use the laptop's network address, not localhost**, when you open the host
+   screen (e.g. `http://192.168.x.x:8877/?live=host`) — the QR copies whatever
+   address the page was opened on.
+
+The game now also **fails loudly** on blocked networks: if the page can't
+reach its live service within 8 seconds, the host/join screens show a clear
+message (with these workarounds) instead of hanging on "Joining…".
+
 ## Reference: the server's knobs
 
 | Setting | Env var | Default | Meaning |

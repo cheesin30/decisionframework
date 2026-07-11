@@ -2813,6 +2813,7 @@ var qrcode = function() {
         <button class="btn btn-ghost" id="btnHost">🖥️ Host a live room</button>
         <button class="btn btn-ghost" id="btnJoinOpen">📱 Join with a code</button>
       </div>
+      <p class="joinerr" id="liveHostErr" hidden style="margin-top:12px">Couldn't reach the live service from this network — corporate networks often block it. Solo play still works. For live rooms here, run the bundled company-laptop server (live-server/) or use a phone hotspot.</p>
     </div>
   </section>
 
@@ -3796,6 +3797,13 @@ function FirebaseNet(code) {
   const root = LIVE_BACKEND.databaseURL === "auto" ? location.origin : LIVE_BACKEND.databaseURL;
   const base = root.replace(/\/$/, "") + "/rooms/" + code;
   const net = { mirror: {}, cb: null, local: false };
+  // Corporate networks often block cloud endpoints by black-holing them — a
+  // plain fetch then hangs forever. Give setup calls an 8s deadline so the UI
+  // can show a real error instead of freezing.
+  const fetchT = (url, opts) => {
+    const c = new AbortController(); const t = setTimeout(() => c.abort(), 8000);
+    return fetch(url, { ...(opts || {}), signal: c.signal }).finally(() => clearTimeout(t));
+  };
   function listen() {
     const es = new EventSource(base + ".json");
     es.addEventListener("put", (e) => { const m = JSON.parse(e.data);
@@ -3806,10 +3814,10 @@ function FirebaseNet(code) {
   }
   net.init = async (asHost, initial) => {
     if (asHost) {
-      await fetch(base + ".json", { method: "PUT", body: JSON.stringify(initial) });
+      await fetchT(base + ".json", { method: "PUT", body: JSON.stringify(initial) });
       net.mirror = initial;                     // seed locally — don't wait on the SSE round-trip
     } else {
-      const r = await fetch(base + ".json"); const snap = await r.json();
+      const r = await fetchT(base + ".json"); const snap = await r.json();
       if (!snap) return false;                  // room does not exist
       net.mirror = snap;                        // seed locally from the full snapshot
     }
@@ -3855,6 +3863,10 @@ function startHost() {
     LIVE.net.cb = renderHost;
     renderHost();
     showPhase("phase-host-lobby");
+  }).catch(() => {
+    LIVE.active = false; LIVE.role = null;
+    $("liveHostErr").hidden = false;
+    showPhase("phase-welcome");
   });
 }
 function hostStart() {
@@ -3981,6 +3993,10 @@ function joinGo() {
     $("joinForm").hidden = true; $("joinWait").hidden = false;
     LIVE.net.cb = playerSync;
     playerSync();
+  }).catch(() => {
+    $("joinErr").textContent = "Can't reach the live service from this network — corporate networks often block it. " +
+      "Try a phone hotspot / different network, or run the bundled company-laptop server (live-server/).";
+    $("joinErr").hidden = false; $("btnJoinGo").disabled = false; $("btnJoinGo").textContent = "Join →";
   });
 }
 function beginPlayer(scIdxs) {
