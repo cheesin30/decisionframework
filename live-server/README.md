@@ -114,3 +114,18 @@ And the one change inside the game file: `const LIVE_BACKEND = { databaseURL: "a
 | **Fully internal (this folder)** | **Internal host** | **`server.js` on same host** | **Nothing** |
 
 The bottom row is what to pitch to IT — the ask is deliberately tiny.
+
+## ⚠️ One reality check before choosing: what network are the phones on?
+
+A server that lives only on the company network can only be reached by phones
+**on that network** (venue/corp WiFi or VPN). A phone on **cellular data cannot
+reach an internal address at all** — private addresses don't exist outside the
+building.
+
+**Current decision (Jul 2026): event audiences are expected on mixed/cellular
+networks → the live room needs a publicly reachable address.** That means
+either (a) today's Firebase + static-host setup, or (b) this relay hosted by IT
+*with a public front door* (their reverse proxy exposed to the internet — a
+bigger security conversation, since it's then internet-facing). The fully
+internal row of the table above is the right choice only for events where
+everyone joins the venue/company WiFi.
