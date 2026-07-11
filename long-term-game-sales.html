@@ -120,7 +120,8 @@
 
   /* Visually hidden but available to screen readers (chart data table). */
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
-    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    display: block; /* tables refuse width:1px (min-content floor) and stretch the page on phones — block display lets the clip actually apply */ }
 
   /* ── Phase transitions ─────────────────────────────────────────────── */
   .phase { display: none; opacity: 0; transform: translateY(14px); }
@@ -416,7 +417,8 @@
   .fund-facts .ff b { font-size: 14px; color: var(--navy); }
   .perf { border-top: 1px solid var(--gray-light); padding-top: 12px; }
   .perf-title { font-size: 12px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
-  .perf-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .perf-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .perf-table { width: 100%; min-width: 400px; border-collapse: collapse; font-size: 12.5px; }
   .perf-table th, .perf-table td { text-align: right; padding: 6px 8px; border-bottom: 1px solid var(--gray-light); }
   .perf-table th:first-child, .perf-table td:first-child { text-align: left; color: var(--navy); font-weight: 700; }
   .perf-table thead th { font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: .04em; }
@@ -624,13 +626,13 @@
 
         <div class="perf">
           <div class="perf-title">Average annual total returns (net of fees), as of [VERIFY date]</div>
-          <table class="perf-table">
+          <div class="perf-scroll"><table class="perf-table">
             <thead><tr><th>Period</th><th>1 yr</th><th>5 yr</th><th>10 yr</th><th>Since inception</th></tr></thead>
             <tbody>
               <tr><td>Fund (net)</td><td>[VERIFY]</td><td>[VERIFY]</td><td>[VERIFY]</td><td>[VERIFY]</td></tr>
               <tr><td>Benchmark</td><td>[VERIFY]</td><td>[VERIFY]</td><td>[VERIFY]</td><td>[VERIFY]</td></tr>
             </tbody>
-          </table>
+          </table></div>
           <p class="perf-disc">Figures shown are placeholders. Drop in the compliance-approved standardized returns from the fund's current fact sheet/prospectus before any use. <b>Past performance does not guarantee future results.</b> Current performance may be lower or higher than the figures shown. Investment return and principal value will fluctuate, and shares, when sold, may be worth more or less than their original cost. Returns are net of fund expenses; a sales charge, where applicable, would reduce returns. For month-end performance, refer to the fund's official page.</p>
         </div>
 

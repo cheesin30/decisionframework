@@ -112,7 +112,8 @@
 
   /* Visually hidden but available to screen readers (chart data table). */
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
-    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    display: block; /* tables refuse width:1px (min-content floor) and stretch the page on phones — block display lets the clip actually apply */ }
 
   /* ── Phase transitions ─────────────────────────────────────────────── */
   .phase { display: none; opacity: 0; transform: translateY(14px); }
