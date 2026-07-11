@@ -99,17 +99,29 @@ from the company machine.** That's fine — the relay in this folder needs
 neither. The whole game can run from the company laptop itself. Two engines,
 pick whichever the laptop allows:
 
-| | Node.js edition (`server.js`) | Python edition (`server.py`) |
-|---|---|---|
-| Run with | `node live-server/server.js` | `python3 live-server/server.py` (Windows: `py live-server\server.py`) |
-| Needs installed | Node 18+ | Python 3.8+ — **already on most corporate machines** |
-| Extra packages | none | none (standard library only) |
+| | Node.js edition (`server.js`) | Python edition (`server.py`) | PowerShell edition (`server.ps1` + `relay.cs`) |
+|---|---|---|---|
+| Run with | `node live-server/server.js` | `python3 live-server/server.py` (Windows: `py live-server\server.py`) | double-click **`start-live.bat`** |
+| Needs installed | Node 18+ | Python 3.8+ | **NOTHING** — uses what ships with every Windows |
+| Extra packages | none | none (stdlib only) | none (compiled on the spot by Windows' built-in compiler) |
 
-Both serve the game and the live API identically, and both **auto-switch any
-page they serve into "talk to me" mode** — you never edit the HTML. If you
-can't install anything at all: Node also ships as a no-install ZIP
-("portable"), and Python often hides pre-installed (`python3 --version` /
-`py --version` in a terminal to check).
+All three serve the game and the live API identically, and all three
+**auto-switch any page they serve into "talk to me" mode** — you never edit
+the HTML. Confirmed reality (Jul 2026): the company laptop has **no Node and
+no Python** → the **PowerShell edition is the one for it.** The kit is four
+files in one folder: `long-term-game-live.html`, `server.ps1`, `relay.cs`,
+`start-live.bat`. Double-click the .bat; a black window stays open (that's
+the server); it prints the big-screen link.
+
+PowerShell-edition specifics:
+- If it reports **LOCALHOST-ONLY mode**, Windows needs one-time permission to
+  accept connections from other devices: run PowerShell **as administrator**
+  once, or have an admin run
+  `netsh http add urlacl url=http://+:8877/ user=Everyone`. Until then it
+  still works fully in two browser windows on the laptop itself.
+- If it refuses with a **Constrained Language Mode** message, the laptop is
+  locked beyond what any script can do — use the phone-hotspot +
+  personal-laptop setup below.
 
 **Company-laptop gotchas, in the order you'll hit them:**
 1. **Firewall prompt** — first run, allow "node"/"python" to accept incoming
