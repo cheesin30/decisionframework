@@ -58,6 +58,23 @@ check passed (2008-10 = −11.02%). Verify the full series against col G source.
 | **Still missing** | **3 months: Apr 1983, May 1983, Dec 1999** (fell between screenshots — not used by any current game feature, but the master file is incomplete). Supply screenshots of source rows 162–163 and 362 to close out. |
 | **Verify** | Confirm which MSCI World variant this is (net TR, USD?) and spot-check the full series against the provider |
 
+### 1.5a Online cross-check performed (July 2026) — passed
+
+As a pre-verification sanity layer, calendar-year returns were compounded from
+every embedded monthly series and compared against publicly published figures
+(MSCI factsheets, index trackers, S&P/Bloomberg year-end figures). Results:
+
+| Series | Years checked | Result |
+|---|---|---|
+| Derived S&P 500 TR (`EQ_2020`) | 2020–2025 | 2020 +18.40 exact; 2022/2023/2024 within 0.02pp; 2025 +17.73 vs ≈+17.7 ✓; **2021 +28.66 vs published +28.71 (Δ0.05pp — benchmark-decomposition rounding, immaterial)** |
+| Bloomberg US Agg (`AGG_2020`) | 2020–2025 | 2020–2024 within 0.05pp (2023 exact); **2025 +7.52 vs published +7.30 (Δ0.22pp — transcribed Oct/Nov/Dec 2025 values (0.60/0.40/0.30) look like rounded placeholders in the source sheet; confirm these three months)** |
+| MSCI World net USD (master CSV) | 1970–2025 spot years | 2008 −40.71 **exact**; 2024 +18.67 **exact**; 2020 +15.90 **exact**; 2022 −18.15 vs −18.14; 2023 +23.81 vs +23.79; 2025 +21.10 vs 21.09; Oct-1987 month −17.0 ✓; Oct-2008 month −18.9 ✓. (A 1990 figure of −16.5% found in one source appears to be the gross variant; ours −17.01 is consistent with the net series that matches every other year.) |
+| 60/40 benchmark (`BENCH_0525`) | components | Equals 0.6·S&P + 0.4·Agg within 0.002pp over 2020–2025; Oct-2008 −11.02 consistent with published component months |
+| All on-screen results | era endpoints, headline stat, clustering claim | Independently recomputed in Python from the raw series — **all six era hold/missed figures, $250,945/$135,882, and "6 of 10 best within 6 months of a worst" match exactly** |
+
+This confirms the series are the genuine indices, but does **not** replace the
+formal source verification below (public trackers are themselves secondary).
+
 ### 1.6 Modeling simplifications to bless (not errors — disclosed choices)
 
 - **Cash yields a flat 2%/yr** when a player sells. Real cash yielded ~0% in
