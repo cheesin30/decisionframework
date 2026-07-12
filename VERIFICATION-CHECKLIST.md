@@ -25,7 +25,8 @@ system of record.
 | **Where used** | `long-term-investing-game.html` (`AMBAL_NET`, `AMBAL_BENCH`); `long-term-game-sales.html` (`AMBAL_NET_2020`) |
 | **The problem** | As transcribed, the fund's **net** return trails its own benchmark by ≈1%/yr over the full record — cumulative **+313.7% (7.00%/yr) vs +401.9% (7.98%/yr)**, and **+64.2% vs +72.3%** over 2020–2025. A ~1%/yr drag is larger than the fund's published expense ratio (≈0.57% for ABALX) and inconsistent with the fund's actual long-term record — strongly suggesting a wrong share class, a gross/net mix-up, or a transcription error in the source column. |
 | **Consequence** | The Sales edition's fund line is **switched off in code** (`FUND_LINE_ENABLED = false`) and cannot ship until this is resolved. |
-| **Verify** | ① Which share class / fee basis col F actually represents. ② The correct monthly net TR series from the system of record. ③ Fund facts for the Sales panel: ticker, share class, net expense ratio, inception date, standardized 1/5/10-yr + since-inception returns as of a stated date (these are `[VERIFY]` placeholders in the file). |
+| **Verify** | ① Which share class / fee basis col F actually represents. ② The correct monthly net TR series from the system of record. ③ Fund facts for the Sales panel — **now populated from publicly available fund information (Jul 2026): ABALX, Class A, 0.55% net expense ratio, inception 7/26/1975, standardized returns as of 12/31/2025 (1yr +18.47% / 5yr +9.73% / 10yr +10.42% at NAV)** — confirm against the current prospectus/fact sheet before client use. |
+| **New evidence (Jul 2026)** | The published ABALX standardized returns **beat** the 60/40 benchmark on 1/5/10-yr horizons (+18.47 vs +13.70, +9.73 vs +8.47, +10.42 vs +9.78), the opposite of the transcribed composite's behavior — further confirming the composite series, not the fund, is wrong. |
 
 ### 1.2 Derived S&P 500 series, 2020–2025
 
