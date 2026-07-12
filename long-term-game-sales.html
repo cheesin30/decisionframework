@@ -7,12 +7,16 @@
   Sales build: same behavioral game as the 2020–2025 edition, plus fund
   content at the reveal — an American Balanced Fund facts panel, a
   standardized performance-disclosure block, an advisor call-to-action, and
-  the plumbing for a net-of-fees fund line on the chart.
+  a net-of-fees fund line drawn on the reveal chart (60/40 profile).
 
-  ⚠ Two things are deliberately UNFINISHED pending verification:
-    1) The fund line is HELD OFF (FUND_LINE_ENABLED = false) because the
-       transcribed net composite trails its benchmark in a way that looks
-       like bad data — flip the flag only after the composite is verified.
+  ⚠ Two things remain PENDING VERIFICATION before any client use:
+    1) The fund line is ON (FUND_LINE_ENABLED = true) but drawn from an
+       APPROXIMATED monthly series: each calendar year anchored exactly to
+       the fund's published annual return (Class A at NAV), intra-year shape
+       following the 60/40 benchmark. Disclosed on-screen. Replace with the
+       verified monthly net series from the system of record. (The original
+       hand-transcribed composite was discarded as bad data — see
+       VERIFICATION-CHECKLIST.md §1.1.)
     2) Fund figures (ticker ABALX, 0.55% expense ratio, standardized returns
        as of 12/31/2025) are populated from publicly available fund
        information and MUST be compliance-verified before any client use.
@@ -643,7 +647,7 @@
       </div>
 
       <p class="disclaimer" style="max-width:640px;margin:14px auto 0">
-        <b>Sales build — internal / pre-approval.</b> The behavioral chart uses real historical monthly total returns for a broad U.S. stock index (S&amp;P 500) and the Bloomberg U.S. Aggregate Bond Index, blended to a hypothetical 60/40 or 70/30 portfolio; it is not the return of any Capital Group product. Fund facts and performance figures above are populated from publicly available fund information (as dated) and are <b>pending compliance verification</b>; the American Balanced Fund chart overlay remains switched off until the monthly net composite is verified against source. Not investment, tax or legal advice.
+        <b>Sales build — internal / pre-approval.</b> The behavioral chart uses real historical monthly total returns for a broad U.S. stock index (S&amp;P 500) and the Bloomberg U.S. Aggregate Bond Index, blended to a hypothetical 60/40 or 70/30 portfolio; it is not the return of any Capital Group product. Fund facts and performance figures above are populated from publicly available fund information (as dated) and are <b>pending compliance verification</b>. The American Balanced Fund chart line is an <b>approximation built from the fund's published calendar-year total returns</b> (Class A at NAV, net of expenses: 2020 +10.86%, 2021 +15.76%, 2022 −12.11%, 2023 +14.01%, 2024 +14.95%, 2025 +18.47%) — each year-end lands exactly on the published figure, but the month-to-month path follows the 60/40 benchmark's shape and is not the fund's actual monthly record. Replace with the verified monthly net series before any client use. Returns at NAV do not reflect the maximum 5.75% sales charge, which would reduce results shown. Not investment, tax or legal advice.
       </p>
 
       <div class="reveal-actions">
@@ -764,27 +768,31 @@ const AGG_2020 = [ // monthly % total return, 2020-01 … 2025-12
   0.53,2.2,0.04,0.39,-0.72,1.54,-0.26,1.2,1.09,0.6,0.4,0.3
 ];
 
-/* ═══ AMERICAN BALANCED FUND — net-of-fee composite overlay (SALES build) ═══
-   AMBAL_NET_2020 = the fund composite NET OF FEES as index levels, 73 points:
-   the 2019-12 anchor followed by 2020-01 … 2025-12, so month m's fund return
-   is AMBAL_NET_2020[m+1]/AMBAL_NET_2020[m] − 1.
+/* ═══ AMERICAN BALANCED FUND — net-of-fee fund line (SALES build) ═══
+   AMBAL_NET_2020 = the fund NET OF FEES (Class A at NAV) as index levels,
+   73 points: the 2019-12 anchor followed by 2020-01 … 2025-12, so month m's
+   fund return is AMBAL_NET_2020[m+1]/AMBAL_NET_2020[m] − 1.
 
-   ⚠ HELD OFF BY DEFAULT. On this transcribed composite the fund's NET return
-   trails its own 60/40 benchmark over both 2020–2025 (+64% vs +72%) and the
-   full 2005–2025 record (~7.0%/yr vs ~8.0%/yr). That ~1%/yr drag is larger
-   than the fund's stated expense ratio and is inconsistent with the fund's
-   actual long-term record — a strong sign the transcribed NET series is wrong
-   (wrong share class or a transcription error). Do NOT plot it in a client-
-   facing asset until the composite is verified and compliance-approved. Flip
-   FUND_LINE_ENABLED to true only after that verification. */
-const FUND_LINE_ENABLED = false;
+   HOW THIS SERIES WAS BUILT (Jul 2026) — approximation from public data:
+   each calendar year is anchored EXACTLY to the fund's published total
+   return (Class A at NAV: 2020 +10.86%, 2021 +15.76%, 2022 −12.11%,
+   2023 +14.01%, 2024 +14.95%, 2025 +18.47%), with the intra-year monthly
+   shape following the verified 60/40 benchmark months plus a constant
+   per-year spread. Year-end values are right; the month-to-month wiggle is
+   an approximation, disclosed on-screen. It replaces the hand-transcribed
+   spreadsheet composite previously here, which showed the fund TRAILING its
+   benchmark by ~1%/yr — contradicted by the fund's published record on
+   every horizon and therefore judged bad data (see VERIFICATION-CHECKLIST
+   §1.1). Replace with the verified monthly net series from the system of
+   record, and set the flag below accordingly, before any client use. */
+const FUND_LINE_ENABLED = true;
 const AMBAL_NET_2020 = [ // index levels, 2019-12 anchor + 2020-01 … 2025-12
-  251.9977,251.3425,241.5904,222.1182,239.2657,245.5105,247.9411,256.0984,262.0143,257.5077,252.6408,269.9467,276.4254,
-  274.3522,278.3029,286.0119,294.1632,299.1934,300.7193,303.8468,308.1007,298.149,308.942,305.729,316.5824,
-  305.7236,300.8932,303.0295,286.0295,290.2913,272.2642,284.2983,275.286,255.4929,268.4975,283.2917,275.2462,
-  286.0909,276.5641,282.1784,285.6492,283.3069,292.5144,298.2769,293.8922,283.2827,278.7218,296.9502,310.4614,
-  312.4173,320.1652,328.7136,317.7346,326.9489,335.7765,341.6862,347.0848,352.8117,348.6132,358.3744,353.0346,
-  362.8843,361.7231,351.2693,349.9345,363.477,379.6154,382.6903,388.4307,399.5398,406.0123,413.1581,413.7365
+  100.0000,100.4615,95.9342,88.3165,95.4785,98.1037,99.2451,102.9087,106.7179,103.9555,101.8155,108.6102,110.8600,
+  109.8677,111.0466,113.4018,117.3855,118.0252,119.9974,122.2329,124.3609,120.4496,125.4856,125.1003,128.3315,
+  123.6898,121.3509,123.1360,115.2590,116.0901,110.0221,117.5685,113.7723,105.9254,110.8944,116.6288,112.7906,
+  118.1294,114.8612,118.2511,119.3312,118.8078,123.0318,125.0389,123.1925,118.0866,115.5376,123.6522,128.5925,
+  129.7415,133.1582,136.2121,131.4903,136.2811,139.7174,142.0304,144.9015,147.5293,145.2506,150.9640,147.8171,
+  151.1076,151.7817,147.1949,147.3334,152.9881,159.1322,161.6562,164.9508,169.8632,173.2538,174.5463,175.1190
 ];
 
 /* ── Model: pick a risk profile (60/40 or 70/30). $50k in that composite.
@@ -1001,8 +1009,8 @@ function buildChart() {
         borderWidth: 2.5, pointRadius: 0, pointHitRadius: 10, tension: 0, fill: false },
       { label: "Stayed invested", data: [], borderColor: "#083469",
         borderWidth: 2.5, pointRadius: 0, pointHitRadius: 10, tension: 0, fill: false },
-      // American Balanced Fund (net) overlay — only added once verified.
-      ...(FUND_LINE_ENABLED ? [{ label: "American Balanced Fund (net)", data: [],
+      // American Balanced Fund (net, at NAV) overlay — approximated series, see notes.
+      ...(FUND_LINE_ENABLED ? [{ label: "American Balanced Fund (net, at NAV)", data: [],
         borderColor: "#831574", borderWidth: 2.5, borderDash: [5, 3],
         pointRadius: 0, pointHitRadius: 10, tension: 0, fill: false }] : [])
     ]},
@@ -1036,7 +1044,7 @@ function buildChart() {
 function setFundNote(active) {
   const note = $("fundNote"); if (!note) return;
   if (active) {
-    note.innerHTML = '<span style="color:#831574;font-weight:700">╌ American Balanced Fund (net)</span> — net of fees, for the 60/40 comparison.';
+    note.innerHTML = '<span style="color:#831574;font-weight:700">╌ American Balanced Fund (net, at NAV)</span> — monthly path approximated from the fund’s published calendar-year returns (year-ends exact; intra-year shape follows the 60/40 benchmark). Returns at NAV; results would be lower with the maximum 5.75% sales charge. See notes below.';
   } else if (FUND_LINE_ENABLED && state.risk !== "60/40") {
     note.innerHTML = 'American Balanced Fund overlay is shown for the <b>Balanced (60/40)</b> profile — reselect it to compare.';
   } else {
@@ -1274,15 +1282,18 @@ function showEra(key, userInitiated) {
     Object.keys(decByMonth).forEach((mi) => { const idx = chartIdxOf(+mi), dd = decByMonth[mi];
       pr[idx] = 6; ps[idx] = decShape[dd]; pbg[idx] = decColor[dd]; phr[idx] = 8; REVEAL_DEC[idx] = dd; });
     Object.assign(d0, { pointRadius: pr, pointStyle: ps, pointBackgroundColor: pbg, pointBorderColor: "#fff", pointBorderWidth: 1.5, pointHoverRadius: phr });
+    const a11yRows = [["Your choices", fmt(you[you.length - 1])], ["Stayed invested", fmt(stay[stay.length - 1])]];
     if (typeof FUND_LINE_ENABLED !== "undefined" && d2) {
       const fundActive = FUND_LINE_ENABLED && state.risk === "60/40";
-      const base = AMBAL_NET_2020[state.startIdx + 1], fund = [START];
+      // Anchor at the level entering month startIdx, matching you/stay above.
+      const base = AMBAL_NET_2020[state.startIdx], fund = [START];
       for (let m = state.startIdx; m < MONTHS; m++) fund.push(START * AMBAL_NET_2020[m + 1] / base);
       Object.assign(d2, { data: fundActive ? fund : [], hidden: !fundActive });
       if (typeof setFundNote === "function") setFundNote(fundActive);
+      if (fundActive) a11yRows.push(["American Balanced Fund, net, at NAV", fmt(fund[fund.length - 1])]);
     }
     $("legendNote").innerHTML = '<span style="color:#008074;font-weight:700">━ Your choices</span> &nbsp;·&nbsp; <span style="color:var(--navy);font-weight:700">━ Stayed invested</span>';
-    setChartA11y("Portfolio value, 2020 to 2025.", [["Your choices", fmt(you[you.length - 1])], ["Stayed invested", fmt(stay[stay.length - 1])]]);
+    setChartA11y("Portfolio value, 2020 to 2025.", a11yRows);
   } else {
     const era = HIST_ERAS.find((e) => e.key === key);
     const hold = era.moves ? growMoves(era.moves) : benchGrow(era.a, era.b);
