@@ -22,9 +22,10 @@ system of record.
 | | |
 |---|---|
 | **What** | Monthly net-of-fees composite (source spreadsheet col F) and its 60/40 benchmark (col G), Jan 2005 – Dec 2025, index levels base 100 |
-| **Where used** | `long-term-investing-game.html` (`AMBAL_NET`, `AMBAL_BENCH`); `long-term-game-sales.html` (`AMBAL_NET_2020`) |
+| **Where used** | `long-term-investing-game.html` (`AMBAL_NET`, `AMBAL_BENCH`). The Sales edition (`long-term-game-sales.html`, `AMBAL_NET_2020`) **no longer uses the transcribed composite** — see the rebuilt-series row below. |
 | **The problem** | As transcribed, the fund's **net** return trails its own benchmark by ≈1%/yr over the full record — cumulative **+313.7% (7.00%/yr) vs +401.9% (7.98%/yr)**, and **+64.2% vs +72.3%** over 2020–2025. A ~1%/yr drag is larger than the fund's published expense ratio (≈0.57% for ABALX) and inconsistent with the fund's actual long-term record — strongly suggesting a wrong share class, a gross/net mix-up, or a transcription error in the source column. |
-| **Consequence** | The Sales edition's fund line is **switched off in code** (`FUND_LINE_ENABLED = false`) and cannot ship until this is resolved. |
+| **Consequence** | The transcribed composite was **removed from the Sales edition** (Jul 2026). Its fund line is now ON but drawn from a rebuilt approximation (next row); the true monthly net series is still needed to replace it. |
+| **Rebuilt series (Jul 2026)** | Sales `AMBAL_NET_2020` is now an **approximation from public data**: each calendar year anchored exactly to the fund's published Class A at-NAV total return (2020 +10.86 / 2021 +15.76 / 2022 −12.11 / 2023 +14.01 / 2024 +14.95 / 2025 +18.47), intra-year monthly shape = verified 60/40 benchmark months + a constant per-year spread. Year-ends exact; monthly wiggle approximate; disclosed on-screen. **Verify**: replace with the true monthly net TR series from the system of record. **Known tension**: compounding the six published annuals gives a 5-yr (2021–25) of +9.58%/yr vs the +9.73% standardized 5-yr shown in the fact panel (both publicly sourced) — resolve which is right when verifying against the prospectus. |
 | **Verify** | ① Which share class / fee basis col F actually represents. ② The correct monthly net TR series from the system of record. ③ Fund facts for the Sales panel — **now populated from publicly available fund information (Jul 2026): ABALX, Class A, 0.55% net expense ratio, inception 7/26/1975, standardized returns as of 12/31/2025 (1yr +18.47% / 5yr +9.73% / 10yr +10.42% at NAV)** — confirm against the current prospectus/fact sheet before client use. |
 | **New evidence (Jul 2026)** | The published ABALX standardized returns **beat** the 60/40 benchmark on 1/5/10-yr horizons (+18.47 vs +13.70, +9.73 vs +8.47, +10.42 vs +9.78), the opposite of the transcribed composite's behavior — further confirming the composite series, not the fund, is wrong. |
 
@@ -98,8 +99,10 @@ formal source verification below (public trackers are themselves secondary).
 - [ ] **Sales edition specifics**: fund facts panel and standardized-returns
   table are now populated from publicly available fund information (Jul 2026,
   see §1.1) — confirm against the current prospectus/fact sheet and
-  compliance-approve. The fund chart overlay stays disabled until the §1.1
-  monthly composite is resolved.
+  compliance-approve. The fund chart line is now drawn from the §1.1 rebuilt
+  approximation (year-ends exact, monthly shape approximate, disclosed
+  on-screen) — swap in the verified monthly net series and review the
+  approximation disclosure before client use.
 - [ ] **Public exposure (interim risk, accepted)**: the prototype is live at
   `https://cheesin30.github.io/decisionframework/` with a wide-open Firebase
   Realtime Database behind the live room (`.read/.write: true` on `/rooms`).
