@@ -96,8 +96,10 @@ formal source verification below (public trackers are themselves secondary).
   gross); hypothetical/illustrative framing on every chart; past-performance
   language present. Review each edition's disclaimer text.
 - [ ] **Sales edition specifics**: fund facts panel and standardized-returns
-  table are `[VERIFY]` placeholders — populate from a current fact sheet and
-  compliance-approve before the fund line is enabled.
+  table are now populated from publicly available fund information (Jul 2026,
+  see §1.1) — confirm against the current prospectus/fact sheet and
+  compliance-approve. The fund chart overlay stays disabled until the §1.1
+  monthly composite is resolved.
 - [ ] **Public exposure (interim risk, accepted)**: the prototype is live at
   `https://cheesin30.github.io/decisionframework/` with a wide-open Firebase
   Realtime Database behind the live room (`.read/.write: true` on `/rooms`).
