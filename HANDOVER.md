@@ -3,7 +3,7 @@
 **For the person taking over this project.** You don't need to know how to
 code. You need VS Code, GitHub Copilot, a web browser, and this guide.
 Everything below is written for a non-programmer — where things live, how to
-change them safely, how to test, and how to publish.
+change them safely, how to test, and how to keep yourself safe with backups.
 
 ---
 
@@ -19,6 +19,9 @@ and the logic are all inside that one file. Open it in a browser and it runs.
 There is no installation, no database, no build step. This is the most
 important fact in this whole document: **one file = one complete game.**
 
+That also means sharing a game is trivial: send someone the `.html` file
+(email, Teams, USB stick) and they have the whole, working game.
+
 ---
 
 ## 2 · The files — what's what
@@ -31,45 +34,43 @@ important fact in this whole document: **one file = one complete game.**
 | `long-term-investing-game.html`, `long-term-investing-game-2020.html` | Older prototypes, kept for reference only. | No — leave them alone |
 | `VERIFICATION-CHECKLIST.md` | The list of every number that must be verified and every compliance sign-off needed **before real client use**. | Read it. Update it when data changes. |
 | `live-server/` folder | The kit for running the Live Room on a company laptop with no internet services. Has its own plain-English `README.md`. | Only if events need it |
-| `HANDOVER.md` | This document. | Keep it current |
-
-The public demo site (while it's up) is at:
-`https://cheesin30.github.io/decisionframework/`
-— the Live Room is the homepage; the other games are at
-`/long-term-game-learning.html` and `/long-term-game-sales.html`.
+| `HANDOVER.md` | This document (the master copy — the Word/PDF versions are generated from it). | Keep it current |
 
 ---
 
 ## 3 · The golden rules
 
-1. **Small changes, tested immediately.** Change one thing, save, refresh the
+1. **Back up before you edit.** Before every editing session, copy the game
+   file into a `backups` folder and put today's date in the name
+   (e.g. `long-term-game-sales — 2026-07-12.html`). It takes five seconds
+   and means you can never lose a working game. This is your safety net —
+   treat it as non-negotiable.
+2. **Small changes, tested immediately.** Change one thing, save, refresh the
    browser, play it. Never batch up ten edits and hope.
-2. **Copilot is your hands, the browser is your judge.** Whatever Copilot
+3. **Copilot is your hands, the browser is your judge.** Whatever Copilot
    writes, YOU confirm it works by actually playing the game.
-3. **Never edit below the "vendored" line.** Near the top of each game file
+4. **Never edit below the "vendored" line.** Near the top of each game file
    there are two giant walls of unreadable compressed code labeled
    `Chart.js` and `html2canvas` (they draw the charts and make the share
    image). They are someone else's library, pasted in so the game works
    offline. Scroll past them; never touch them.
-4. **Don't weaken the legal text.** Every screen has disclaimers
+5. **Don't weaken the legal text.** Every screen has disclaimers
    ("Illustrative… past performance…"). Compliance depends on them. You can
    fix a typo; you cannot delete or soften them without a compliance
    conversation.
-5. **When in doubt, undo.** `Ctrl+Z` undoes typing. The Source Control panel
-   can discard everything back to the last saved version (Section 9). You
-   cannot permanently break anything that has been committed to GitHub.
+6. **When in doubt, undo.** `Ctrl+Z` undoes typing. And if a file is truly
+   mangled, delete it and restore today's backup copy (rule 1).
 
 ---
 
 ## 4 · Your daily setup
 
-1. Open **VS Code** → `File → Open Folder…` → pick the `decisionframework`
-   folder (clone it from GitHub first if you haven't: in VS Code press
-   `Ctrl+Shift+P`, type "Git: Clone", paste the repo address).
-2. Click a game file in the left sidebar to open it.
-3. To **see the game**: find the file in Windows Explorer / Finder and
+1. Open **VS Code** → `File → Open Folder…` → pick the project folder.
+2. Make your dated backup copy (rule 1).
+3. Click a game file in the left sidebar to open it.
+4. To **see the game**: find the file in Windows Explorer / Finder and
    double-click it — it opens in your browser. Keep that tab open.
-4. Your loop is: **edit in VS Code → `Ctrl+S` to save → refresh the browser
+5. Your loop is: **edit in VS Code → `Ctrl+S` to save → refresh the browser
    tab (`F5`) → play**.
 
 **The one navigation skill you need:** `Ctrl+F` (find). These files are long,
@@ -132,7 +133,7 @@ These search terms work in each game file:
 | The fund's chart data (Sales only) | `AMBAL_NET_2020` | ⚠ Read recipe 7.5 — this is approximated data with rules attached |
 | Market data (the real monthly returns) | `EQ_2020`, `AGG_2020`, `BENCH_0525` | ⚠ Don't edit unless replacing with verified data — update `VERIFICATION-CHECKLIST.md` if you do |
 | Live Room's online service address | `const LIVE_BACKEND` | ⚠ Recipe 7.7 — the line's exact shape matters |
-| Legal / disclaimer text | `disclaimer` or `Illustrative` | Rule 4 applies |
+| Legal / disclaimer text | `disclaimer` or `Illustrative` | Rule 5 applies |
 
 Every file also starts with a long comment block (the text between `<!--`
 and `-->` at the very top) explaining that game's design — worth reading once.
@@ -185,6 +186,7 @@ The purple dashed fund line is currently drawn from an **approximation**:
 each calendar year lands exactly on the fund's published annual return, but
 the month-to-month wiggle follows the benchmark. That's disclosed on screen
 and in `VERIFICATION-CHECKLIST.md` §1.1. The rules:
+
 - If compliance/data ever supplies the **real verified monthly series**,
   replace the `AMBAL_NET_2020` array with it (Copilot prompt: *"Replace the
   values in AMBAL_NET_2020 with this list, keeping the same format: …"*),
@@ -209,7 +211,7 @@ Search `const LIVE_BACKEND` in `long-term-game-live.html`. It looks like:
 const LIVE_BACKEND = { databaseURL: "https://…firebasedatabase.app" };
 ```
 
-- That address is the Firebase "switchboard" that passes votes from phones
+- That address is the online "switchboard" that passes votes from phones
   to the big screen. Replace the address only if you set up a new Firebase
   Realtime Database (or an IT-hosted relay).
 - **Do not reformat this line.** The company-laptop servers in `live-server/`
@@ -220,69 +222,54 @@ const LIVE_BACKEND = { databaseURL: "https://…firebasedatabase.app" };
 
 ---
 
-## 8 · Test before you publish (10 minutes)
+## 8 · Test before you share it (10 minutes)
 
-After ANY change, play the changed game start to finish. Before publishing,
-check these specifically — they're the invariants that have caught real bugs:
+After ANY change, play the changed game start to finish. Before handing a
+file to anyone, check these specifically — they're the invariants that have
+caught real bugs:
 
 **Solo games (Learning & Sales):**
-- [ ] Portfolio starts at exactly **$50,000** at the first moment.
-- [ ] Play a round pressing **Hold every time** → at the reveal, "Your
+
+- Portfolio starts at exactly **$50,000** at the first moment.
+- Play a round pressing **Hold every time** → at the reveal, "Your
   choices" and "Stayed invested" must be **identical to the dollar**. If
-  they differ, something broke — undo your change.
-- [ ] Click every era tab (1973, 1987, 2000, 2008, 2011, 2015–18) and back
+  they differ, something broke — restore your backup.
+- Click every era tab (1973, 1987, 2000, 2008, 2011, 2015–18) and back
   to "Your 2020" — the whole section should swap cleanly each way.
-- [ ] "Play again" lets you pick a different risk profile.
-- [ ] Sales only: fund line appears on the 60/40 profile, disappears on era
+- "Play again" lets you pick a different risk profile.
+- Sales only: fund line appears on the 60/40 profile, disappears on era
   views, and the 70/30 profile shows the "reselect Balanced" note.
-- [ ] Make the browser window phone-narrow (or press `F12` → phone icon) —
+- Make the browser window phone-narrow (or press `F12` → phone icon) —
   nothing should overflow sideways.
 
 **Live Room:**
-- [ ] Open `?live=host` in one window → room code appears.
-- [ ] Join from a second window (or your phone) with that code → vote →
+
+- Open the game with `?live=host` added to the address in one window →
+  a room code appears.
+- Join from a second window (or your phone) with that code → vote →
   the phone should NOT show the outcome until the host presses **"Reveal
   what happened"**.
-- [ ] Leaderboard appears at the end.
+- Leaderboard appears at the end.
 
 ---
 
-## 9 · Saving and publishing (GitHub, in plain English)
+## 9 · Backups and sharing your work
 
-Think of it as two shelves:
-- **`main` branch** = the master copy of the files.
-- **`gh-pages` branch** = the live public website. Whatever sits on this
-  shelf IS what the world sees at the site address.
+**Your backup system is a folder of dated copies.** Before each editing
+session, copy the file you're about to change into `backups/` with the date
+in the name. Keep them all — they're tiny. Every dated copy is a complete,
+working game you can go back to by simply opening it.
 
-**Saving your work (the master copy).** In VS Code, click the **Source
-Control** icon (left bar, branching-lines symbol). You'll see your changed
-files. Hover a file to see the diff (what you changed). Then:
-1. Click **+** next to the file (this "stages" it — puts it in the box).
-2. Type a one-line description of what you changed.
-3. Click **Commit**, then **Sync Changes** (pushes it to GitHub).
+**Sharing an updated game = sending one file.** Because each game is fully
+self-contained, handing your latest version to a colleague, a presenter, or
+a reviewer is just sending them the `.html` file. Nothing to install,
+nothing else to include. (For the Live Room at an event, also read
+`live-server/README.md` — the audience's phones need a way to reach the
+game, which that guide explains.)
 
-That's it. Every commit is a permanent restore point — this is your backup
-system, which is why you commit often.
-
-**Publishing to the live site.** The simplest reliable way is the GitHub
-website:
-1. Go to the repo on github.com and switch the branch dropdown (top-left of
-   the file list) to **`gh-pages`**.
-2. Click **Add file → Upload files**, drag in the game file(s) you changed,
-   and commit. Uploading a file with the same name replaces the old one.
-3. Wait ~1 minute, then hard-refresh the public page (`Ctrl+Shift+R`).
-
-Note: on `gh-pages` the Live Room file is ALSO saved as `index.html` (that's
-why it's the homepage). If you changed `long-term-game-live.html`, upload it
-twice — once as itself, and once renamed to `index.html`.
-
-**Undo, at every level:**
-- Typing mistake → `Ctrl+Z`.
-- "I want to throw away everything since my last commit" → Source Control →
-  right-click the file → **Discard Changes**.
-- "I published something bad" → on github.com, open the file's **History**,
-  view the last good version, and re-upload that. (Or ask Copilot Chat:
-  *"Show me the git commands to restore this file to the previous commit."*)
+**If the game ever needs to live on a website** (so people can reach it by
+link rather than by file), that's a hosting request to IT — the file itself
+needs no changes to be hosted anywhere.
 
 ---
 
@@ -295,12 +282,8 @@ fund performance in it. It is currently **internal / pre-approval**:
    a real client or external audience until the data verifications and the
    compliance/brand sign-offs in that file are done. If you change any
    number, record it there.
-2. **The public demo site is temporary.** The recorded decision: it stays up
-   for testing, and **must be taken down before the compliance review
-   concludes** — delete the `gh-pages` branch on GitHub AND lock the
-   Firebase database rules. Don't inherit this project and forget that.
-3. **Disclaimers stay.** (Rule 4 again, because it matters.)
-4. **The Live Room collects nothing but nicknames and votes**, in throwaway
+2. **Disclaimers stay.** (Rule 5 again, because it matters.)
+3. **The Live Room collects nothing but nicknames and votes**, in throwaway
    rooms. Keep it that way — the moment someone suggests collecting emails
    through it, that's a new privacy conversation, not a Copilot prompt.
 
@@ -315,14 +298,15 @@ fund performance in it. It is currently **internal / pre-approval**:
   smallest fix?"*
 - **Chart looks wrong / numbers seem off:** re-run the Section 8 checklist,
   especially the all-Hold tie. If the tie fails, your change touched game
-  math — discard the change and re-approach with a narrower prompt.
-- **Live Room won't connect:** it now fails loudly with an on-screen message
+  math — restore your backup and re-approach with a narrower prompt.
+- **Live Room won't connect:** it fails loudly with an on-screen message
   after ~8 seconds instead of hanging. The message itself lists the likely
   causes (corporate network blocking, etc.). `live-server/README.md` has the
   full plain-English troubleshooting list, including the phone-hotspot
   fallback for events.
-- **Totally lost:** every version of every file ever committed is on GitHub
-  under the repo's commit history. You can always get back to a working game.
+- **Totally lost:** open today's backup copy from your `backups` folder —
+  it's a complete working game. Rename it back and you're exactly where you
+  started the day.
 
 ---
 
@@ -330,10 +314,8 @@ fund performance in it. It is currently **internal / pre-approval**:
 
 | Word | Meaning here |
 |---|---|
-| Repo | The project folder as it exists on GitHub |
-| Branch | A named shelf of the files (`main` = master copy, `gh-pages` = live site) |
-| Commit | A saved snapshot with a description — your restore points |
-| Push / Sync | Send your commits up to GitHub |
 | HTML / CSS / JavaScript | The words / the styling / the behavior — all inside the one file |
 | Firebase | Google's small online service the Live Room uses to pass votes around |
+| Relay / `live-server` | The bundled do-it-yourself alternative to Firebase for company laptops |
 | `const SOMETHING = …` | "Here is a named value the game uses" — the settings knobs live in lines like this |
+| Vendored library | Someone else's finished code pasted into the file so the game works offline — never edit it |
