@@ -3846,20 +3846,34 @@ function startHost() {
   LIVE.code = roomCode();
   LIVE.net = makeNet(LIVE.code);
   LIVE.net.init(true, { state: { phase: "lobby" } }).then(() => {
-    const joinURL = location.origin !== "null"
-      ? location.href.split("?")[0] + "?room=" + LIVE.code
-      : "(host this file on a web server for a scannable link)";
+    // A scannable link only exists when this page itself was opened through a
+    // web address. A double-clicked saved file (file://) has none — encoding
+    // placeholder text into the QR just makes phones say "no usable data".
+    // And "localhost" is an address that only exists on this machine, so a QR
+    // pointing there scans fine but leads phones nowhere.
+    const isWebPage = /^https?:$/.test(location.protocol);
+    const isLocalhost = /^(localhost|127\.|0\.0\.0\.0)/.test(location.hostname);
+    const joinURL = isWebPage ? location.href.split("?")[0] + "?room=" + LIVE.code : null;
     $("hostCode").textContent = LIVE.code;
-    $("hostJoinURL").textContent = joinURL;
-    try {
-      const qr = qrcode(0, "M"); qr.addData(joinURL); qr.make();
-      $("hostQR").innerHTML = qr.createSvgTag({ cellSize: 5, margin: 2, scalable: true });
-    } catch (e) { $("hostQR").innerHTML = ""; }
-    $("hostNetNote").textContent = LIVE.net.local
-      ? "Demo transport: players must open this page in tabs of THIS browser. Set LIVE_BACKEND.databaseURL for real phones."
-      : LIVE_BACKEND.databaseURL === "auto"
-        ? "Live on this server — phones that can reach it can join."
-        : "Live over Firebase — phones can join from anywhere.";
+    if (joinURL) {
+      $("hostJoinURL").textContent = joinURL;
+      try {
+        const qr = qrcode(0, "M"); qr.addData(joinURL); qr.make();
+        $("hostQR").innerHTML = qr.createSvgTag({ cellSize: 5, margin: 2, scalable: true });
+      } catch (e) { $("hostQR").innerHTML = ""; }
+    } else {
+      $("hostJoinURL").textContent = "no scannable link — this page was opened as a saved file";
+      $("hostQR").innerHTML = "";
+    }
+    $("hostNetNote").textContent = !isWebPage
+      ? "This screen was opened as a saved file, so there is no web link for phones to scan. Serve the game from the bundled live-server (double-click start-live.bat) or the hosted site, and open the host screen through THAT address — see live-server/README.md."
+      : LIVE.net.local
+        ? "Demo transport: players must open this page in tabs of THIS browser. Set LIVE_BACKEND.databaseURL for real phones."
+        : (isLocalhost
+          ? "⚠ You opened this screen as \"localhost\", which only exists on this computer — the QR will scan but phones can't reach it. Reopen the host screen using the computer's network address (the server window prints it, e.g. http://192.168.x.x:8877/?live=host)."
+          : LIVE_BACKEND.databaseURL === "auto"
+            ? "Live on this server — phones that can reach it can join."
+            : "Live over Firebase — phones can join from anywhere.");
     LIVE.net.cb = renderHost;
     renderHost();
     showPhase("phase-host-lobby");
