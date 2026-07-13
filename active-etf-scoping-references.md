@@ -12,92 +12,98 @@ supports, followed by the URL. Copy the block for each row into the matching cel
 
 ### Row 4 — What exactly is an active ETF? What are the mechanics?
 
-1. What an actively managed ETF is, how active management works inside the ETF wrapper, and potential benefits/costs – Fidelity
-https://www.fidelity.com/learning-center/investment-products/etf/types-of-etfs-actively-managed
+[Capital Group]
+1. “What is an ETF?” — definition, how shares trade at market price vs NAV
+https://www.capitalgroup.com/ria/investments/exchange-traded-funds/resources/what-is-an-etf.html
+2. ETF investing guide — mechanics, buying/selling, trading best practices (limit orders)
+https://www.capitalgroup.com/advisor/investments/exchange-traded-funds/ETF-investing-guide.html
+3. ETF Insights & Resources hub — full advisor education library on active ETFs
+https://www.capitalgroup.com/advisor/investments/exchange-traded-funds/resources.html
 
-2. Investor-level guide to what active ETFs are and how they differ from index ETFs – etf.com
-https://www.etf.com/sections/etf-basics/what-are-active-etfs-investing-guide
+[Internal research]
+4. How fund selectors actually define an active ETF (key features, tracking-error spectrum) — RiF Active ETF Study — “Perceptions of Active ETFs in Europe” (EuroETF/EuroFSS, internal deck), Section 5 “Defining active ETFs”
 
-3. How ETF shares are bought/sold and the mechanics of NAV, bid/ask spread and liquidity (creation/redemption, market makers) – State Street Global Advisors
+[External]
+5. ETF trading mechanics: NAV, bid/ask spread, liquidity, creation/redemption — State Street Global Advisors
 https://www.ssga.com/us/en/intermediary/insights/master-the-mechanics-of-etf-trading
-
-4. Technical reference on ETF mechanics (creation/redemption, premiums/discounts, trading and liquidity) – CFA Institute
+6. Technical reference on ETF mechanics and applications — CFA Institute
 https://www.cfainstitute.org/insights/professional-learning/refresher-readings/2026/exchange-traded-funds-mechanics-applications
-
-5. Regulator's plain-English definition of active management and what it means for investors – U.S. SEC, Investor.gov glossary
-https://www.investor.gov/introduction-investing/investing-basics/glossary/active-fund-actively-managed-fund
-
-6. How active management is delivered inside the ETF vehicle – T. Rowe Price, “How to Gain the Benefits of Active Management in an Exchange-Traded Fund”
-https://www.troweprice.com/en/us/insights/gain-benefits-of-active-management-in-an-exchange-traded-fund
+7. What an actively managed ETF is and how it works — Fidelity
+https://www.fidelity.com/learning-center/investment-products/etf/types-of-etfs-actively-managed
 
 
 ### Row 5 — Why have active ETFs become so widespread?
 
-1. Younger investors choosing to work with advisors who include active ETFs in their investment approach
+[Capital Group]
+1. Active ETF solutions landing — Capital Group's positioning of the category's growth
+https://www.capitalgroup.com/active-etf
+
+[Internal research]
+2. ETF timeline: first active ETF 2010 → $1 trillion in active ETFs globally by 2024; US vs Europe flows; Rogers adoption curve showing active ETFs at the early-adopter stage — RiF Active ETF Study — “Perceptions of Active ETFs in Europe” (EuroETF/EuroFSS, internal deck), Sections 1–2, slides 6–9
+
+[External]
+3. Younger investors choosing to work with advisors who include active ETFs in their investment approach — InvestmentNews
 https://www.investmentnews.com/practice-management/could-active-etfs-be-a-client-acquisition-magnet/259875
-
-2. Clients increasingly wants to understand what they own – Active ETFs provide transparency and flexibility
+4. Clients increasingly want to understand what they own — active ETFs provide transparency and flexibility — RFI Global
 https://rfi.global/planning-for-2026-five-us-consumer-trends-financial-institutions-cant-ignore/
-
-3. Increasing global adoption – active ETF flows increasing at a greater rate vs passive – BlackRock, “Active ETFs: Accelerating Adoption”
+5. Increasing global adoption — active ETF flows growing at a greater rate vs passive — BlackRock
 https://www.blackrock.com/us/financial-professionals/insights/exploring-active-etfs
 
 
 ### Row 6 — How is an active ETF different from an active fund?
 
-1. Side-by-side comparison of ETFs vs mutual funds (trading, minimums, costs, use cases) – Charles Schwab
+[Capital Group]
+1. “ETF tax efficiency, explained” — video on externalization and in-kind redemption vs mutual funds
+https://www.capitalgroup.com/advisor/investments/exchange-traded-funds/resources/etf-tax-efficiency-explained.html
+2. “Mythbusted: Active ETFs can be as tax efficient as passive ETFs” — CG's own capital-gains record as proof the wrapper (not passive management) drives tax efficiency
+https://www.capitalgroup.com/advisor/investments/exchange-traded-funds/resources/mythbusted-CG-capital-gains.html
+3. “Tax-efficient investing with ETFs” — wrapper-level differences that matter to clients
+https://www.capitalgroup.com/advisor/investments/exchange-traded-funds/resources/tax-efficiency.html
+
+[Internal research]
+4. ~50% of ETF users expect ETFs to be preferred to, or replace, mutual funds; only 7% expect mutual funds preferred; ETF-vs-mutual-fund preference by market and client type — RiF Active ETF Study — “Perceptions of Active ETFs in Europe” (EuroETF/EuroFSS, internal deck), Section 3 “Future expectations”, slides 18, 37–39
+
+[External]
+5. Side-by-side ETF vs mutual fund comparison (trading, minimums, costs, use cases) — Charles Schwab
 https://www.schwab.com/learn/story/etf-vs-mutual-fund-it-depends-on-your-strategy
-
-2. Why the ETF wrapper is generally more tax-efficient than a mutual fund (in-kind creation/redemption) – Fidelity
-https://www.fidelity.com/learning-center/investment-products/etf/etfs-tax-efficiency
-
-3. Data point: only ~9% of active ETFs distributed a capital gain vs ~53% of active mutual funds – State Street Global Advisors
+6. Data point: only ~9% of active ETFs distributed a capital gain vs ~53% of active mutual funds — State Street Global Advisors
 https://www.ssga.com/us/en/individual/insights/tax-efficiency-is-structural-etfs-continue-to-issue-fewer-capital-gains-than-mutual-funds
-
-4. Manager's view on what changes (and what doesn't) when an active strategy moves from a mutual fund to an ETF wrapper – T. Rowe Price, “Active ETFs Designed to Outperform”
+7. What changes (and what doesn't) when an active strategy moves from a mutual fund to an ETF wrapper — T. Rowe Price
 https://www.troweprice.com/financial-intermediary/us/en/insights/articles/2021/q3/active-etfs-designed-to-outperform.html
-
-5. Primer on how active ETFs work in much the same way as actively managed mutual funds, plus wrapper advantages – Hilton Capital Management, “Understanding Active ETFs”
-https://www.hiltoncapitalmanagement.com/understanding-active-etfs
 
 
 ### Row 7 — How is an active ETF different from a passive ETF?
 
-1. The case for active ETFs vs index-tracking ETFs (similarities, differences, potential for outperformance) – Aberdeen Investments, “Know Your ETFs: Why Active”
+[Capital Group]
+1. “The benefits of active ETFs” — potential for better-than-market outcomes and downside protection vs index tracking
+https://www.capitalgroup.com/advisor/investments/exchange-traded-funds/resources/benefits-of-active-etfs.html
+
+[Internal research]
+2. Selectors say 'ETF' and 'passive' were synonymous for years — definitions are still fluid; 56% would accept tracking error above 2%, signalling appetite for genuinely active ETFs — RiF Active ETF Study — “Perceptions of Active ETFs in Europe” (EuroETF/EuroFSS, internal deck), Section 5, slides 12–14 and 50–53
+
+[External]
+3. The case for active ETFs vs index-tracking ETFs — Aberdeen Investments, “Know Your ETFs: Why Active”
 https://www.aberdeeninvestments.com/en-us/investor/insights-and-research/know-your-etfs-why-active
-
-2. The cost trade-off: higher fees mean active ETFs must clear a higher bar, with fee/performance data – Morningstar
+4. The cost trade-off: higher fees mean active ETFs must clear a higher bar — Morningstar
 https://www.morningstar.com/funds/active-versus-passive-etfs-why-lower-fees-still-win
-
-3. How the active/passive distinction is becoming a spectrum (systematic active, factor strategies) – Morningstar
-https://www.morningstar.com/funds/how-line-between-active-passive-etfs-is-blurring
-
-4. What active and passive ETFs share (the wrapper) and where they diverge (the strategy) – J.P. Morgan Asset Management, “ETFs Explained #1: Similarities of Active and Passive ETFs”
+5. What active and passive ETFs share (the wrapper) and where they diverge (the strategy) — J.P. Morgan Asset Management
 https://am.jpmorgan.com/au/en/asset-management/adv/insights/investment-ideas/similarities-etfs/
-
-5. Balanced overview of the active vs passive trade-offs from the leading indexing provider – Vanguard, “Passive vs Active Investing: What's the Difference?”
-https://www3.vanguard.com.au/personal/learn/investment-options/active-vs-passive-investing
 
 
 ### Row 8 — What are some risks or limitations of active ETFs?
 
-1. Manager selection risk / potential underperformance: share of active managers underperforming their benchmarks over 1–20 year horizons – S&P Dow Jones Indices, SPIVA U.S. Scorecard
+[Internal research]
+1. Potential underperformance is the #1 perceived drawback (48%), then high management fees (30%), tracking error (23%) and complexity (18%); drawbacks broken down by client type — RiF Active ETF Study — “Perceptions of Active ETFs in Europe” (EuroETF/EuroFSS, internal deck), Section 4 “Perceived benefits and drawbacks”, slides 15–16 and 48–49
+
+[External]
+2. Manager selection risk: share of active managers underperforming benchmarks over 1–20 year horizons — S&P Dow Jones Indices, SPIVA U.S. Scorecard
 https://www.spglobal.com/spdji/en/spiva/article/spiva-us/
-
-2. Premiums and discounts to NAV: why they arise and what they mean for investors – Fidelity
+3. Premiums and discounts to NAV: why they arise and what they mean — Fidelity
 https://www.fidelity.com/learning-center/investment-products/etf/premiums-discounts-etfs
-
-3. Liquidity and trading concerns: price returns of some active ETFs lag their NAV returns because of trading frictions – Morningstar
+4. Liquidity/trading: price returns of some active ETFs lag NAV returns due to trading frictions — Morningstar
 https://www.morningstar.com/funds/you-might-not-always-get-returns-your-active-etf-earned
-
-4. Trading costs beyond the expense ratio (bid/ask spreads on active ETFs) – Morningstar
-https://www.morningstar.com/funds/your-active-etf-is-cheap-your-trade-might-not-be
-
-5. Whether active ETFs are inherently riskier than passive ETFs (risk depends on the underlying investments) – J.P. Morgan Asset Management, “Myth Busting #1”
+5. Whether active ETFs are inherently riskier than passive (risk depends on the underlying investments) — J.P. Morgan Asset Management, “Myth Busting #1”
 https://am.jpmorgan.com/sg/en/asset-management/adv/insights/portfolio-insights/etf-perspectives/active-etf-manual/myth-busting-active-etf-risks/
-
-6. Regulator's note that active funds typically carry higher costs and may underperform their index – U.S. SEC, Investor.gov
-https://www.investor.gov/introduction-investing/investing-basics/glossary/active-fund-actively-managed-fund
 
 
 ## Module 2 (Conversation readiness)
@@ -105,74 +111,80 @@ https://www.investor.gov/introduction-investing/investing-basics/glossary/active
 
 ### Row 12 — Why would I use an active ETF? Which strategies should it be used for?
 
-1. How active ETFs are used to pursue specific objectives (income, total return, risk management, hard-to-reach markets) – Goldman Sachs Asset Management
+[Capital Group]
+1. “The benefits of active ETFs” — where manager judgement adds value: outperformance potential, downside protection, intraday flexibility
+https://www.capitalgroup.com/advisor/investments/exchange-traded-funds/resources/benefits-of-active-etfs.html
+2. Capital Group active ETF line-up by objective (core equity, income, international, fixed income) — matching strategy to investment objective
+https://www.capitalgroup.com/advisor/investments/exchange-traded-funds.html
+3. “Seeking to maximize tax efficiency with ETFs: 5 strategies” — concrete use cases for deploying active ETFs
+https://www.capitalgroup.com/advisor/investments/exchange-traded-funds/resources/5-ways-to-pursue-greater-tax-efficiency-with-etfs.html
+
+[Internal research]
+4. Main benefits selectors buy active ETFs for: potential outperformance (41%), low management fees (38%), niche/thematic access (38%), diversification, unique strategies — RiF Active ETF Study — “Perceptions of Active ETFs in Europe” (EuroETF/EuroFSS, internal deck), Section 4, slide 15
+
+[External]
+5. How active ETFs are used to fine-tune portfolio construction — Goldman Sachs Asset Management
 https://am.gs.com/en-us/advisors/insights/article/2025/how-active-etfs-can-help-investors-fine-tune-portfolio-construction
-
-2. Whitepaper on active ETF categories and the manager's role in adding value – iShares/BlackRock, “Decoding Active ETFs”
+6. Active ETF categories and the manager's role in adding value — iShares/BlackRock, “Decoding Active ETFs” (whitepaper)
 https://www.ishares.com/us/literature/whitepaper/decoding-active-etfs.pdf
-
-3. The case for active ETFs now – market conditions and strategy fit – Fidelity Institutional, “Why Active ETFs, Why Now?”
-https://institutional.fidelity.com/advisors/insights/topics/investing-ideas/why-active-etfs-why-now
-
-4. What advisors need to know about the rapid rise of active ETFs (42% of Q1 2026 net inflows) and where they fit – VettaFi via Advisor Perspectives
-https://www.advisorperspectives.com/commentaries/2026/02/11/what-advisors-need-to-know-about-the-rapid-rise-of-active-etfs
-
-5. Where manager judgement is designed to add value over an index – T. Rowe Price, “Active ETFs Designed to Outperform”
-https://www.troweprice.com/financial-intermediary/us/en/insights/articles/2021/q3/active-etfs-designed-to-outperform.html
 
 
 ### Row 13 — Which clients are suitable for an active ETF?
 
-1. Practical advisor guidance on incorporating ETFs into client portfolios and matching them to client goals – Day Hagan Asset Management
-https://dayhagan.com/how-to-incorporate-etfs-into-client-portfolios
+[Capital Group]
+1. Investment planning client-conversation tools — matching investment vehicles to client goals
+https://www.capitalgroup.com/advisor/tools/investment-planning.html
+2. Tax-sensitive clients as a natural active ETF audience — “5 strategies” tax-efficiency piece
+https://www.capitalgroup.com/advisor/investments/exchange-traded-funds/resources/5-ways-to-pursue-greater-tax-efficiency-with-etfs.html
 
-2. Which active ETF categories advisors actually use and the client needs they map to (income, cash management, tax-efficient core) – The Daily Upside (Advisor)
+[Internal research]
+3. Openness to active ETFs by market and channel: wealth/investment managers most open, retail banks and insurance least; % of client portfolios where active ETFs are used; opportunity signals by segment — RiF Active ETF Study — “Perceptions of Active ETFs in Europe” (EuroETF/EuroFSS, internal deck), Sections 2–3, slides 19 and 37–39
+
+[External]
+4. Which active ETF categories advisors use and the client needs they map to — The Daily Upside (Advisor)
 https://www.thedailyupside.com/advisor/investing-strategies/here-are-the-top-active-etfs-used-by-advisors/
-
-3. When advisors do (and don't) recommend active ETFs to clients – etf.com Advisor Center
-https://www.etf.com/sections/advisor-center/active-etf-financial-advisor-jpst-jaaa
-
-4. Advisor demand signal: 88% of advisors somewhat/very likely to increase active fixed income ETF allocations – VettaFi via Advisor Perspectives, “How Advisors Are Rewiring Fixed Income Portfolios”
+5. Advisor demand signal: 88% of advisors likely to increase active fixed income ETF allocations — VettaFi via Advisor Perspectives
 https://www.advisorperspectives.com/commentaries/2026/04/10/how-advisors-are-rewiring-fixed-income-portfolios
-
-5. Matching more conservative active ETF products to more conservative client profiles – ETF Trends, “Capital Group's Newer Active ETFs Offer More Conservative Approach”
-https://www.etftrends.com/capital-groups-newer-active-etfs-offer-more-conservative-approach/
 
 
 ### Row 14 — How do I evaluate an active ETF that is right for my client?
 
-1. Research-based due diligence guide for active ETFs (people, process, price plus ETF-specific metrics) – Morningstar
+[Capital Group]
+1. ETF Insights & Resources hub — evaluation and comparison materials for CG active ETFs
+https://www.capitalgroup.com/advisor/investments/exchange-traded-funds/resources.html
+
+[Internal research]
+2. Where selectors research ETFs: asset manager websites (63%) and fund research/ratings agencies (61%) top the list; Morningstar, Bloomberg and JustETF are the preferred research sources — RiF Active ETF Study — “Perceptions of Active ETFs in Europe” (EuroETF/EuroFSS, internal deck), Section 7 “ETF information sources”, slides 61–63
+
+[External]
+3. Morningstar's Guide to Active ETF Due Diligence (people, process, price + ETF-specific metrics)
 https://www.morningstar.com/business/insights/research/etf-due-diligence-guide
-
-2. Framework for active ETF due diligence combining fund-level and wrapper-level factors – John Hancock Investments
+4. Framework for active ETF due diligence — John Hancock Investments
 https://www.jhinvestments.com/resources/all-resources/business-building/etf-active-white-paper
-
-3. Qualitative + quantitative evaluation of active ETFs (philosophy, team, liquidity, spreads) – Goldman Sachs Asset Management
+5. Qualitative + quantitative evaluation of active ETFs — Goldman Sachs Asset Management, “Art and Science”
 https://am.gs.com/en-us/advisors/insights/article/2026/active-etf-due-diligence-combination-of-art-and-science
-
-4. Step-by-step checklist for comparing active ETF options across a peer group – Mackenzie Investments
-https://www.mackenzieinvestments.com/en/investments/by-type/etfs/etf-articles/your-step-by-step-guide-to-active-etf-due-diligence
-
-5. General ETF due diligence checklist (costs, liquidity, structure, issuer strength) – State Street Global Advisors
+6. General ETF due diligence checklist — State Street Global Advisors
 https://www.ssga.com/us/en/intermediary/insights/a-etf-due-diligence-checklist
-
-6. Issuer framework for evaluating active ETFs across the peer group (PDF) – J.P. Morgan Asset Management, “Evaluating Active ETFs”
-https://am.jpmorgan.com/content/dam/jpm-am-aem/asiapacific/au/en/etf/evaluating-active-etf.pdf
 
 
 ### Row 15 — How do I approach ETFs by client type?
 
-1. Tailoring investment conversations to different client personas and their underlying beliefs – Morningstar
+[Capital Group]
+1. Chart stories — ready-made visuals for tailoring investment conversations to what each client cares about
+https://www.capitalgroup.com/advisor/pro/chart-stories.html
+2. “The power of storytelling” — using stories to land concepts with different client types (PracticeLab)
+https://www.capitalgroup.com/advisor/practicelab/articles/the-power-of-storytelling.html
+3. Investing-basics client conversation tools — talking points for foundational concepts
+https://www.capitalgroup.com/advisor/tools/investing-basics.html
+
+[Internal research]
+4. Four knowledge segments among intermediaries — Enthusiasm, Uncertainty, Education, Smart-beta confusion — with verbatim quotes per segment; maps directly onto the sheet's investor personas — RiF Active ETF Study — “Perceptions of Active ETFs in Europe” (EuroETF/EuroFSS, internal deck), Section 2, slide 12
+
+[External]
+5. Tailoring conversations to different client personas and their underlying beliefs — Morningstar
 https://www.morningstar.com/financial-advisors/how-discuss-portfolio-diversification-with-different-types-clients
-
-2. Adapting communication style to client personality types when presenting recommendations – Brighthouse Financial, “A Guide to Speaking Your Client's Language”
-https://www.brighthousefinancial.com/content/dam/brighthouse-financial/protected/pdfs/shield/Guide-Speaking-Clients-Language.pdf
-
-3. Understanding the beliefs and concerns behind client resistance before responding – Hartford Funds
+6. Understanding the beliefs behind client resistance before responding — Hartford Funds
 https://www.hartfordfunds.com/insights/investor-insight/investor-behavior/your-money-story/how-to-respond-when-a-client-resists-recommendations.html
-
-4. The four most common misconceptions advisors will meet across client types, with rebuttals – J.P. Morgan Asset Management, “Active ETF Investing: Four Myths Debunked”
-https://am.jpmorgan.com/ca/en/asset-management/adv/funds/etf-perspectives/active-etf-investing-myths/
 
 
 ## Module 3 (Recommendation conversations)
@@ -180,66 +192,74 @@ https://am.jpmorgan.com/ca/en/asset-management/adv/funds/etf-perspectives/active
 
 ### Row 19 — How do I introduce active ETFs into a client conversation?
 
-1. Advisor conversation-starter resources for opening investment discussions from the client's goals – BlackRock
+[Capital Group]
+1. Chart stories — visuals that open goal-based conversations an active ETF discussion can hang off
+https://www.capitalgroup.com/advisor/pro/chart-stories.html
+2. PracticeLab client-conversations topic hub — conversation starters and discovery techniques
+https://www.capitalgroup.com/advisor/ca/en/practicelab/topics/client-conversations.html
+3. “The power of storytelling” — engaging clients through stories rather than product pitches (PracticeLab)
+https://www.capitalgroup.com/advisor/practicelab/articles/the-power-of-storytelling.html
+
+[Internal research]
+4. The 5 stages of client decision-making around an innovation (knowledge/awareness → confirmation) and why education is the growth lever at the early-adopter stage; asset manager websites are selectors' #1 information source (63%) — advisors are the education channel — RiF Active ETF Study — “Perceptions of Active ETFs in Europe” (EuroETF/EuroFSS, internal deck), Sections 1 and 7, slides 8 and 61
+
+[External]
+5. Advisor conversation starters for opening investment discussions from client goals — BlackRock
 https://www.blackrock.com/us/financial-professionals/resources/practice-management/conversation-starters
-
-2. Tools and talking points for structuring client conversations around goals and market events – Russell Investments, Client Conversation Center
-https://russellinvestments.com/content/ri/us/en/financial-professional/tools-and-education/business-solutions/client-conversation-center.html
-
-3. Framing the active ETF opportunity with clients (growth of the category and where it fits) – AllianceBernstein
-https://www.alliancebernstein.com/us/en-us/investments/etfs/etf-insights/actively-managed-etfs-are-on-the-move.html
-
-4. Current conversation hook: active ETFs took 42% of Q1 2026 net inflows and what that means for client portfolios – VettaFi via Advisor Perspectives
+6. Current conversation hook: active ETFs took 42% of Q1 2026 net inflows — VettaFi via Advisor Perspectives
 https://www.advisorperspectives.com/commentaries/2026/02/11/what-advisors-need-to-know-about-the-rapid-rise-of-active-etfs
-
-5. How one issuer coaches advisors to pair active ETFs with client goals (accumulation vs decumulation) – ETF Database, “How Capital Group Shifted the Active ETF Playbook”
-https://etfdb.com/equity-etf-content-hub/capital-group-shifted-active-playbook/
 
 
 ### Row 20 — What questions or objections can I expect from clients?
 
-1. “What are active ETFs?” – Q&A-format primer answering the most common first questions – HANetf
-https://hanetf.com/what-is-an-active-etf-your-questions-answered/
+[Capital Group]
+1. “Mythbusted: Active ETFs can be as tax efficient as passive ETFs” — answers the 'active can't be tax efficient / why not passive' objection with CG's own record
+https://www.capitalgroup.com/advisor/investments/exchange-traded-funds/resources/mythbusted-CG-capital-gains.html
 
-2. “Why wouldn't I just index?” – data on active funds' struggle to beat index funds – CNBC
-https://www.cnbc.com/2025/09/05/active-funds-struggle-to-beat-index-funds.html
+[Internal research]
+2. Verbatim client-style doubts to prepare for (“Is it a robot? Who's going to change the parameters?”, “these are complex and could require more intensive monitoring”); ranked drawbacks (underperformance 48%, fees 30%); tax and commission barriers by market — RiF Active ETF Study — “Perceptions of Active ETFs in Europe” (EuroETF/EuroFSS, internal deck), Sections 2 and 4, slides 12 and 15–17
 
-3. “Can active ETFs really outperform?” – whether outperformance persists – S&P Dow Jones Indices, SPIVA Persistence Scorecard
-https://www.spglobal.com/spdji/en/spiva/article/us-persistence-scorecard/
-
-4. “Why should I pay more?” – fee differentials between active and passive ETFs – Morningstar
-https://www.morningstar.com/funds/active-versus-passive-etfs-why-lower-fees-still-win
-
-5. “Aren't active ETFs riskier than passive ones?” – risk depends on the underlying investments, not the management style – J.P. Morgan Asset Management, “Myth Busting #1”
-https://am.jpmorgan.com/sg/en/asset-management/adv/insights/portfolio-insights/etf-perspectives/active-etf-manual/myth-busting-active-etf-risks/
-
-6. The four most common active ETF objections in one place, each answered – J.P. Morgan Asset Management, “Active ETF Investing: Four Myths Debunked”
+[External]
+3. The four most common active ETF objections, each answered — J.P. Morgan Asset Management, “Four Myths Debunked”
 https://am.jpmorgan.com/ca/en/asset-management/adv/funds/etf-perspectives/active-etf-investing-myths/
+4. “Why wouldn't I just index?” — data on active funds' struggle to beat index funds — CNBC
+https://www.cnbc.com/2025/09/05/active-funds-struggle-to-beat-index-funds.html
+5. “Can active really outperform?” — persistence of outperformance — S&P DJI, SPIVA Persistence Scorecard
+https://www.spglobal.com/spdji/en/spiva/article/us-persistence-scorecard/
+6. “Why should I pay more?” — fee differentials between active and passive ETFs — Morningstar
+https://www.morningstar.com/funds/active-versus-passive-etfs-why-lower-fees-still-win
 
 
 ### Row 21 — How do I respond to client objections?
 
-1. Using curiosity and empathy to uncover the belief behind an objection before reframing – Hartford Funds
-https://www.hartfordfunds.com/insights/investor-insight/investor-behavior/your-money-story/how-to-respond-when-a-client-resists-recommendations.html
+[Capital Group]
+1. THE source for the four-box framework: “How to have better client conversations (even in uncertain times)” — Paul Cieslik's 4-Box Crucial Client Conversations model (acknowledge → perspective → confidence → opportunity), PracticeLab
+https://www.capitalgroup.com/advisor/practicelab/articles/have-better-client-conversations.html
+2. Chart stories — visual proof points to reframe objections during the conversation
+https://www.capitalgroup.com/advisor/pro/chart-stories.html
+3. Proof point vs active mutual fund: wrapper-driven tax efficiency (“Mythbusted”)
+https://www.capitalgroup.com/advisor/investments/exchange-traded-funds/resources/mythbusted-CG-capital-gains.html
+4. Proof point vs passive index: “The benefits of active ETFs” — outcomes and downside protection
+https://www.capitalgroup.com/advisor/investments/exchange-traded-funds/resources/benefits-of-active-etfs.html
 
-2. A repeatable framework for handling clients who reject recommendations while keeping the discussion on goals – Kitces.com
+[Internal research]
+5. Reframing ammunition: outperformance is also the #1 perceived benefit (41%); ~50% of ETF users expect ETFs preferred to mutual funds vs 7% the reverse — RiF Active ETF Study — “Perceptions of Active ETFs in Europe” (EuroETF/EuroFSS, internal deck), Sections 3–4, slides 15 and 18
+
+[External]
+6. Handling clients who reject recommendations while keeping the discussion on goals — Kitces.com
 https://www.kitces.com/blog/163-michael-kitces-carl-richards-client-advice-implementation-recommendation-communication/
-
-3. Proof points for the active ETF wrapper vs active mutual funds and passive index funds (cost, tax efficiency, flexibility) – Fidelity Institutional
-https://institutional.fidelity.com/advisors/investment-solutions/strategies/active-etfs
-
-4. Ready-made rebuttals to the four most common objections (risk, liquidity, cost, performance) – J.P. Morgan Asset Management, “Active ETF Investing: Four Myths Debunked”
-https://am.jpmorgan.com/ca/en/asset-management/adv/funds/etf-perspectives/active-etf-investing-myths/
-
-5. Proof points vs passive: where active ETFs are designed to outperform and the evidence behind it – T. Rowe Price
-https://www.troweprice.com/financial-intermediary/us/en/insights/articles/2021/q3/active-etfs-designed-to-outperform.html
+7. Responding with curiosity and empathy when a client resists — Hartford Funds
+https://www.hartfordfunds.com/insights/investor-insight/investor-behavior/your-money-story/how-to-respond-when-a-client-resists-recommendations.html
 
 
 ---
 
 ## Notes
 
-- Rows 4–8 lean on investor-education and regulator sources (Fidelity, Schwab, SSGA, Morningstar, S&P DJI, CFA Institute, SEC/Investor.gov) because Module 1 is baseline product knowledge; Modules 2–3 use advisor-facing practice-management, due-diligence, and 2026 market-commentary sources (Morningstar, John Hancock, Goldman Sachs AM, J.P. Morgan AM, T. Rowe Price, VettaFi/Advisor Perspectives, Hartford Funds, Kitces) to match their audience.
-- Row 5 ("Why have active ETFs become so widespread?") keeps the sheet's original references; a URL was added to its previously link-less item 3.
-- Every URL was surfaced via web search (July 2026) with the page title and content excerpt confirming it matches the cell topic. The sandbox's network policy blocked direct page fetches for final click-through verification, so give each link a quick click when pasting into the sheet.
+- References are grouped in three tiers per row:
+  - **[Capital Group]** — capitalgroup.com advisor and PracticeLab sources, including the **chart stories** library and the **4-Box Crucial Client Conversations framework** (the "four-box client conversation framework" named in row 21's Possible content).
+  - **[Internal research]** — the RiF *Perceptions of Active ETFs in Europe* study (EuroETF/EuroFSS, private & confidential deck). Cited by section/slide; do not link or distribute externally.
+  - **[External]** — third-party sources (SSGA, Morningstar, S&P DJI SPIVA, CFA Institute, Fidelity, Schwab, J.P. Morgan AM, Goldman Sachs AM, John Hancock, T. Rowe Price, VettaFi/Advisor Perspectives, Hartford Funds, Kitces), kept to the strongest few per row.
+- Row 5 ("Why have active ETFs become so widespread?") keeps the sheet's original references, with internal-deck and Capital Group items added.
+- Every public URL was surfaced via web search (July 2026) with the page title and content excerpt confirming it matches the cell topic. The sandbox's network policy blocked direct page fetches for final click-through verification, so give each link a quick click when pasting into the sheet.
 - The empty cells on the **Scope** tab (rationale cells) are commentary, not references, so they are out of scope here.
