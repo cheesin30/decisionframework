@@ -410,9 +410,20 @@
   .tl-move.up { color: #1c7c53; } .tl-move.down { color: var(--red); }
   .tl-you { display: inline-block; margin-left: 8px; font-weight: 700; }
   .tl-you.buy { color: #008074; } .tl-you.hold { color: var(--navy); } .tl-you.sell { color: var(--red); }
+
+  /* Outcome tiles: actions that weren't available are blurred, not compared. */
+  .cf-row.unavail { opacity: .8; }
+  .cf-val.blur { filter: blur(6px); user-select: none; pointer-events: none; }
+  .cf-why { font-style: normal; font-size: 10.5px; color: var(--gray); font-weight: 600; }
+  /* Internal-use banner, pinned to every screen. */
+  .internal-footer { position: fixed; left: 0; right: 0; bottom: 0; z-index: 999; text-align: center;
+    font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #5f7081;
+    background: rgba(255,255,255,.93); border-top: 1px solid #dfe7ea; padding: 5px 10px; }
+  body { padding-bottom: 34px; }
 </style>
 </head>
 <body>
+<div class="internal-footer" role="note">For internal use only · Do not disseminate</div>
 <div class="wrap">
 
   <div class="brandbar">
@@ -592,64 +603,64 @@
    is hand-typed and play stays faithful to the reveal. The reveal uses
    {month, event, what} to break the ambiguity. ── */
 const POOL = [
-  { title: "The world stops", month: "2020-03", emotionalPull: "panic + fear",
-    story: "A new virus is racing across the globe. Cities lock down, shelves empty, and nobody knows how bad it gets. In weeks the market has fallen off a cliff. Your dad calls, shaking: \"Get out now, before it all disappears.\"",
-    mood: "Freefall — the fastest crash anyone can remember.",
+  { title: "The floor gives way", month: "2020-03", emotionalPull: "panic + fear",
+    story: "It starts as a headline you scroll past. Three weeks later it's the only headline — and your account is down more in a month than it normally moves in a year. This is the money that was supposed to buy your fifties back. Your dad calls, voice shaking: \"Get out. Now. Before it's all gone.\"",
+    mood: "Freefall — faster and harder than anyone alive remembers.",
     event: "The COVID-19 crash · March 2020",
     what: "A global pandemic triggered the fastest bear market in history — equities fell about a third in five weeks." },
   { title: "It makes no sense", month: "2020-04", emotionalPull: "disbelief + sitting out",
-    story: "The news is still terrifying — record job losses, hospitals overflowing. Yet the market is roaring back, its best month in decades. It feels fake. Surely it can't last while the world is still shut down.",
+    story: "The real world is still getting worse — the news is wall-to-wall bad. Yet the market just posted its best month in decades, and the friends who panicked out have gone very quiet. Every cell in your body says this rally is a lie. And it keeps going up without you having to believe in it.",
     mood: "Ripping higher — against all logic.",
     event: "The stimulus rebound · April 2020",
     what: "Zero rates and trillions in stimulus fueled one of the fastest recoveries ever — equities had their best month in decades." },
   { title: "A breakthrough", month: "2020-11", emotionalPull: "hope + regret",
-    story: "Scientists announce something that could finally end the crisis. Markets leap on the news. If you stepped aside earlier, you're watching it climb without you.",
+    story: "One morning: actual good news, the kind that could genuinely end the crisis. The market gaps up before you've finished your coffee, and the group chat is pure euphoria. If you stepped aside earlier this year, every green day now lands like a small insult.",
     mood: "A sharp, sudden relief rally.",
     event: "The vaccine breakthrough · November 2020",
     what: "The first highly effective vaccine was announced. Markets surged that month and beaten-down equities soared." },
   { title: "The first crack", month: "2021-09", emotionalPull: "unease + recency bias",
-    story: "Prices are starting to creep up — gas, groceries, rent. The central bank hints it may pull back its support. The market wobbles for the first time in a while, and it feels like the party might be ending.",
-    mood: "A first wobble after a long climb.",
+    story: "Everything you buy costs a little more each month, and the people who kept the party going are hinting the punch bowl leaves soon. Your portfolio sits at numbers you're now scared to lose. For the first time in ages, it wobbles — and this one feels different.",
+    mood: "A first wobble after a long, easy climb.",
     event: "The inflation scare · September 2021",
     what: "Inflation began surging and the Fed signaled it would taper support — the first tremor before a hard year." },
   { title: "It won't stop bleeding", month: "2022-04", emotionalPull: "fear + helplessness",
-    story: "A major war has erupted in Europe. Gas and food prices spike to levels you've never seen. Even the 'safe' fixed income part of your portfolio is falling this time. Every month is another leg down.",
-    mood: "Everything falling at once.",
+    story: "A crisis abroad has set the cost of everything on fire — and this time there is nowhere to hide. Even the 'safe' fixed income half of your portfolio is falling with the rest. Month after month, another leg down. You catch yourself doing the math on how many working years this is costing you.",
+    mood: "Everything falling at once — no safe corner.",
     event: "War & inflation shock · April 2022",
     what: "War in Ukraine collided with 40-year-high inflation — unusually, equities and fixed income fell hard together." },
   { title: "No bottom in sight", month: "2022-06", emotionalPull: "fear + recency bias",
-    story: "The central bank is hiking rates faster than in decades. Every rally fails. Forecasters keep cutting their targets. It genuinely feels like it could just keep going down.",
+    story: "Rates are rising faster than they have in decades and every rally dies within days. The pundits who called the top are taking victory laps; the voices that said 'hold on' have gone quiet. Down again this month. It genuinely feels like there is no floor.",
     mood: "A grinding, relentless decline.",
     event: "The rate-hike bear market · June 2022",
     what: "The most aggressive rate hikes in decades drove equities deep into a bear market." },
   { title: "Maximum pain", month: "2022-09", emotionalPull: "capitulation + loss aversion",
-    story: "It's been a brutal year of losses, and this is the worst month yet. The headlines insist even more pain is ahead. You're worn down, and part of you just wants to make it stop and sell what's left.",
-    mood: "Peak pessimism — the worst month of a bad year.",
+    story: "The worst month of a brutal year. You've stopped opening your statements. Your neighbor swears he sold 'just in time' and sleeps great. A tired voice in your head keeps whispering the same thing: make it stop — sell what's left while there's something left.",
+    mood: "Peak pessimism — capitulation weather.",
     event: "The low · September 2022",
     what: "Equities hit their sharpest monthly drop of the bear market — just weeks before the bottom that October." },
   { title: "You're exhausted", month: "2022-10", emotionalPull: "capitulation + disbelief",
-    story: "After a year of losses, a sudden sharp bounce. You've been burned so many times you don't trust it — every rally this year has failed. It's tempting to sell into the strength and finally be done.",
+    story: "A violent bounce, out of nowhere. You've been burned by every single rally this year, and this one smells exactly like the others. Selling into the strength and walking away would feel so clean. So final. So safe. You could just… be done.",
     mood: "A powerful bounce nobody believes.",
     event: "The turn · October 2022",
     what: "At peak fear the market began to recover — those who'd capitulated locked in their losses and missed the turn." },
-  { title: "The bank runs", month: "2023-03", emotionalPull: "contagion fear",
-    story: "A major bank collapses overnight. Then another. People line up to pull their money out, and everyone starts asking if it's 2008 all over again. Nobody knows who's next.",
-    mood: "A sudden jolt of financial fear.",
+  { title: "Something just broke", month: "2023-03", emotionalPull: "contagion fear",
+    story: "A household name in finance fails — overnight, just gone. Then a second one. Suddenly everyone around you is asking a question nobody has asked in fifteen years: is my money actually safe anywhere? You remember exactly how the last one of these felt.",
+    mood: "A sudden jolt of fear out of nowhere.",
     event: "The banking scare · March 2023",
     what: "Several banks failed in days. Fears of a 2008 repeat faded fast — and the month actually closed higher." },
-  { title: "The machines take over", month: "2023-06", emotionalPull: "FOMO + greed",
-    story: "A new AI tool goes viral, and suddenly every company claims to be an 'AI company.' A handful of tech giants drag the whole market up. Your friend who bought them is up huge. Have you already missed it?",
+  { title: "Everyone's rich but you", month: "2023-06", emotionalPull: "FOMO + greed",
+    story: "A new technology has the market in a fever, and a handful of giant names are dragging the indexes up almost single-handedly. Your friend who piled in is up 40% and can't stop talking about it. The fear in your gut isn't losing money anymore — it's missing out.",
     mood: "A narrow, powerful rally.",
     event: "The AI boom · June 2023",
     what: "A viral AI tool sparked a frenzy; a few megacap tech equities powered a strong summer rally." },
   { title: "The all-clear", month: "2023-11", emotionalPull: "relief + regret",
-    story: "For over a year every piece of good news was a trap. Now the central bank finally signals it's done raising rates, and the market erupts in its best month in a long time. Have you been too cautious this whole time?",
+    story: "For over a year, every piece of good news was a trap. Now the ground finally shifts — and the market erupts into its best month in ages, everything up at once. The question stings more than any loss did: were you still in it when it mattered?",
     mood: "A furious, everything-up rally.",
     event: "The pivot rally · November 2023",
     what: "Hints that rate hikes were over set off one of the strongest months in years — for both equities and fixed income." },
   { title: "The rules just changed", month: "2025-03", emotionalPull: "fear + uncertainty",
-    story: "Overnight, sweeping new trade tariffs are announced. Markets drop, headlines scream 'trade war,' and prices whipsaw. Nobody knows the rules anymore. It'd be so easy to step aside until it's clear.",
-    mood: "Headline-driven swings, out of a calm sky.",
+    story: "Overnight, a policy bombshell rewrites the rules of the global economy. Markets whipsaw on every headline, and nobody — not the pros, not the pundits — can tell you what tomorrow looks like. Stepping aside until the dust settles has never felt more reasonable.",
+    mood: "Headline-driven whiplash out of a calm sky.",
     event: "The tariff shock · March 2025",
     what: "A sudden tariff announcement rattled markets after a calm stretch — a reminder that shocks never really stop." }
 ];
@@ -794,6 +805,9 @@ function decide(action) {
   const bd = isTut ? sc.tutBond : bdMoveOf(sc);
   const r = (w * eq + (1 - w) * bd) / 100;
   const before = state.fund + state.cash;
+  // What was actually available this moment: buy needs cash on the sidelines,
+  // sell needs something invested. The outcome screen blurs the rest.
+  const avail = { buy: state.cash > 0.005, hold: true, sell: state.fund > 0.005 };
   const results = {
     buy:  applyMoment(state.fund, state.cash, "buy",  r),
     hold: applyMoment(state.fund, state.cash, "hold", r),
@@ -819,22 +833,27 @@ function decide(action) {
     (cashPct > 0 ? " on the invested part (the rest sat in cash)" : "") +
     ", so " + fmt(before) + " became " + fmt(chosen.total) + (isTut ? ". Got it? Now it counts." : ".");
 
-  renderCounterfactuals(before, results, action);
+  renderCounterfactuals(before, results, action, avail);
   $("ocPullChip").hidden = false;
   $("ocPullChip").textContent = "That moment tested: " + sc.emotionalPull;
   showPhase("phase-outcome");
 }
 
-function renderCounterfactuals(before, results, chosen) {
+function renderCounterfactuals(before, results, chosen, avail) {
   const order = ["buy", "hold", "sell"], noun = { buy: "Buy 25%", hold: "Hold", sell: "Sell 25%" };
   const box = $("ocChoices"); box.innerHTML = "";
   order.forEach((act) => {
     const delta = results[act].total - before;
     const row = document.createElement("div");
-    row.className = "cf-row" + (act === chosen ? " picked" : "");
+    // Actions that weren't on the table this moment aren't a fair comparison —
+    // blur their number instead of teasing an opportunity that never existed.
+    const ok = !avail || avail[act];
+    const why = ok ? "" : ' <em class="cf-why">— wasn’t an option: ' +
+      (act === "buy" ? "you were fully invested" : "nothing was invested") + '</em>';
+    row.className = "cf-row" + (act === chosen ? " picked" : "") + (ok ? "" : " unavail");
     row.innerHTML = '<span class="cf-dot"></span>' +
-      '<span class="cf-name">' + noun[act] + (act === chosen ? " · your call" : "") + '</span>' +
-      '<span class="cf-val">' + fmt(results[act].total) + ' <em class="' + (delta >= 0 ? "up" : "down") + '">(' +
+      '<span class="cf-name">' + noun[act] + (act === chosen ? " · your call" : "") + why + '</span>' +
+      '<span class="cf-val' + (ok ? "" : " blur") + '"' + (ok ? "" : ' aria-hidden="true"') + '>' + fmt(results[act].total) + ' <em class="' + (delta >= 0 ? "up" : "down") + '">(' +
       (delta >= 0 ? "+" : "") + fmt(delta).replace("$-", "-$") + ')</em></span>';
     box.appendChild(row);
   });
