@@ -35,9 +35,9 @@
   in (disabled while fully invested); Hold = stay. After each choice a neutral
   "what the market did" line preserves the ambiguity; the reveal breaks it.
 
-  DATA: uses REAL monthly total returns, 2020–2025, for a broad U.S. stock
+  DATA: uses REAL monthly total returns, 2020–2025, for a broad U.S. equity
   index (S&P 500, derived from the 60/40 benchmark and the Bloomberg U.S.
-  Aggregate) and the Aggregate bond index, blended to the chosen 60/40 or
+  Aggregate) and the Aggregate fixed income index, blended to the chosen 60/40 or
   70/30 weight. Play reacts at the six event months and holds the months in
   between, so the in-game total lands exactly on the reveal path — nothing is
   synthetic. Index data is transcribed/derived from source and MUST be verified
@@ -476,8 +476,8 @@
       <div class="risk-pick">
         <div class="risk-label">First, pick the fund your $50,000 sits in:</div>
         <div class="risk-opts">
-          <button type="button" class="risk-opt" data-risk="60/40"><b>Balanced</b><span>60% stocks · 40% bonds</span></button>
-          <button type="button" class="risk-opt" data-risk="70/30"><b>Growth</b><span>70% stocks · 30% bonds</span></button>
+          <button type="button" class="risk-opt" data-risk="60/40"><b>Balanced</b><span>60% equities · 40% fixed income</span></button>
+          <button type="button" class="risk-opt" data-risk="70/30"><b>Growth</b><span>70% equities · 30% fixed income</span></button>
         </div>
       </div>
       <div class="stat-row">
@@ -568,7 +568,7 @@
             <p class="principle">Long-term perspective is the foundation of <b>The Capital System</b>.</p>
           </div>
           <div class="timeline" id="timeline"></div>
-          <p class="disclaimer">For illustrative and educational purposes only. The chart uses real historical monthly total returns for a broad U.S. stock index (S&P 500) and the Bloomberg U.S. Aggregate Bond Index for 2020–2025, blended to a hypothetical 60/40 or 70/30 portfolio; it is not the return of any Capital Group product and does not reflect fund fees, expenses or taxes. Index data is transcribed/derived from source series and must be verified against the original and reviewed for compliance before any external use. Past performance is not predictive of future results. This experience is not investment, tax or legal advice; investors should consider their own circumstances and consult a financial professional.</p>
+          <p class="disclaimer">For illustrative and educational purposes only. The chart uses real historical monthly total returns for a broad U.S. equity index (S&P 500) and the Bloomberg U.S. Aggregate Bond Index for 2020–2025, blended to a hypothetical 60/40 or 70/30 portfolio; it is not the return of any Capital Group product and does not reflect fund fees, expenses or taxes. Index data is transcribed/derived from source series and must be verified against the original and reviewed for compliance before any external use. Past performance is not predictive of future results. This experience is not investment, tax or legal advice; investors should consider their own circumstances and consult a financial professional.</p>
         </div>
 
         <!-- era-only: swapped in when you flip to a historical crisis -->
@@ -620,9 +620,9 @@
             <b>ABALX</b>
           </div>
         </div>
-        <p class="fund-obj"><b>Objective:</b> Conservation of capital, current income and long-term growth of capital and income — pursued through a diversified mix of stocks and bonds.<span class="verify-tag">verify against current prospectus</span></p>
+        <p class="fund-obj"><b>Objective:</b> Conservation of capital, current income and long-term growth of capital and income — pursued through a diversified mix of equities and fixed income.<span class="verify-tag">verify against current prospectus</span></p>
         <div class="fund-facts">
-          <div class="ff"><span>Asset mix</span><b>≈60% stocks / 40% bonds</b></div>
+          <div class="ff"><span>Asset mix</span><b>≈60% equities / 40% fixed income</b></div>
           <div class="ff"><span>Inception</span><b>July 26, 1975</b></div>
           <div class="ff"><span>Net expense ratio</span><b>0.55%</b></div>
           <div class="ff"><span>Share class</span><b>Class A</b></div>
@@ -671,7 +671,7 @@
 
 /* ── Pool of 12 real moments, each anchored to an actual month of the
    2020–2025 record. During play only {title, story, mood, emotionalPull}
-   are shown — never the date. The stock/bond move for a moment is looked up
+   are shown — never the date. The equity/fixed income move for a moment is looked up
    live from the REAL monthly returns below (EQ_2020 / AGG_2020), so nothing
    is hand-typed and play stays faithful to the reveal. The reveal uses
    {month, event, what} to break the ambiguity. ── */
@@ -680,37 +680,37 @@ const POOL = [
     story: "A new virus is racing across the globe. Cities lock down, shelves empty, and nobody knows how bad it gets. In weeks the market has fallen off a cliff. Your dad calls, shaking: \"Get out now, before it all disappears.\"",
     mood: "Freefall — the fastest crash anyone can remember.",
     event: "The COVID-19 crash · March 2020",
-    what: "A global pandemic triggered the fastest bear market in history — stocks fell about a third in five weeks." },
+    what: "A global pandemic triggered the fastest bear market in history — equities fell about a third in five weeks." },
   { title: "It makes no sense", month: "2020-04", emotionalPull: "disbelief + sitting out",
     story: "The news is still terrifying — record job losses, hospitals overflowing. Yet the market is roaring back, its best month in decades. It feels fake. Surely it can't last while the world is still shut down.",
     mood: "Ripping higher — against all logic.",
     event: "The stimulus rebound · April 2020",
-    what: "Zero rates and trillions in stimulus fueled one of the fastest recoveries ever — stocks had their best month in decades." },
+    what: "Zero rates and trillions in stimulus fueled one of the fastest recoveries ever — equities had their best month in decades." },
   { title: "A breakthrough", month: "2020-11", emotionalPull: "hope + regret",
     story: "Scientists announce something that could finally end the crisis. Markets leap on the news. If you stepped aside earlier, you're watching it climb without you.",
     mood: "A sharp, sudden relief rally.",
     event: "The vaccine breakthrough · November 2020",
-    what: "The first highly effective vaccine was announced. Markets surged that month and beaten-down stocks soared." },
+    what: "The first highly effective vaccine was announced. Markets surged that month and beaten-down equities soared." },
   { title: "The first crack", month: "2021-09", emotionalPull: "unease + recency bias",
     story: "Prices are starting to creep up — gas, groceries, rent. The central bank hints it may pull back its support. The market wobbles for the first time in a while, and it feels like the party might be ending.",
     mood: "A first wobble after a long climb.",
     event: "The inflation scare · September 2021",
     what: "Inflation began surging and the Fed signaled it would taper support — the first tremor before a hard year." },
   { title: "It won't stop bleeding", month: "2022-04", emotionalPull: "fear + helplessness",
-    story: "A major war has erupted in Europe. Gas and food prices spike to levels you've never seen. Even the 'safe' bond part of your portfolio is falling this time. Every month is another leg down.",
+    story: "A major war has erupted in Europe. Gas and food prices spike to levels you've never seen. Even the 'safe' fixed income part of your portfolio is falling this time. Every month is another leg down.",
     mood: "Everything falling at once.",
     event: "War & inflation shock · April 2022",
-    what: "War in Ukraine collided with 40-year-high inflation — unusually, stocks and bonds fell hard together." },
+    what: "War in Ukraine collided with 40-year-high inflation — unusually, equities and fixed income fell hard together." },
   { title: "No bottom in sight", month: "2022-06", emotionalPull: "fear + recency bias",
     story: "The central bank is hiking rates faster than in decades. Every rally fails. Forecasters keep cutting their targets. It genuinely feels like it could just keep going down.",
     mood: "A grinding, relentless decline.",
     event: "The rate-hike bear market · June 2022",
-    what: "The most aggressive rate hikes in decades drove stocks deep into a bear market." },
+    what: "The most aggressive rate hikes in decades drove equities deep into a bear market." },
   { title: "Maximum pain", month: "2022-09", emotionalPull: "capitulation + loss aversion",
     story: "It's been a brutal year of losses, and this is the worst month yet. The headlines insist even more pain is ahead. You're worn down, and part of you just wants to make it stop and sell what's left.",
     mood: "Peak pessimism — the worst month of a bad year.",
     event: "The low · September 2022",
-    what: "Stocks hit their sharpest monthly drop of the bear market — just weeks before the bottom that October." },
+    what: "Equities hit their sharpest monthly drop of the bear market — just weeks before the bottom that October." },
   { title: "You're exhausted", month: "2022-10", emotionalPull: "capitulation + disbelief",
     story: "After a year of losses, a sudden sharp bounce. You've been burned so many times you don't trust it — every rally this year has failed. It's tempting to sell into the strength and finally be done.",
     mood: "A powerful bounce nobody believes.",
@@ -725,12 +725,12 @@ const POOL = [
     story: "A new AI tool goes viral, and suddenly every company claims to be an 'AI company.' A handful of tech giants drag the whole market up. Your friend who bought them is up huge. Have you already missed it?",
     mood: "A narrow, powerful rally.",
     event: "The AI boom · June 2023",
-    what: "A viral AI tool sparked a frenzy; a few megacap tech stocks powered a strong summer rally." },
+    what: "A viral AI tool sparked a frenzy; a few megacap tech equities powered a strong summer rally." },
   { title: "The all-clear", month: "2023-11", emotionalPull: "relief + regret",
     story: "For over a year every piece of good news was a trap. Now the central bank finally signals it's done raising rates, and the market erupts in its best month in a long time. Have you been too cautious this whole time?",
     mood: "A furious, everything-up rally.",
     event: "The pivot rally · November 2023",
-    what: "Hints that rate hikes were over set off one of the strongest months in years — for both stocks and bonds." },
+    what: "Hints that rate hikes were over set off one of the strongest months in years — for both equities and fixed income." },
   { title: "The rules just changed", month: "2025-03", emotionalPull: "fear + uncertainty",
     story: "Overnight, sweeping new trade tariffs are announced. Markets drop, headlines scream 'trade war,' and prices whipsaw. Nobody knows the rules anymore. It'd be so easy to step aside until it's clear.",
     mood: "Headline-driven swings, out of a calm sky.",
@@ -797,14 +797,14 @@ const AMBAL_NET_2020 = [ // index levels, 2019-12 anchor + 2020-01 … 2025-12
 
 /* ── Model: pick a risk profile (60/40 or 70/30). $50k in that composite.
    Sell → 25% to cash; Buy → 25% back; Hold → nothing. Each month's portfolio
-   return blends the REAL stock and bond returns by weight. The reveal walks
+   return blends the REAL equity and fixed income returns by weight. The reveal walks
    all 72 real months; play reacts at the drawn events and quietly holds the
    months in between — so the running total lands exactly on the reveal. ── */
 const START = 50000, ACTION = 0.25;
 const CASH_MONTHLY = Math.pow(1.02, 1/12);   // 2%/yr on cash
 const MONTHS = 72;                            // 2020-01 … 2025-12
-const RISK = { "60/40": { w: 0.60, sub: "60% stocks · 40% bonds" },
-               "70/30": { w: 0.70, sub: "70% stocks · 30% bonds" } };
+const RISK = { "60/40": { w: 0.60, sub: "60% equities · 40% fixed income" },
+               "70/30": { w: 0.70, sub: "70% equities · 30% fixed income" } };
 const DRAW = 6;
 
 // Real move for a moment, looked up by its month.
@@ -921,8 +921,8 @@ function decide(action) {
 
   const eqTxt = (v) => (v >= 0 ? "+" + v.toFixed(1) : v.toFixed(1)) + "%";
   $("ocEmoji").textContent = eq >= 8 ? "📈" : eq >= 0 ? "🌤️" : "📉";
-  $("ocMarket").innerHTML = "Stocks " + (eq >= 0 ? "climbed <b>" + eqTxt(eq) + "</b>" : "fell <b>" + eqTxt(eq) + "</b>") +
-    " · bonds <b>" + eqTxt(bd) + "</b> that month.";
+  $("ocMarket").innerHTML = "Equities " + (eq >= 0 ? "climbed <b>" + eqTxt(eq) + "</b>" : "fell <b>" + eqTxt(eq) + "</b>") +
+    " · fixed income <b>" + eqTxt(bd) + "</b> that month.";
   const cashPct = Math.round(100 * state.cash / (state.fund + state.cash));
   $("ocYou").innerHTML = (isTut ? "Practice: you " : "You ") +
     { buy: "bought more", hold: "held", sell: "sold" }[action] +
@@ -1099,7 +1099,7 @@ function renderReveal() {
     const row = document.createElement("div"); row.className = "tl-item";
     row.innerHTML = '<div class="tl-when">' + when + '</div>' +
       '<div class="tl-body"><b>' + name + '</b><p>' + sc.what + '</p>' +
-      '<div class="tl-meta">Stocks: <span class="tl-move ' + (m >= 0 ? "up" : "down") + '">' + mv + '</span>' +
+      '<div class="tl-meta">Equities: <span class="tl-move ' + (m >= 0 ? "up" : "down") + '">' + mv + '</span>' +
       '<span class="tl-you ' + d + '">· you ' + { buy: "bought", hold: "held", sell: "sold" }[d] + '</span></div></div>';
     tl.appendChild(row);
   });
@@ -1143,8 +1143,8 @@ const BENCH_0525 = [ // monthly % total return, 2005-02 … 2025-12 (251 months)
 const bIdx = (ym) => ((+ym.slice(0, 4) - 2005) * 12 + (+ym.slice(5) - 1)) - 1;  // 2005-02 → 0
 
 /* ── Pre-2005 crisis eras: real MSCI World equity index monthly total returns
-   (100% stocks — verified bond-index data before 2005 isn't available, so
-   these three eras aren't blended with bonds the way the 2005+ ones are).
+   (100% equities — verified fixed income index data before 2005 isn't available, so
+   these three eras aren't blended with fixed income the way the 2005+ ones are).
    Each is a raw array for its own window, played with growMoves()/movesLabels()
    below rather than the BENCH_0525/bIdx machinery the newer eras use. Index
    data transcribed/derived from source — verify & compliance-review before
@@ -1174,17 +1174,17 @@ const MOVES_DOTCOM = [ // MSCI World monthly % total return (equity only), 2000-
 
 const HIST_ERAS = [
   { key: "oil", tab: "1973", title: "The 1970s oil shock", years: "1973–1978", a: "1973-01", moves: MOVES_OIL,
-    sub: "An oil embargo, runaway inflation, and a stock market crash that erased more than a third of its value. 'Stagflation' entered the dictionary.",
+    sub: "An oil embargo, runaway inflation, and an equity market crash that erased more than a third of its value. 'Stagflation' entered the dictionary.",
     take: "The worst bear market since the Depression up to that point — and stepping out for its best few months would have cost you a real chunk of your money.",
-    about: "An Arab oil embargo quadrupled energy prices just as inflation was already spiraling. Global stocks fell for nearly two years, bottoming in late 1974 down more than a third from their highs — then some of the best months of the decade landed within weeks of that bottom. Shown here as 100% equities: verified bond-index data before 2005 isn't available, so this era isn't blended with bonds the way the 2005+ eras are." },
+    about: "An Arab oil embargo quadrupled energy prices just as inflation was already spiraling. Global equities fell for nearly two years, bottoming in late 1974 down more than a third from their highs — then some of the best months of the decade landed within weeks of that bottom. Shown here as 100% equities: verified fixed income index data before 2005 isn't available, so this era isn't blended with fixed income the way the 2005+ eras are." },
   { key: "blackmon", tab: "1987", title: "Black Monday", years: "1987–1989", a: "1987-01", moves: MOVES_BLACKMON,
     sub: "Global markets lost 17% in a single month — the fastest, sharpest one-month crash on record at the time. No warning, no clear cause.",
     take: "The scariest single month markets had ever produced — and within about two years, staying invested had fully made it back and more.",
-    about: "On October 19, 1987, stock markets around the world fell together with no clear trigger — still the single worst month in this MSCI World record, which goes back to 1970. Markets recovered their losses within about two years. Shown here as 100% equities: verified bond-index data before 2005 isn't available, so this era isn't blended with bonds the way the 2005+ eras are." },
+    about: "On October 19, 1987, equity markets around the world fell together with no clear trigger — still the single worst month in this MSCI World record, which goes back to 1970. Markets recovered their losses within about two years. Shown here as 100% equities: verified fixed income index data before 2005 isn't available, so this era isn't blended with fixed income the way the 2005+ eras are." },
   { key: "dotcom", tab: "2000", title: "The dot-com bust", years: "2000–2006", a: "2000-01", moves: MOVES_DOTCOM,
-    sub: "A multi-year grind as the internet bubble deflated — three straight down years, something global stocks hadn't done since the 1930s.",
+    sub: "A multi-year grind as the internet bubble deflated — three straight down years, something global equities hadn't done since the 1930s.",
     take: "Three losing years in a row tested everyone's patience — and holding on still beat stepping out for the recovery's best months.",
-    about: "The bubble in internet and technology stocks burst in 2000 and kept deflating for three straight years — one of the worst stretches for global stocks on record. $50,000 barely broke even over the full six years shown; sitting out just its best months would have turned that into a real loss. Shown here as 100% equities: verified bond-index data before 2005 isn't available, so this era isn't blended with bonds the way the 2005+ eras are." },
+    about: "The bubble in internet and technology equities burst in 2000 and kept deflating for three straight years — one of the worst stretches for global equities on record. $50,000 barely broke even over the full six years shown; sitting out just its best months would have turned that into a real loss. Shown here as 100% equities: verified fixed income index data before 2005 isn't available, so this era isn't blended with fixed income the way the 2005+ eras are." },
   { key: "gfc",  tab: "2008",    title: "The global financial crisis", years: "2007–2013", a: "2007-06", b: "2013-06",
     sub: "The worst financial crash since the Great Depression — and you weren't even there. Watch the same choice play out.",
     take: "Even the deepest crash in a lifetime recovered — and stepping out for its best months was the costliest move of all.",
@@ -1196,7 +1196,7 @@ const HIST_ERAS = [
   { key: "vol",  tab: "2015–18", title: "China shock & the 2018 selloff", years: "2014–2019", a: "2014-01", b: "2019-12",
     sub: "A growth scare out of China, an oil crash, then a brutal end to 2018 — two gut-checks in five years.",
     take: "Two nasty scares in five years — both looked like the end, both recovered to new highs.",
-    about: "China's 2015 slowdown and a collapse in oil prices rattled markets, then a steep fourth-quarter drop in late 2018 nearly ended the bull market. Both times stocks fell hard and the headlines turned grim — and both times they recovered and pushed on to new highs." }
+    about: "China's 2015 slowdown and a collapse in oil prices rattled markets, then a steep fourth-quarter drop in late 2018 nearly ended the bull market. Both times equities fell hard and the headlines turned grim — and both times they recovered and pushed on to new highs." }
 ];
 const HIST_MISS_K = 3;
 
@@ -1316,7 +1316,7 @@ function showEra(key, userInitiated) {
     $("eraTake").textContent = era.take;
     $("eraAbout").textContent = era.about;
     if ($("eraDisclaimer")) $("eraDisclaimer").innerHTML = era.moves
-      ? "Illustrative. Real MSCI World equity index monthly total returns (100% stocks). Verified bond-index data before 2005 isn't available, so this era is not blended with bonds. “Sat out the best months” = the same portfolio with that period's best months held in cash — it shows the cost of being out of the market, not any specific trading strategy or Capital Group product. Past performance is not predictive of future results; verify data and obtain compliance review before external use."
+      ? "Illustrative. Real MSCI World equity index monthly total returns (100% equities). Verified fixed income index data before 2005 isn't available, so this era is not blended with fixed income. “Sat out the best months” = the same portfolio with that period's best months held in cash — it shows the cost of being out of the market, not any specific trading strategy or Capital Group product. Past performance is not predictive of future results; verify data and obtain compliance review before external use."
       : "Illustrative. Real 60/40 benchmark monthly total returns (60% S&amp;P 500 / 40% Bloomberg U.S. Aggregate Bond Index). “Sat out the best months” = the same portfolio with that period's best months held in cash — it shows the cost of being out of the market, not any specific trading strategy or Capital Group product. Past performance is not predictive of future results; verify data and obtain compliance review before external use.";
     setChartA11y("Portfolio value, " + era.years + " (" + era.title + ").", [["Stayed invested", fmt(fh)], ["Sat out the best months", fmt(fm)]]);
   }
