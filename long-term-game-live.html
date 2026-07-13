@@ -2705,16 +2705,12 @@ var qrcode = function() {
     border-top: 1px solid rgba(255,255,255,.25); padding-top: 12px; }
   .res-grid { display: flex; gap: 10px; justify-content: center; margin: 14px 0; flex-wrap: wrap; }
   .res-cell { background: var(--navy); color: #fff; border-radius: 12px; padding: 12px 18px; min-width: 130px; }
+  .res-cell.lead { background: var(--accent); }
   .res-cell b { display: block; font-size: 22px; } .res-cell span { font-size: 11px; opacity: .85; }
-  .res-hist { display: flex; gap: 6px; align-items: flex-end; justify-content: center; height: 86px; margin-top: 10px; }
-  .hist-col { width: 34px; text-align: center; } .hist-col span { font-size: 10px; color: var(--accent5, #831574); font-weight: 800; }
-  .hist-fill { background: var(--gray-light); border-radius: 6px 6px 0 0; min-height: 3px; }
-  .hist-col.hold .hist-fill { background: var(--navy); }
-  .res-top { max-width: 420px; margin: 0 auto; }
-  .lb-row { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; text-align: left;
-    padding: 8px 10px; border-bottom: 1px solid var(--gray-light); font-size: 14px; }
-  .lb-rank { font-weight: 800; color: var(--accent); } .lb-name { font-weight: 700; color: var(--navy); }
-  .lb-val { color: var(--ink); } .lb-tag { font-style: normal; font-size: 10.5px; color: var(--accent); font-weight: 800; }
+  /* the finale reuses the performance-check bars; its extra reference line: */
+  .pc-line.hold { border-left-color: var(--accent5, #831574); }
+  .pc-line.hold small { color: var(--accent5, #831574); }
+  #resChart .pc-row { text-align: left; }
 
   /* Performance check (big screen): named horizontal bars vs the $50k start line. */
   .pc-stats { display: flex; gap: 10px; justify-content: center; margin: 12px 0 4px; flex-wrap: wrap; }
@@ -3078,13 +3074,12 @@ var qrcode = function() {
       <h2>Same storms. <span style="color:var(--accent)">Different choices.</span></h2>
       <p class="muted" id="resWait">Waiting for phones to finish… <b id="resPlayers"></b></p>
       <div class="res-grid">
-        <div class="res-cell"><b id="resHold"></b><span>buy-and-hold finished</span></div>
+        <div class="res-cell lead"><b id="resHold"></b><span>buy-and-hold finished</span></div>
         <div class="res-cell"><b id="resMedian"></b><span>room median</span></div>
         <div class="res-cell"><b id="resBeat"></b><span>matched or beat holding</span></div>
       </div>
-      <div class="res-hist" id="resHist"></div>
-      <p class="muted" style="margin:6px 0 14px">Each bar = players finishing in that range · the navy bar contains buy-and-hold.</p>
-      <div class="res-top" id="resTop"></div>
+      <div class="pc-chart" id="resChart" aria-live="polite"></div>
+      <p class="muted" style="margin:6px 0 14px">Dotted line = the $50,000 start · <b style="color:var(--accent5,#831574)">purple line</b> = where simply holding on finished.</p>
       <p class="hist-note" style="margin-top:16px"><b>The lesson doesn't change with a crowd:</b> the fewer times a player reached for the exit, the closer they finished to the disciplined line. Every phone now shows its own full reveal.</p>
       <p class="disclaimer" style="margin-top:12px">For illustrative and educational purposes only; hypothetical results from real historical index returns. Not investment advice. Verify data and obtain compliance review before external use.</p>
     </div>
@@ -4021,6 +4016,31 @@ function hostNext() {
 // Switch phases only on actual change — every incoming vote re-renders, and
 // re-triggering showPhase would restart the fade + scroll on each message.
 function ensurePhase(id) { if (!$(id).classList.contains("active")) showPhase(id); }
+/* Shared room chart: sorted named bars + vertical reference lines. Used by
+   the mid-game performance checks and the final results screen so the whole
+   session speaks one visual language. rows: [{n,v}] sorted desc.
+   lines: [{v,label,cls}]. Bars are green at-or-above $50k, red below. */
+function roomBarsHTML(rows, lines) {
+  const domain = rows.map((r) => r.v).concat(lines.map((l) => l.v));
+  const lo = Math.min(...domain) * 0.995, hi = Math.max(...domain) * 1.005;
+  const p = (v) => Math.min(100, Math.max(1, 100 * (v - lo) / (hi - lo)));
+  // Tracks start 128px in (118px name column + 10px gap) → mixed px/% calc.
+  const lineHTML = lines.map((l) => {
+    const sp = p(l.v) / 100;
+    return '<div class="pc-line ' + (l.cls || "") + '" style="left:calc(' + (sp * 100).toFixed(2) +
+      '% + ' + (128 * (1 - sp)).toFixed(1) + 'px)"><small>' + l.label + '</small></div>';
+  }).join("");
+  return lineHTML + rows.map((r) => {
+    const w = p(r.v), inside = w > 74;
+    // long bars: label rides INSIDE the bar's end (white); short bars: just right of it
+    const valStyle = inside
+      ? 'left:' + w.toFixed(1) + '%;transform:translate(-100%,-50%);padding:0 10px 0 0;color:#fff'
+      : 'left:' + w.toFixed(1) + '%';
+    return '<div class="pc-row"><span class="pc-name">' + esc(r.n) + '</span><div class="pc-track">' +
+      '<div class="pc-fill ' + (r.v >= START ? "up" : "down") + '" style="width:' + w.toFixed(1) + '%"></div>' +
+      '<span class="pc-val" style="' + valStyle + '">' + fmt(r.v) + '</span></div></div>';
+  }).join("");
+}
 function renderHost() {
   const m = LIVE.net.mirror, st = m.state || {};
   const players = m.players || {};
@@ -4089,23 +4109,7 @@ function renderHost() {
       return;
     }
     const vals = rows.map((r) => r.v);
-    const lo = Math.min(...vals, START) * 0.995, hi = Math.max(...vals, START) * 1.005;
-    const p = (v) => Math.min(100, Math.max(1, 100 * (v - lo) / (hi - lo)));
-    // The dotted start line spans the whole chart; tracks begin 128px in
-    // (name column 118px + 10px gap), so its position mixes px and %.
-    const sp = p(START) / 100;
-    $("pcChart").innerHTML =
-      '<div class="pc-line" style="left:calc(' + (sp * 100).toFixed(2) + '% + ' + (128 * (1 - sp)).toFixed(1) + 'px)"><small>started · $50,000</small></div>' +
-      rows.map((r) => {
-        const w = p(r.v), inside = w > 74;
-        // long bars: label rides INSIDE the bar's end (white); short bars: just right of it
-        const valStyle = inside
-          ? 'left:' + w.toFixed(1) + '%;transform:translate(-100%,-50%);padding:0 10px 0 0;color:#fff'
-          : 'left:' + w.toFixed(1) + '%';
-        return '<div class="pc-row"><span class="pc-name">' + esc(r.n) + '</span><div class="pc-track">' +
-          '<div class="pc-fill ' + (r.v >= START ? "up" : "down") + '" style="width:' + w.toFixed(1) + '%"></div>' +
-          '<span class="pc-val" style="' + valStyle + '">' + fmt(r.v) + '</span></div></div>';
-      }).join("");
+    $("pcChart").innerHTML = roomBarsHTML(rows, [{ v: START, label: "started · $50,000" }]);
     const asc = vals.slice().sort((a, b) => a - b);
     const median = asc[Math.floor(asc.length / 2)];
     const ahead = vals.filter((v) => v >= START).length;
@@ -4133,19 +4137,12 @@ function renderHost() {
     $("resHold").textContent = fmt(hold);
     $("resMedian").textContent = fmt(median);
     $("resBeat").textContent = beat + " of " + fin.length + " (" + Math.round(100 * beat / fin.length) + "%)";
-    const top = fin.slice().sort((a, b) => b.v - a.v).slice(0, 5);
-    $("resTop").innerHTML = top.map((f, i) =>
-      '<div class="lb-row"><span class="lb-rank">' + (i + 1) + '</span><span class="lb-name">' + esc(f.n) +
-      '</span><span class="lb-val">' + fmt(f.v) + (f.v >= f.h ? ' <em class="lb-tag">held up</em>' : "") + "</span></div>").join("");
-    // distribution histogram vs the buy-and-hold line
-    const lo = Math.min(vals[0], hold), hi = Math.max(vals[vals.length - 1], hold), B = 8;
-    const w = Math.max(1, (hi - lo) / B), buckets = Array(B).fill(0);
-    vals.forEach((v) => buckets[Math.min(B - 1, Math.floor((v - lo) / w))]++);
-    const holdB = Math.min(B - 1, Math.floor((hold - lo) / w));
-    const mx = Math.max(...buckets, 1);
-    $("resHist").innerHTML = buckets.map((c, i) =>
-      '<div class="hist-col' + (i === holdB ? " hold" : "") + '"><div class="hist-fill" style="height:' +
-      Math.round(64 * c / mx) + 'px"></div><span>' + (i === holdB ? "hold" : "") + "</span></div>").join("");
+    // Everyone's finish as the same named bars the room saw at the checks,
+    // now against TWO lines: the $50k start and where buy-and-hold ended.
+    const rows = fin.map((f) => ({ n: f.n, v: f.v })).sort((a, b) => b.v - a.v);
+    $("resChart").innerHTML = roomBarsHTML(rows,
+      [{ v: START, label: "started · $50k" },
+       { v: hold, label: "buy &amp; hold · " + fmt(hold), cls: "hold" }]);
   }
 }
 
