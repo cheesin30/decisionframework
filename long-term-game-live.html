@@ -3808,12 +3808,32 @@ function FirebaseNet(code) {
     const c = new AbortController(); const t = setTimeout(() => c.abort(), 8000);
     return fetch(url, { ...(opts || {}), signal: c.signal }).finally(() => clearTimeout(t));
   };
+  // Fallback for networks where the live stream is blocked: poll the full
+  // room snapshot with plain GETs (those demonstrably pass — the room was
+  // created with one). 2.5s is plenty for a lobby counter and vote bars.
+  function poll() {
+    if (net.polling) return; net.polling = true;
+    let last = "";
+    const tick = () => fetchT(base + ".json").then((r) => r.json()).then((snap) => {
+      const s = JSON.stringify(snap);
+      if (s !== last) { last = s; net.mirror = snap || {}; net.cb && net.cb(); }
+    }).catch(() => {});
+    tick();
+    net.pollTimer = setInterval(tick, 2500);
+  }
   function listen() {
     const es = new EventSource(base + ".json");
-    es.addEventListener("put", (e) => { const m = JSON.parse(e.data);
+    let alive = false;
+    const fallBack = () => { if (!alive && !net.polling) { es.close(); poll(); } };
+    es.addEventListener("put", (e) => { alive = true; const m = JSON.parse(e.data);
       net.mirror = applyPut(net.mirror, m.path, m.data); net.cb && net.cb(); });
-    es.addEventListener("patch", (e) => { const m = JSON.parse(e.data);
+    es.addEventListener("patch", (e) => { alive = true; const m = JSON.parse(e.data);
       net.mirror = applyMerge(net.mirror, m.path, m.data || {}); net.cb && net.cb(); });
+    // Firebase pushes a full snapshot the moment the stream opens. If nothing
+    // has arrived after 5s, a proxy is buffering/blocking the stream (typical
+    // on corporate networks) — switch to polling instead of sitting deaf.
+    es.onerror = fallBack;
+    setTimeout(fallBack, 5000);
     net.es = es;
   }
   net.init = async (asHost, initial) => {
