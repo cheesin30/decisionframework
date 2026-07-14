@@ -2802,6 +2802,10 @@ var qrcode = function() {
   .cf-row.unavail { opacity: .8; }
   .cf-val.blur { filter: blur(6px); user-select: none; pointer-events: none; }
   .cf-why { font-style: normal; font-size: 10.5px; color: var(--gray); font-weight: 600; }
+  /* Version-mismatch warning (phones whose file differs from the host's). */
+  .ver-warn { position: fixed; left: 0; right: 0; top: 0; z-index: 999; text-align: center;
+    font-size: 11.5px; line-height: 1.45; color: #7a5200; background: #fff7e6;
+    border-bottom: 1px solid #e8d9b0; padding: 7px 12px; }
   /* Internal-use banner, pinned to every screen. */
   .internal-footer { position: fixed; left: 0; right: 0; bottom: 0; z-index: 999; text-align: center;
     font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #5f7081;
@@ -2811,6 +2815,7 @@ var qrcode = function() {
 </head>
 <body>
 <div class="internal-footer" role="note">For internal use only · Do not disseminate</div>
+<div class="ver-warn" id="verWarn" hidden role="alert">⚠ This screen is running a <b>different version</b> of the game than the host. The market months stay in sync, but stories and figures may differ — open the same link/file on both to fix.</div>
 <div class="wrap">
 
   <div class="brandbar">
@@ -3992,26 +3997,46 @@ function startHost() {
     showPhase("phase-welcome");
   });
 }
+/* ── Version-proof scenario sharing ──
+   Rooms share moments by MONTH (a stable key), never by list position: if the
+   host and a phone run slightly different copies of this file, "2022-04"
+   still means April 2022 on both, whereas "scenario #4" silently becomes a
+   different moment when someone edits the pool. GAME_REV fingerprints this
+   copy's pool so mismatched screens can warn instead of drifting apart. */
+const GAME_REV = POOL.map((p) => p.month).join("|");
+const scByKey = (k) => {
+  if (typeof k === "number") return POOL[k];               // legacy rooms (index-based)
+  return POOL.find((p) => p.month === k) || {
+    // This copy doesn't have that moment's story — play the REAL month's data
+    // anyway so every screen still shows the same market.
+    title: "A real market moment", month: k, emotionalPull: "a surprise",
+    story: "This copy of the game is missing this moment's story — the market move below is still the real month from the host's version.",
+    mood: "The market is moving.",
+    event: "A real market moment · " + k,
+    what: "This moment came from the host's copy of the game; update both screens to the same version to see its story." };
+};
+// Every host write of `state` carries the pool fingerprint.
+const setRoomState = (obj) => LIVE.net.set("state", Object.assign({ rev: GAME_REV }, obj));
 function hostStart() {
-  const idxs = drawScenarios().map((sc) => POOL.indexOf(sc));
-  LIVE.net.set("state", { phase: "round", round: 0, sc: idxs, reveal: false });
+  const months = drawScenarios().map((sc) => sc.month);
+  setRoomState({ phase: "round", round: 0, sc: months, reveal: false });
 }
 function hostReveal() { LIVE.net.set("state/reveal", true); }
 function hostNext() {
   const st = LIVE.net.mirror.state;
   // Leaving a performance check → the next moment.
   if (st.phase === "check") {
-    LIVE.net.set("state", { phase: "round", round: st.round + 1, sc: st.sc, reveal: false });
+    setRoomState({ phase: "round", round: st.round + 1, sc: st.sc, reveal: false });
     return;
   }
   // After every 2nd revealed moment (except the last), detour into the
   // room-wide performance check before moving on.
   if ((st.round + 1) % 2 === 0 && st.round + 1 < DRAW) {
-    LIVE.net.set("state", { phase: "check", round: st.round, sc: st.sc, reveal: true });
+    setRoomState({ phase: "check", round: st.round, sc: st.sc, reveal: true });
     return;
   }
-  if (st.round + 1 < DRAW) LIVE.net.set("state", { phase: "round", round: st.round + 1, sc: st.sc, reveal: false });
-  else LIVE.net.set("state", { phase: "reveal", round: st.round, sc: st.sc, reveal: true });
+  if (st.round + 1 < DRAW) setRoomState({ phase: "round", round: st.round + 1, sc: st.sc, reveal: false });
+  else setRoomState({ phase: "reveal", round: st.round, sc: st.sc, reveal: true });
 }
 // Switch phases only on actual change — every incoming vote re-renders, and
 // re-triggering showPhase would restart the fade + scroll on each message.
@@ -4053,7 +4078,7 @@ function renderHost() {
   }
   if (st.phase === "round") {
     ensurePhase("phase-host-round");
-    const r = st.round, sc = POOL[st.sc[r]];
+    const r = st.round, sc = scByKey(st.sc[r]);
     $("hrProgress").textContent = "Moment " + (r + 1) + " of " + DRAW;
     $("hrTitle").textContent = sc.title;
     $("hrStory").textContent = sc.story;
@@ -4180,12 +4205,15 @@ function joinGo() {
 }
 function beginPlayer(scIdxs) {
   LIVE.begun = true;
-  state.pool = scIdxs.map((i) => POOL[i]);
+  state.pool = scIdxs.map(scByKey);
   state.startIdx = monthIndex(state.pool[0].month);
   state.step = -1; state.decisions = []; state.fund = START; state.cash = 0; state.cursor = state.startIdx;
 }
 function playerSync() {
   const st = LIVE.net.mirror.state; if (!st) return;
+  // Different copies of the game? Months still align (shared by key), but the
+  // stories/figures on this screen may not match the big screen — say so.
+  if (st.rev && st.rev !== GAME_REV && $("verWarn")) $("verWarn").hidden = false;
   if (st.phase === "round") {
     if (!LIVE.begun) beginPlayer(st.sc);
     // catch up any missed rounds as silent holds, then land on the live round
