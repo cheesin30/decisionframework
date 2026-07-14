@@ -825,6 +825,7 @@ const AMBAL_NET_2020 = [ // index levels, 2019-12 anchor + 2020-01 … 2025-12
    all 72 real months; play reacts at the drawn events and quietly holds the
    months in between — so the running total lands exactly on the reveal. ── */
 let START = 50000;                     // set from the player's chosen amount
+const ERA_BASE = 50000;                // the 'History rhymes' era examples are fixed at $50k
 const ACTION = 0.25, INJECT_FRAC = 0.5;  // round-3 windfall = 50% of the starting amount
 const CASH_MONTHLY = Math.pow(1.02, 1/12);   // 2%/yr on cash
 const MONTHS = 72;                            // 2020-01 … 2025-12
@@ -1263,7 +1264,7 @@ function benchGrow(a, b, missK) {
   const s = bIdx(a), e = bIdx(b), seg = [];
   for (let i = s; i <= e; i++) seg.push({ i, r: BENCH_0525[i] });
   const skip = new Set(missK ? seg.slice().sort((x, y) => y.r - x.r).slice(0, missK).map(o => o.i) : []);
-  const out = [START]; let v = START;
+  const out = [ERA_BASE]; let v = ERA_BASE;
   for (let i = s; i <= e; i++) { v *= 1 + (skip.has(i) ? 0 : BENCH_0525[i]) / 100; out.push(v); }
   return out;
 }
@@ -1274,7 +1275,7 @@ function benchGrow(a, b, missK) {
 function growMoves(moves, missK) {
   const idxs = moves.map((r, i) => i);
   const skip = new Set(missK ? idxs.slice().sort((a, b) => moves[b] - moves[a]).slice(0, missK) : []);
-  const out = [START]; let v = START;
+  const out = [ERA_BASE]; let v = ERA_BASE;
   moves.forEach((r, i) => { v *= 1 + (skip.has(i) ? 0 : r) / 100; out.push(v); });
   return out;
 }
