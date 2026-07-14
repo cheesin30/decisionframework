@@ -965,7 +965,7 @@ function renderCounterfactuals(before, results, chosen, avail) {
     row.innerHTML = '<span class="cf-dot"></span>' +
       '<span class="cf-name">' + noun[act] + (act === chosen ? " · your call" : "") + why + '</span>' +
       '<span class="cf-val' + (ok ? "" : " blur") + '"' + (ok ? "" : ' aria-hidden="true"') + '>' + fmt(results[act].total) + ' <em class="' + (delta >= 0 ? "up" : "down") + '">(' +
-      (delta >= 0 ? "+" : "") + fmt(delta).replace("$-", "-$") + ')</em></span>';
+      (delta >= 0 ? "+" : "") + (100 * delta / before).toFixed(1) + '%)</em></span>';
     box.appendChild(row);
   });
 }
