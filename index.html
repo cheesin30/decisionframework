@@ -2806,6 +2806,20 @@ var qrcode = function() {
   .ver-warn { position: fixed; left: 0; right: 0; top: 0; z-index: 999; text-align: center;
     font-size: 11.5px; line-height: 1.45; color: #7a5200; background: #fff7e6;
     border-bottom: 1px solid #e8d9b0; padding: 7px 12px; }
+  /* Round-3 windfall banner on the scenario card. */
+  .windfall { background: linear-gradient(90deg, rgba(0,209,144,.16), rgba(0,128,116,.10));
+    border: 1px solid rgba(0,128,116,.35); border-radius: 12px; padding: 12px 14px; margin: 0 0 14px;
+    font-size: 14px; line-height: 1.5; color: var(--navy); }
+  /* Amount picker on the welcome / lobby. */
+  .amount-pick { margin: 16px 0 4px; }
+  .amount-label { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+  .amount-field { display: flex; align-items: center; gap: 6px; background: #fff;
+    border: 1.5px solid #ccd7df; border-radius: 12px; padding: 12px 16px; max-width: 320px; }
+  .amount-field:focus-within { border-color: var(--accent); }
+  .amount-field .cur { font-size: 20px; font-weight: 800; color: var(--navy); }
+  .amount-field input { border: 0; outline: none; font-size: 20px; font-weight: 800; color: var(--navy);
+    width: 100%; background: transparent; font-family: inherit; }
+  .amount-hint { font-size: 11.5px; color: var(--gray); margin-top: 6px; }
   /* Internal-use banner, pinned to every screen. */
   .internal-footer { position: fixed; left: 0; right: 0; bottom: 0; z-index: 999; text-align: center;
     font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #5f7081;
@@ -2831,18 +2845,16 @@ var qrcode = function() {
   <!-- ═══ WELCOME + RISK PICKER ═══ -->
   <section class="phase active" id="phase-welcome">
     <div class="card">
-      <h1>You have $50,000 invested.<br>Now live through the moments that test you.</h1>
+      <h1>Choose how much you have invested.<br>Then live through the moments that test you.</h1>
       <p class="lede">Six times, the world will throw something at you — a crash, a panic, a mania, a war. Each time, you decide what to do with your money.</p>
       <p class="muted" style="margin:14px 0 8px"><b>Here's the catch:</b> you won't be told when you are. No dates, no names — just the moment, as it hits. Only at the very end will you find out what you just lived through.</p>
-      <div class="risk-pick">
-        <div class="risk-label">First, pick the fund your $50,000 sits in:</div>
-        <div class="risk-opts">
-          <button type="button" class="risk-opt" data-risk="60/40"><b>Balanced</b><span>60% equities · 40% fixed income</span></button>
-          <button type="button" class="risk-opt" data-risk="70/30"><b>Growth</b><span>70% equities · 30% fixed income</span></button>
-        </div>
+      <div class="amount-pick">
+        <div class="amount-label">How much do you have invested?</div>
+        <div class="amount-field"><span class="cur">$</span><input id="startAmt" type="text" inputmode="numeric" value="50,000" aria-label="Starting amount"></div>
+        <div class="amount-hint">Your money sits in a <b>Balanced</b> fund — 60% equities · 40% fixed income.</div>
       </div>
       <div class="stat-row">
-        <div class="stat"><b>$50,000</b><span>in a composite fund</span></div>
+        <div class="stat"><b>Balanced</b><span>60/40 composite fund</span></div>
         <div class="stat"><b>6</b><span>moments ahead of you</span></div>
         <div class="stat"><b>≈4 min</b><span>to play</span></div>
       </div>
@@ -2861,6 +2873,7 @@ var qrcode = function() {
     <div class="card">
       <div class="progress" id="progressBar"></div>
       <div id="practiceBadge" class="badge-practice" hidden>Practice round — doesn't count</div>
+      <div class="windfall" id="windfallBanner" hidden role="status"></div>
       <h2 id="scTitle"></h2>
       <p class="story" id="scStory"></p>
       <div class="tie-in"><b>In the markets</b><span id="scMood"></span></div>
@@ -2989,7 +3002,7 @@ var qrcode = function() {
       <div class="eyebrow">Live room</div>
       <h2 style="margin-bottom:8px">Join room <span id="joinCode" class="join-code"></span></h2>
       <div id="joinForm">
-        <p class="muted" style="margin-bottom:14px">Pick a nickname for the leaderboard. You'll run your own <b>$50,000</b> — same moments as everyone else, your calls.</p>
+        <p class="muted" style="margin-bottom:14px">Pick a nickname for the leaderboard. Everyone runs the same starting amount (the host sets it) — same moments as everyone else, your calls.</p>
         <input id="joinName" class="join-input" maxlength="18" placeholder="Your nickname" autocomplete="off">
         <p class="joinerr" id="joinErr" hidden>Room not found in this browser. (The demo transport only joins tabs of the same browser — set a backend for real phones.)</p>
         <div><button class="btn btn-primary" id="btnJoinGo">Join →</button></div>
@@ -2997,7 +3010,7 @@ var qrcode = function() {
       <div id="joinWait" hidden>
         <div class="wait-emoji">🍿</div>
         <p style="font-size:16px"><b>You're in.</b> Watch the big screen — the first moment lands there.</p>
-        <p class="muted" style="margin-top:6px">Your fund: $50,000 in a balanced 60/40 portfolio — same profile for the whole room, so the leaderboard is fair.</p>
+        <p class="muted" style="margin-top:6px">The host sets the starting amount for the room — you'll see yours when the first moment lands. Everyone plays the same amount in a Balanced 60/40 fund, so the leaderboard is fair.</p>
       </div>
     </div>
   </section>
@@ -3007,7 +3020,7 @@ var qrcode = function() {
     <div class="card" style="text-align:center">
       <div class="eyebrow">Live room · big screen</div>
       <h2 style="margin:2px 0 4px">Scan to play</h2>
-      <p class="muted">Everyone runs their own $50,000 through six real market moments — no dates revealed until the end. Along the way, performance checks show who's ahead.</p>
+      <p class="muted">Everyone runs the same starting amount (you set it below) through six real market moments — no dates revealed until the end. Along the way, performance checks show who's ahead.</p>
       <div class="host-grid">
         <div class="host-qr" id="hostQR" aria-hidden="true"></div>
         <div class="host-code-box">
@@ -3021,6 +3034,11 @@ var qrcode = function() {
         <b id="hostPlayerCount">0 players</b>
         <div class="host-players" id="hostPlayers"></div>
       </div>
+      <div class="amount-pick" style="max-width:340px;margin:0 auto 4px">
+        <div class="amount-label">Starting amount for everyone in the room</div>
+        <div class="amount-field"><span class="cur">$</span><input id="hostAmt" type="text" inputmode="numeric" value="50,000" aria-label="Room starting amount"></div>
+        <div class="amount-hint">Everyone plays this same amount, so the leaderboard stays fair.</div>
+      </div>
       <button class="btn btn-primary" id="btnHostStart" disabled>Start the six moments →</button>
     </div>
   </section>
@@ -3030,6 +3048,7 @@ var qrcode = function() {
     <div class="card">
       <div class="hr-top"><span class="eyebrow">Live room</span><span class="hr-progress" id="hrProgress"></span></div>
       <h2 id="hrTitle"></h2>
+      <div class="windfall" id="hrWindfall" hidden role="status"></div>
       <p class="story" id="hrStory"></p>
       <div class="tie-in"><b>In the markets</b><span id="hrMood"></span></div>
       <div class="hr-live" aria-live="polite">
@@ -3206,7 +3225,8 @@ const AGG_2020 = [ // monthly % total return, 2020-01 … 2025-12
    return blends the REAL equity and fixed income returns by weight. The reveal walks
    all 72 real months; play reacts at the drawn events and quietly holds the
    months in between — so the running total lands exactly on the reveal. ── */
-const START = 50000, ACTION = 0.25;
+let START = 50000;                     // set from the player's chosen amount
+const ACTION = 0.25, INJECT_FRAC = 0.5;  // round-3 windfall = 50% of the starting amount
 const CASH_MONTHLY = Math.pow(1.02, 1/12);   // 2%/yr on cash
 const MONTHS = 72;                            // 2020-01 … 2025-12
 const RISK = { "60/40": { w: 0.60, sub: "60% equities · 40% fixed income" },
@@ -3223,6 +3243,21 @@ const state = { risk: "60/40", w: 0.60, pool: [], step: -1, decisions: [],
                 fund: START, cash: 0, cursor: 0, startIdx: 0, chart: null };
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => "$" + Math.round(n).toLocaleString("en-US");
+const AMOUNT_MIN = 1000, AMOUNT_MAX = 100000000;
+function readAmount(id) {
+  const raw = ((document.getElementById(id) || {}).value || "").replace(/[^0-9.]/g, "");
+  const v = parseFloat(raw);
+  if (!isFinite(v) || v <= 0) return 50000;
+  return Math.min(AMOUNT_MAX, Math.max(AMOUNT_MIN, Math.round(v)));
+}
+// Live commas as the user types an amount into #id.
+function wireAmountInput(id) {
+  const el = document.getElementById(id); if (!el) return;
+  el.addEventListener("input", () => {
+    const digits = el.value.replace(/[^0-9]/g, "");
+    el.value = digits ? Number(digits).toLocaleString("en-US") : "";
+  });
+}
 const REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const monthIndex = (ym) => (+ym.slice(0,4) - 2020) * 12 + (+ym.slice(5) - 1);
 
@@ -3272,10 +3307,18 @@ function renderScenario() {
       state.fund *= 1 + r; state.cash *= CASH_MONTHLY;
     }
     state.cursor = mi;   // now sitting AT the event month; its return applies on decide
+    // Round-3 windfall: a bonus lands and is invested at the balanced mix.
+    if (state.step === 2 && !state.injected) { state.fund += state.injectAmt; state.injected = true; }
   }
   renderProgress();
   $("practiceBadge").hidden = !isTut;
   $("tutorialHint").hidden = !isTut;
+  const wf = $("windfallBanner");
+  if (wf) { const showWf = !isTut && state.step === 2;
+    wf.hidden = !showWf;
+    if (showWf) wf.innerHTML = '\uD83D\uDCB0 <b>An unexpected bonus.</b> ' + fmt(state.injectAmt) +
+      ' just landed and was invested at your balanced mix \u2014 your portfolio is now <b>' +
+      fmt(state.fund + state.cash) + '</b>. Do you add to a shaky market, or pull back?'; }
   $("scTitle").textContent = sc.title;
   $("scStory").textContent = sc.story;
   $("scMood").textContent = sc.mood;
@@ -3393,9 +3436,11 @@ function simulatePath() {
   const w = state.w;
   const decByMonth = {};
   state.pool.forEach((sc, k) => { decByMonth[monthIndex(sc.month)] = state.decisions[k]; });
-  const you = [START], stay = [START];   // anchor $50k at the first moment
+  const you = [START], stay = [START];   // anchor the chosen amount at the first moment
   let yf = START, yc = 0, sv = START;
   for (let m = state.startIdx; m < MONTHS; m++) {
+    // Round-3 windfall lands in BOTH lines, so the comparison stays fair.
+    if (m === state.injectIdx) { yf += state.injectAmt; sv += state.injectAmt; }
     const r = compMonth(m, w);
     if (decByMonth[m] !== undefined) {           // act at the event month, before its return
       const total = yf + yc, d = decByMonth[m];
@@ -3766,8 +3811,12 @@ function selectRisk(key) {
   document.querySelectorAll(".risk-opt").forEach((el) => el.classList.toggle("sel", el.dataset.risk === key));
 }
 function startGame() {
+  START = readAmount("startAmt");               // the player's chosen amount
   state.pool = drawScenarios();
-  state.startIdx = monthIndex(state.pool[0].month);   // $50k anchored at the first moment
+  state.startIdx = monthIndex(state.pool[0].month);   // chosen amount anchored at moment 1
+  state.injectIdx = monthIndex(state.pool[2].month);  // round-3 windfall month
+  state.injectAmt = INJECT_FRAC * START;
+  state.injected = false;
   state.step = -1; state.decisions = []; state.fund = START; state.cash = 0; state.cursor = state.startIdx;
   renderScenario();
 }
@@ -3782,8 +3831,9 @@ function playAgain() {
   showPhase("phase-welcome");
 }
 
-document.querySelectorAll(".risk-opt").forEach((el) => el.addEventListener("click", () => selectRisk(el.dataset.risk)));
-selectRisk(state.risk);
+wireAmountInput("startAmt");   // solo amount input
+wireAmountInput("hostAmt");    // host-lobby room amount input
+selectRisk("60/40");           // Balanced is the only profile now
 $("btnStart").addEventListener("click", startGame);
 $("btnBuy").addEventListener("click", () => decide("buy"));
 $("btnHold").addEventListener("click", () => decide("hold"));
@@ -4016,8 +4066,11 @@ const scByKey = (k) => {
     what: "This moment came from the host's copy of the game; update both screens to the same version to see its story." };
 };
 // Every host write of `state` carries the pool fingerprint.
-const setRoomState = (obj) => LIVE.net.set("state", Object.assign({ rev: GAME_REV }, obj));
+// Every state write carries the pool fingerprint AND the room-wide starting
+// amount, so the amount the host chose rides along through every phase.
+const setRoomState = (obj) => LIVE.net.set("state", Object.assign({ rev: GAME_REV, start: START }, obj));
 function hostStart() {
+  START = readAmount("hostAmt");   // one starting amount for the whole room (fair leaderboard)
   const months = drawScenarios().map((sc) => sc.month);
   setRoomState({ phase: "round", round: 0, sc: months, reveal: false });
 }
@@ -4068,6 +4121,7 @@ function roomBarsHTML(rows, lines) {
 }
 function renderHost() {
   const m = LIVE.net.mirror, st = m.state || {};
+  if (st.start) START = st.start;   // survive a host refresh mid-game
   const players = m.players || {};
   const n = Object.keys(players).length;
   if (st.phase === "lobby") {
@@ -4083,6 +4137,11 @@ function renderHost() {
     $("hrTitle").textContent = sc.title;
     $("hrStory").textContent = sc.story;
     $("hrMood").textContent = sc.mood;
+    // Moment 3: announce the room-wide windfall on the big screen too.
+    const hw = $("hrWindfall"), showHw = st.round === 2;
+    hw.hidden = !showHw;
+    if (showHw) hw.innerHTML = '💰 <b>An unexpected bonus.</b> ' + fmt(INJECT_FRAC * START) +
+      ' just landed in every portfolio and was invested at the balanced mix. Add to a shaky market, or pull back?';
     const votes = (m.votes && m.votes["r" + r]) || {};
     const vs = Object.values(votes), tot = vs.length;
     $("hrVoteCount").textContent = tot + " / " + n + " locked in";
@@ -4134,14 +4193,17 @@ function renderHost() {
       return;
     }
     const vals = rows.map((r) => r.v);
-    $("pcChart").innerHTML = roomBarsHTML(rows, [{ v: START, label: "started · $50,000" }]);
+    // "Invested" = money put in so far: the start, plus the round-3 windfall
+    // once that moment has passed (the check after moment 4 is post-windfall).
+    const invested = START + (st.round >= 2 ? INJECT_FRAC * START : 0);
+    $("pcChart").innerHTML = roomBarsHTML(rows, [{ v: invested, label: "invested · " + fmt(invested) }]);
     const asc = vals.slice().sort((a, b) => a - b);
     const median = asc[Math.floor(asc.length / 2)];
-    const ahead = vals.filter((v) => v >= START).length;
+    const ahead = vals.filter((v) => v >= invested).length;
     $("pcStats").innerHTML =
       '<div class="pc-cell lead"><b>' + esc(rows[0].n) + '</b><span>leading · ' + fmt(rows[0].v) + '</span></div>' +
       '<div class="pc-cell"><b>' + fmt(median) + '</b><span>room median</span></div>' +
-      '<div class="pc-cell"><b>' + ahead + ' of ' + rows.length + '</b><span>ahead of the start line</span></div>';
+      '<div class="pc-cell"><b>' + ahead + ' of ' + rows.length + '</b><span>ahead of what they put in</span></div>';
     const gap = rows[0].v - rows[rows.length - 1].v;
     $("pcNote").innerHTML = rows.length > 1
       ? 'Top to bottom of the room: <b>' + fmt(gap) + '</b> apart — same market, same moments, only the choices differ.' +
@@ -4163,10 +4225,12 @@ function renderHost() {
     $("resMedian").textContent = fmt(median);
     $("resBeat").textContent = beat + " of " + fin.length + " (" + Math.round(100 * beat / fin.length) + "%)";
     // Everyone's finish as the same named bars the room saw at the checks,
-    // now against TWO lines: the $50k start and where buy-and-hold ended.
+    // now against TWO lines: total invested (start + windfall) and where
+    // buy-and-hold ended.
+    const invested = START * (1 + INJECT_FRAC);
     const rows = fin.map((f) => ({ n: f.n, v: f.v })).sort((a, b) => b.v - a.v);
     $("resChart").innerHTML = roomBarsHTML(rows,
-      [{ v: START, label: "started · $50k" },
+      [{ v: invested, label: "invested · " + fmt(invested) },
        { v: hold, label: "buy &amp; hold · " + fmt(hold), cls: "hold" }]);
   }
 }
@@ -4205,8 +4269,13 @@ function joinGo() {
 }
 function beginPlayer(scIdxs) {
   LIVE.begun = true;
+  const st = LIVE.net.mirror.state || {};
+  if (st.start) START = st.start;                      // room-wide amount set by the host
   state.pool = scIdxs.map(scByKey);
   state.startIdx = monthIndex(state.pool[0].month);
+  state.injectIdx = monthIndex(state.pool[2].month);   // round-3 windfall month
+  state.injectAmt = INJECT_FRAC * START;
+  state.injected = false;
   state.step = -1; state.decisions = []; state.fund = START; state.cash = 0; state.cursor = state.startIdx;
 }
 function playerSync() {
