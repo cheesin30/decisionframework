@@ -2806,6 +2806,17 @@ var qrcode = function() {
   .ver-warn { position: fixed; left: 0; right: 0; top: 0; z-index: 999; text-align: center;
     font-size: 11.5px; line-height: 1.45; color: #7a5200; background: #fff7e6;
     border-bottom: 1px solid #e8d9b0; padding: 7px 12px; }
+  /* Start-allocation slider on the welcome. */
+  .alloc-row { margin-top: 4px; }
+  #allocSlider { width: 100%; max-width: 320px; accent-color: var(--accent); margin: 8px 0 4px; }
+  .alloc-split { font-size: 12.5px; color: var(--gray); font-weight: 600; }
+  #allocPctLabel { color: var(--accent); }
+  /* Round-3 bonus screen. */
+  .inj-emoji { font-size: 56px; line-height: 1; }
+  .inj-eyebrow { font-size: 11.5px; letter-spacing: .16em; text-transform: uppercase; font-weight: 800; color: var(--accent); margin-top: 6px; }
+  .inj-amt { font-size: 46px; font-weight: 800; color: var(--green); margin: 6px 0 2px; letter-spacing: -.01em; }
+  .inj-sub { font-size: 15px; line-height: 1.55; color: var(--ink); max-width: 460px; margin: 8px auto 20px; }
+  .inj-sub b { color: var(--navy); }
   /* Round-3 windfall banner on the scenario card. */
   .windfall { background: linear-gradient(90deg, rgba(0,209,144,.16), rgba(0,128,116,.10));
     border: 1px solid rgba(0,128,116,.35); border-radius: 12px; padding: 12px 14px; margin: 0 0 14px;
@@ -2849,9 +2860,14 @@ var qrcode = function() {
       <p class="lede">Six times, the world will throw something at you — a crash, a panic, a mania, a war. Each time, you decide what to do with your money.</p>
       <p class="muted" style="margin:14px 0 8px"><b>Here's the catch:</b> you won't be told when you are. No dates, no names — just the moment, as it hits. Only at the very end will you find out what you just lived through.</p>
       <div class="amount-pick">
-        <div class="amount-label">How much do you have invested?</div>
-        <div class="amount-field"><span class="cur">$</span><input id="startAmt" type="text" inputmode="numeric" value="50,000" aria-label="Starting amount"></div>
-        <div class="amount-hint">Your money sits in a <b>Balanced</b> fund — 60% equities · 40% fixed income.</div>
+        <div class="amount-label">How much do you have to invest?</div>
+        <div class="amount-field"><span class="cur">$</span><input id="startAmt" type="text" inputmode="numeric" value="50,000" aria-label="Total amount"></div>
+        <div class="alloc-row">
+          <div class="amount-label" style="margin-top:14px">How much goes into the market now? <b id="allocPctLabel">100% invested</b></div>
+          <input type="range" id="allocSlider" min="0" max="100" step="5" value="100" aria-label="Percent invested at the start">
+          <div class="alloc-split" id="allocSplit"></div>
+        </div>
+        <div class="amount-hint">What you invest sits in a <b>Balanced</b> fund — 60% equities · 40% fixed income. Anything you hold back starts in cash.</div>
       </div>
       <div class="stat-row">
         <div class="stat"><b>Balanced</b><span>60/40 composite fund</span></div>
@@ -2873,7 +2889,6 @@ var qrcode = function() {
     <div class="card">
       <div class="progress" id="progressBar"></div>
       <div id="practiceBadge" class="badge-practice" hidden>Practice round — doesn't count</div>
-      <div class="windfall" id="windfallBanner" hidden role="status"></div>
       <h2 id="scTitle"></h2>
       <p class="story" id="scStory"></p>
       <div class="tie-in"><b>In the markets</b><span id="scMood"></span></div>
@@ -2886,6 +2901,17 @@ var qrcode = function() {
       <div class="hint" id="tutorialHint" hidden>
         💡 <b>How to play:</b> Go with your gut, the way you would in the moment. <b>Sell</b> moves money to safety, <b>Hold</b> rides it out, <b>Buy</b> leans in. Right after each choice you'll see what Buy, Hold and Sell would each have done — but never when you are.
       </div>
+    </div>
+  </section>
+
+  <!-- ═══ ROUND-3 BONUS (its own screen) ═══ -->
+  <section class="phase" id="phase-injection">
+    <div class="card" style="text-align:center">
+      <div class="inj-emoji">💰</div>
+      <div class="inj-eyebrow">A bonus arrives</div>
+      <div class="inj-amt" id="injAmt"></div>
+      <p class="inj-sub" id="injSub"></p>
+      <button class="btn btn-primary" id="btnInjectionGo">Continue →</button>
     </div>
   </section>
 
@@ -3010,7 +3036,12 @@ var qrcode = function() {
       <div id="joinWait" hidden>
         <div class="wait-emoji">🍿</div>
         <p style="font-size:16px"><b>You're in.</b> Watch the big screen — the first moment lands there.</p>
-        <p class="muted" style="margin-top:6px">The host sets the starting amount for the room — you'll see yours when the first moment lands. Everyone plays the same amount in a Balanced 60/40 fund, so the leaderboard is fair.</p>
+        <div class="alloc-row" style="margin:16px auto 4px;max-width:320px;text-align:left">
+          <div class="amount-label">How much of your portfolio starts in the market? <b id="liveAllocPctLabel">100% invested</b></div>
+          <input type="range" id="liveAllocSlider" min="0" max="100" step="5" value="100" aria-label="Percent invested at the start">
+          <div class="alloc-split">The host sets the dollar amount; you choose the split.</div>
+        </div>
+        <p class="muted" style="margin-top:6px">Everyone plays the same dollar amount (the host sets it) in a Balanced 60/40 fund; you choose how much starts invested. Anything you hold back starts in cash.</p>
       </div>
     </div>
   </section>
@@ -3251,6 +3282,28 @@ function readAmount(id) {
   if (!isFinite(v) || v <= 0) return 50000;
   return Math.min(AMOUNT_MAX, Math.max(AMOUNT_MIN, Math.round(v)));
 }
+// The dedicated round-3 bonus screen: the player sees the cash arrive.
+function showInjectionScreen() {
+  state.pendingInjection = false;
+  const total = state.fund + state.cash, pct = Math.round(100 * state.fund / total);
+  if ($("injAmt")) $("injAmt").textContent = fmt(state.injectAmt);
+  if ($("injSub")) $("injSub").innerHTML = "It\u2019s landed as <b>cash</b>. Your portfolio is now <b>" +
+    fmt(total) + "</b> \u2014 " + fmt(state.cash) + " in cash (" + pct + "% invested). Buy it into the market in the moments ahead, or keep it safe.";
+  showPhase("phase-injection");
+}
+// Read the start-allocation slider (percent invested, 0..1). Defaults to 100%.
+function readAllocPct(id) {
+  const el = document.getElementById(id || "allocSlider");
+  const v = el ? +el.value : 100;
+  return Math.min(1, Math.max(0, (isFinite(v) ? v : 100) / 100));
+}
+// Keep the invested/cash split label in sync with the amount + slider.
+function updateAllocDisplay() {
+  const amt = readAmount("startAmt"), pct = readAllocPct();
+  const inv = Math.round(pct * amt), cash = amt - inv;
+  if ($("allocPctLabel")) $("allocPctLabel").textContent = Math.round(pct * 100) + "% invested";
+  if ($("allocSplit")) $("allocSplit").textContent = fmt(inv) + " invested \u00b7 " + fmt(cash) + " in cash";
+}
 // Live commas as the user types an amount into #id.
 function wireAmountInput(id) {
   const el = document.getElementById(id); if (!el) return;
@@ -3308,18 +3361,14 @@ function renderScenario() {
       state.fund *= 1 + r; state.cash *= CASH_MONTHLY;
     }
     state.cursor = mi;   // now sitting AT the event month; its return applies on decide
-    // Round-3 windfall: a bonus lands and is invested at the balanced mix.
-    if (state.step === 2 && !state.injected) { state.cash += state.injectAmt; state.injected = true; }
+    // Round-3 windfall: a cash bonus lands. It gets its own screen (below).
+    if (state.step === 2 && !state.injected) {
+      state.cash += state.injectAmt; state.injected = true; state.pendingInjection = true;
+    }
   }
   renderProgress();
   $("practiceBadge").hidden = !isTut;
   $("tutorialHint").hidden = !isTut;
-  const wf = $("windfallBanner");
-  if (wf) { const showWf = !isTut && state.step === 2;
-    wf.hidden = !showWf;
-    if (showWf) wf.innerHTML = '\uD83D\uDCB0 <b>An unexpected bonus.</b> ' + fmt(state.injectAmt) +
-      ' just landed as <b>cash on the sidelines</b> \u2014 your portfolio is now <b>' +
-      fmt(state.fund + state.cash) + '</b>, with ' + fmt(state.cash) + ' sitting in cash. Buy it into a shaky market, or keep it safe?'; }
   $("scTitle").textContent = sc.title;
   $("scStory").textContent = sc.story;
   $("scMood").textContent = sc.mood;
@@ -3333,7 +3382,9 @@ function renderScenario() {
   $("btnSell").disabled = sellAmt <= 0;
 
   updateTracker();
-  showPhase("phase-scenario");
+  // A windfall just landed → show the bonus screen first; Continue reveals the moment.
+  if (state.pendingInjection) showInjectionScreen();
+  else showPhase("phase-scenario");
   if (window.LIVE && LIVE.active && LIVE.role === "player" && !isTut) liveScenarioShown();
 }
 
@@ -3437,10 +3488,10 @@ function simulatePath() {
   const w = state.w;
   const decByMonth = {};
   state.pool.forEach((sc, k) => { decByMonth[monthIndex(sc.month)] = state.decisions[k]; });
-  const you = [START], stay = [START];   // anchor the chosen amount at the first moment
-  let yf = START, yc = 0, sv = START;
+  const you = [START], stay = [START];   // both start at the total amount
+  let yf = state.investedStart, yc = state.cashStart, sv = START;   // benchmark = fully invested from day 1
   for (let m = state.startIdx; m < MONTHS; m++) {
-    // Round-3 windfall lands in BOTH lines, so the comparison stays fair.
+    // Round-3 windfall: the player receives it as cash; the fully-invested benchmark puts it to work.
     if (m === state.injectIdx) { yc += state.injectAmt; sv += state.injectAmt; }
     const r = compMonth(m, w);
     if (decByMonth[m] !== undefined) {           // act at the event month, before its return
@@ -3816,13 +3867,17 @@ function selectRisk(key) {
   document.querySelectorAll(".risk-opt").forEach((el) => el.classList.toggle("sel", el.dataset.risk === key));
 }
 function startGame() {
-  START = readAmount("startAmt");               // the player's chosen amount
+  START = readAmount("startAmt");               // total amount
+  const pct = readAllocPct();                   // how much of it starts in the market
+  state.investedStart = Math.round(pct * START);
+  state.cashStart = START - state.investedStart;
   state.pool = drawScenarios();
-  state.startIdx = monthIndex(state.pool[0].month);   // chosen amount anchored at moment 1
+  state.startIdx = monthIndex(state.pool[0].month);   // total anchored at moment 1
   state.injectIdx = monthIndex(state.pool[2].month);  // round-3 windfall month
   state.injectAmt = INJECT_FRAC * START;
-  state.injected = false;
-  state.step = -1; state.decisions = []; state.fund = START; state.cash = 0; state.cursor = state.startIdx;
+  state.injected = false; state.pendingInjection = false;
+  state.step = -1; state.decisions = [];
+  state.fund = state.investedStart; state.cash = state.cashStart; state.cursor = state.startIdx;
   renderScenario();
 }
 // Replay returns to the welcome screen so the risk profile can be reselected.
@@ -3837,6 +3892,13 @@ function playAgain() {
 }
 
 wireAmountInput("startAmt");   // solo amount input
+["allocSlider", "startAmt"].forEach((id) => { const el = document.getElementById(id);
+  if (el) el.addEventListener("input", updateAllocDisplay); });
+updateAllocDisplay();
+if ($("btnInjectionGo")) $("btnInjectionGo").addEventListener("click", () => showPhase("phase-scenario"));
+// Live-room player's own start-allocation slider (host sets the dollar amount).
+if ($("liveAllocSlider")) $("liveAllocSlider").addEventListener("input", () =>
+  $("liveAllocPctLabel").textContent = $("liveAllocSlider").value + "% invested");
 wireAmountInput("hostAmt");    // host-lobby room amount input
 selectRisk("60/40");           // Balanced is the only profile now
 $("btnStart").addEventListener("click", startGame);
@@ -4276,12 +4338,16 @@ function beginPlayer(scIdxs) {
   LIVE.begun = true;
   const st = LIVE.net.mirror.state || {};
   if (st.start) START = st.start;                      // room-wide amount set by the host
+  const pct = readAllocPct("liveAllocSlider");         // each player picks their own split
+  state.investedStart = Math.round(pct * START);
+  state.cashStart = START - state.investedStart;
   state.pool = scIdxs.map(scByKey);
   state.startIdx = monthIndex(state.pool[0].month);
   state.injectIdx = monthIndex(state.pool[2].month);   // round-3 windfall month
   state.injectAmt = INJECT_FRAC * START;
-  state.injected = false;
-  state.step = -1; state.decisions = []; state.fund = START; state.cash = 0; state.cursor = state.startIdx;
+  state.injected = false; state.pendingInjection = false;
+  state.step = -1; state.decisions = [];
+  state.fund = state.investedStart; state.cash = state.cashStart; state.cursor = state.startIdx;
 }
 function playerSync() {
   const st = LIVE.net.mirror.state; if (!st) return;
