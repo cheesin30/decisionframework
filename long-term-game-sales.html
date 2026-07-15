@@ -671,7 +671,7 @@
       </div>
 
       <p class="disclaimer" style="max-width:640px;margin:14px auto 0">
-        <b>Sales build — internal / pre-approval.</b> The behavioral chart uses real historical monthly total returns for a broad U.S. stock index (S&amp;P 500) and the Bloomberg U.S. Aggregate Bond Index, blended to a hypothetical 60/40 or 70/30 portfolio; it is not the return of any Capital Group product. Fund facts and performance figures above are populated from publicly available fund information (as dated) and are <b>pending compliance verification</b>. The American Balanced Fund chart line is an <b>approximation built from the fund's published calendar-year total returns</b> (Class A at NAV, net of expenses: 2020 +10.86%, 2021 +15.76%, 2022 −12.11%, 2023 +14.01%, 2024 +14.95%, 2025 +18.47%) — each year-end lands exactly on the published figure, but the month-to-month path follows the 60/40 benchmark's shape and is not the fund's actual monthly record. Replace with the verified monthly net series before any client use. Returns at NAV do not reflect the maximum 5.75% sales charge, which would reduce results shown. Not investment, tax or legal advice.
+        <b>Sales build — internal / pre-approval.</b> The behavioral chart uses real historical monthly total returns for a broad U.S. stock index (S&amp;P 500) and the Bloomberg U.S. Aggregate Bond Index, blended to a hypothetical 60/40 or 70/30 portfolio; it is not the return of any Capital Group product. Fund facts and performance figures above are populated from publicly available fund information (as dated) and are <b>pending compliance verification</b>. The American Balanced Fund chart line is the fund's <b>actual monthly net total returns</b> (Class A at NAV, dividend-adjusted month-end closes; each year compounds to the published annual return within rounding). Confirm against the fund's own records/prospectus and obtain compliance review before any client use. Returns at NAV do not reflect the maximum 5.75% sales charge, which would reduce results shown. Not investment, tax or legal advice.
       </p>
 
       <div class="reveal-actions">
@@ -797,26 +797,25 @@ const AGG_2020 = [ // monthly % total return, 2020-01 … 2025-12
    73 points: the 2019-12 anchor followed by 2020-01 … 2025-12, so month m's
    fund return is AMBAL_NET_2020[m+1]/AMBAL_NET_2020[m] − 1.
 
-   HOW THIS SERIES WAS BUILT (Jul 2026) — approximation from public data:
-   each calendar year is anchored EXACTLY to the fund's published total
-   return (Class A at NAV: 2020 +10.86%, 2021 +15.76%, 2022 −12.11%,
-   2023 +14.01%, 2024 +14.95%, 2025 +18.47%), with the intra-year monthly
-   shape following the verified 60/40 benchmark months plus a constant
-   per-year spread. Year-end values are right; the month-to-month wiggle is
-   an approximation, disclosed on-screen. It replaces the hand-transcribed
-   spreadsheet composite previously here, which showed the fund TRAILING its
-   benchmark by ~1%/yr — contradicted by the fund's published record on
-   every horizon and therefore judged bad data (see VERIFICATION-CHECKLIST
-   §1.1). Replace with the verified monthly net series from the system of
-   record, and set the flag below accordingly, before any client use. */
+   REAL MONTHLY DATA (Jul 2026): these are ABALX's ACTUAL monthly net total
+   returns — the dividend-adjusted monthly closing prices (Class A at NAV,
+   distributions reinvested), indexed to 100 at 2019-12. Source: month-end
+   adjusted-close series (Nasdaq, via the fund's ticker). Each year compounds
+   to the fund's published annual total return within rounding (2020 +10.85 /
+   2021 +15.76 / 2022 −12.15 / 2023 +14.04 / 2024 +14.98 / 2025 +18.46 vs
+   published +10.86 / +15.76 / −12.11 / +14.01 / +14.95 / +18.47). This
+   replaces the earlier approximation (annual anchors + benchmark shape) and
+   the hand-transcribed composite before it. Still confirm against the
+   fund's own records/prospectus and obtain compliance review before any
+   client use — see VERIFICATION-CHECKLIST §1.1. */
 const FUND_LINE_ENABLED = true;
-const AMBAL_NET_2020 = [ // index levels, 2019-12 anchor + 2020-01 … 2025-12
-  100.0000,100.4615,95.9342,88.3165,95.4785,98.1037,99.2451,102.9087,106.7179,103.9555,101.8155,108.6102,110.8600,
-  109.8677,111.0466,113.4018,117.3855,118.0252,119.9974,122.2329,124.3609,120.4496,125.4856,125.1003,128.3315,
-  123.6898,121.3509,123.1360,115.2590,116.0901,110.0221,117.5685,113.7723,105.9254,110.8944,116.6288,112.7906,
-  118.1294,114.8612,118.2511,119.3312,118.8078,123.0318,125.0389,123.1925,118.0866,115.5376,123.6522,128.5925,
-  129.7415,133.1582,136.2121,131.4903,136.2811,139.7174,142.0304,144.9015,147.5293,145.2506,150.9640,147.8171,
-  151.1076,151.7817,147.1949,147.3334,152.9881,159.1322,161.6562,164.9508,169.8632,173.2538,174.5463,175.1190
+const AMBAL_NET_2020 = [ // real dividend-adjusted index levels, 2019-12 anchor + 2020-01 … 2025-12
+  100.0000,99.8121,96.0545,88.3513,95.2560,97.8394,98.8727,102.2076,104.6501,102.9591,101.1273,108.1259,110.8502,
+  110.0986,111.7896,114.9836,118.3654,120.5261,121.2306,122.6397,124.4246,120.5261,124.9883,123.8140,128.3232,
+  124.0019,122.1700,123.1564,116.3457,118.1775,110.9441,115.9230,112.3532,104.3682,109.7698,115.9230,112.7290,
+  117.2851,113.4805,115.8760,117.4260,116.5806,120.4791,122.9685,121.2776,117.0033,115.2184,122.8276,128.5580,
+  129.4974,132.8323,136.4960,132.0338,135.9793,139.7839,142.3673,144.7628,147.2992,145.6552,149.8826,147.8159,
+  152.0902,151.7614,147.4871,147.0643,152.8887,159.7933,161.2494,163.8328,168.6707,171.5359,174.7299,175.1057
 ];
 
 /* ── Model: pick a risk profile (60/40 or 70/30). $50k in that composite.
@@ -1072,7 +1071,7 @@ function buildChart() {
         borderWidth: 2.5, pointRadius: 0, pointHitRadius: 10, tension: 0, fill: false },
       { label: "Stayed invested", data: [], borderColor: "#083469",
         borderWidth: 2.5, pointRadius: 0, pointHitRadius: 10, tension: 0, fill: false },
-      // American Balanced Fund (net, at NAV) overlay — approximated series, see notes.
+      // American Balanced Fund (net, at NAV) overlay — real monthly net returns, see notes.
       ...(FUND_LINE_ENABLED ? [{ label: "American Balanced Fund (net, at NAV)", data: [],
         borderColor: "#831574", borderWidth: 2.5, borderDash: [5, 3],
         pointRadius: 0, pointHitRadius: 10, tension: 0, fill: false }] : [])
@@ -1107,7 +1106,7 @@ function buildChart() {
 function setFundNote(active) {
   const note = $("fundNote"); if (!note) return;
   if (active) {
-    note.innerHTML = '<span style="color:#831574;font-weight:700">╌ American Balanced Fund (net, at NAV)</span> — monthly path approximated from the fund’s published calendar-year returns (year-ends exact; intra-year shape follows the 60/40 benchmark). Returns at NAV; results would be lower with the maximum 5.75% sales charge. See notes below.';
+    note.innerHTML = '<span style="color:#831574;font-weight:700">╌ American Balanced Fund (net, at NAV)</span> — the fund’s actual monthly net total returns (Class A at NAV, dividend-adjusted). Returns at NAV; results would be lower with the maximum 5.75% sales charge. See notes below.';
   } else if (FUND_LINE_ENABLED && state.risk !== "60/40") {
     note.innerHTML = 'American Balanced Fund overlay is shown for the <b>Balanced (60/40)</b> profile — reselect it to compare.';
   } else {
