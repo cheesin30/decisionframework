@@ -2938,23 +2938,6 @@ var qrcode = function() {
         <div class="big">Every one of those was real.</div>
         <div class="sub">Every moment you just faced was real — the actual months of <b>2020 to 2025</b>. <span id="revealIntro"></span> Below is the real month-by-month path, with your decisions placed exactly where they happened and the months in between filled in.</div>
       </div>
-      <div class="reveal-hero era-hero" id="heroEra" hidden>
-        <span class="era-badge">Historical example · not your game</span>
-        <div class="big" id="eraBig"></div>
-        <div class="sub" id="eraSub"></div>
-      </div>
-
-      <div class="era-switch" id="eraSwitch">
-        <div class="era-switch-head">
-          <span class="era-switch-icon" aria-hidden="true">🔍</span>
-          <div class="era-switch-copy">
-            <div class="era-switch-title">See it in another crisis <span class="era-arrow">→</span></div>
-            <div class="era-switch-sub" id="eraSwitchLabel">Same story, a different decade. Tap a year to replay it.</div>
-          </div>
-        </div>
-        <div class="era-tabs" id="eraTabs"></div>
-      </div>
-
       <div id="shareCapture">
         <div class="chart-box"><canvas id="revealChart" role="img" aria-label="Loading chart…"></canvas></div>
         <table id="chartTable" class="sr-only"></table>
@@ -2975,10 +2958,44 @@ var qrcode = function() {
           </div>
           <div class="timeline" id="timeline"></div>
           <p class="disclaimer">For illustrative and educational purposes only. The chart uses real historical monthly total returns for a broad U.S. equity index (S&P 500) and the Bloomberg U.S. Aggregate Bond Index for 2020–2025, blended to a hypothetical 60/40 or 70/30 portfolio; it is not the return of any Capital Group product and does not reflect fund fees, expenses or taxes. Index data is transcribed/derived from source series and must be verified against the original and reviewed for compliance before any external use. Past performance is not predictive of future results. This experience is not investment, tax or legal advice; investors should consider their own circumstances and consult a financial professional.</p>
-        </div>
+        </div>      </div>
+      <div class="handoff" id="handoffBlock">
+        <p><b>The scariest headlines of the last six years — and staying invested still came out ahead.</b> The hardest part of investing isn't picking winners. It's holding on through the moments when every instinct — fear, regret, the urge to "do something" — tells you to sell.</p>
+        <p class="muted" style="margin:0">That discipline, repeated across a lifetime of markets, is what separates long-term investors from the headlines.</p>
+      </div>
 
-        <!-- era-only: swapped in when you flip to a historical crisis -->
-        <div id="eraBlock" hidden>
+      <div class="reveal-actions">
+        <button class="btn btn-primary" id="btnExploreCrises">See it in another crisis →</button>
+        <button class="btn btn-gold" id="btnShare">Share your result 📸</button>
+        <button class="btn btn-ghost" id="btnAgain">Play again ↻</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ CRISIS EXPLORER (its own screen) ═══ -->
+  <section class="phase" id="phase-crises">
+    <div class="card" id="crisesCard">
+      <div class="reveal-hero era-hero" id="heroEra">
+        <span class="era-badge">Historical example · not your game</span>
+        <div class="big" id="eraBig"></div>
+        <div class="sub" id="eraSub"></div>
+      </div>
+
+      <div class="era-switch" id="eraSwitch">
+        <div class="era-switch-head">
+          <span class="era-switch-icon" aria-hidden="true">🔍</span>
+          <div class="era-switch-copy">
+            <div class="era-switch-title">See it in another crisis <span class="era-arrow">→</span></div>
+            <div class="era-switch-sub" id="eraSwitchLabel">Same story, a different decade. Tap a year to explore it.</div>
+          </div>
+        </div>
+        <div class="era-tabs" id="eraTabs"></div>
+      </div>
+      <div class="chart-box"><canvas id="crisesChart" role="img" aria-label="Loading chart…"></canvas></div>
+      <table id="chartTableCrises" class="sr-only"></table>
+      <p class="legend-note" id="legendNoteCrises"></p>
+              <!-- era-only: swapped in when you flip to a historical crisis -->
+        <div id="eraBlock">
           <div class="summary" id="eraSummary">
             <h3 id="eraSumTitle"></h3>
             <div class="final-grid" style="grid-template-columns:1fr 1fr">
@@ -2992,9 +3009,6 @@ var qrcode = function() {
           <div class="era-about"><b>What happened</b><p id="eraAbout"></p></div>
           <p class="disclaimer" id="eraDisclaimer">Illustrative. Real 60/40 benchmark monthly total returns (60% S&amp;P 500 / 40% Bloomberg U.S. Aggregate Bond Index). “Sat out the best months” = the same portfolio with that period's best months held in cash — it shows the cost of being out of the market, not any specific trading strategy or Capital Group product. Past performance is not predictive of future results; verify data and obtain compliance review before external use.</p>
         </div>
-      </div>
-
-      <!-- ═══ HISTORY RHYMES — nothing changes across eras ═══ -->
       <section class="history" id="historySection">
         <div class="hist-intro">
           <span class="hist-eyebrow">The bigger picture</span>
@@ -3009,15 +3023,9 @@ var qrcode = function() {
         <p class="hist-note"><b>6 of those 10 best months landed within six months of one of the 10 worst.</b> The rebound comes exactly when it feels most hopeless — so selling in the panic is how you miss it. Timing isn't wrong because it never works; it's wrong because the biggest days arrive without warning, right when the urge to sell is strongest.</p>
         <p class="disclaimer" style="margin-top:10px">Illustrative, based on real 60/40 benchmark monthly total returns (60% S&amp;P 500 / 40% Bloomberg U.S. Aggregate Bond Index), 2005–2025. “Sat out the best months” = the same portfolio with that period's best months held in cash; it illustrates the cost of being out of the market, not any specific trading strategy or Capital Group product. Index data is transcribed/derived from source and must be verified and compliance-reviewed before external use. Past performance is not predictive of future results.</p>
       </section>
-
-      <div class="handoff" id="handoffBlock">
-        <p><b>The scariest headlines of the last six years — and staying invested still came out ahead.</b> The hardest part of investing isn't picking winners. It's holding on through the moments when every instinct — fear, regret, the urge to "do something" — tells you to sell.</p>
-        <p class="muted" style="margin:0">That discipline, repeated across a lifetime of markets, is what separates long-term investors from the headlines.</p>
-      </div>
-
       <div class="reveal-actions">
-        <button class="btn btn-gold" id="btnShare">Share your result 📸</button>
-        <button class="btn btn-ghost" id="btnAgain">Play again ↻</button>
+        <button class="btn btn-primary" id="btnBackToResult">← Back to your result</button>
+        <button class="btn btn-ghost" id="btnAgain2">Play again ↻</button>
       </div>
     </div>
   </section>
@@ -3570,7 +3578,6 @@ function renderReveal() {
   // Stash the personal run, then let the era switcher draw the default view.
   state.psim = { you, stay, decByMonth };
   state.plabels = labels;
-  buildEraTabs();
   showEra("you");
 
   const fy = you[you.length - 1], fh = stay[stay.length - 1];
@@ -3739,9 +3746,9 @@ function movesLabels(startYM, n) {
 
 // Keep the chart's screen-reader label and sr-only data table in sync with
 // whichever view is showing, so it never announces stale numbers.
-function setChartA11y(title, pairs) {
-  $("revealChart").setAttribute("aria-label", title + " " + pairs.map((p) => p[0] + " ended at " + p[1]).join("; ") + ".");
-  $("chartTable").innerHTML = "<caption>" + title + "</caption><tr><th>Line</th><th>End</th></tr>" +
+function setChartA11y(canvasId, tableId, title, pairs) {
+  $(canvasId).setAttribute("aria-label", title + " " + pairs.map((p) => p[0] + " ended at " + p[1]).join("; ") + ".");
+  $(tableId).innerHTML = "<caption>" + title + "</caption><tr><th>Line</th><th>End</th></tr>" +
     pairs.map((p) => "<tr><td>" + p[0] + "</td><td>" + p[1] + "</td></tr>").join("");
 }
 
@@ -3753,10 +3760,38 @@ function eraLabels(era) {
 }
 
 // Build the era tab row once: the player's own run, then each crisis window.
+function buildCrisesChart() {
+  if (state.crisesChart) state.crisesChart.destroy();
+  state.crisesChart = new Chart($("crisesChart"), {
+    type: "line",
+    data: { labels: [], datasets: [
+      { label: "Stayed invested", data: [], borderColor: "#083469",
+        borderWidth: 2.5, pointRadius: 0, pointHitRadius: 10, tension: 0, fill: false },
+      { label: "Sat out the best months", data: [], borderColor: "#b3402e", borderDash: [5, 3],
+        borderWidth: 2.5, pointRadius: 0, pointHitRadius: 10, tension: 0, fill: false }
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: { legend: { display: false },
+        tooltip: { backgroundColor: "#083469", callbacks: { label: (c) => " " + c.dataset.label + ": " + fmt(c.parsed.y) } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: "#5f7081", maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } },
+        y: { grid: { color: "#E6ECEE" }, ticks: { color: "#5f7081", callback: (v) => "$" + Math.round(v / 1000) + "k" } }
+      }
+    }
+  });
+}
+// Open the standalone crisis explorer on its own screen + own chart.
+function openCrises() {
+  if (!state.crisesChart) buildCrisesChart();
+  buildEraTabs();
+  showEra(HIST_ERAS[0].key, false);
+  showPhase("phase-crises");
+}
 function buildEraTabs() {
   const wrap = $("eraTabs"); if (!wrap || wrap.dataset.done) return;
-  wrap.innerHTML = '<button type="button" class="era-tab" data-era="you">Your 2020</button>' +
-    HIST_ERAS.map((e) => '<button type="button" class="era-tab" data-era="' + e.key + '">' + e.tab + '</button>').join("");
+  wrap.innerHTML = HIST_ERAS.map((e) => '<button type="button" class="era-tab" data-era="' + e.key + '">' + e.tab + '</button>').join("");
   wrap.querySelectorAll(".era-tab").forEach((t) => t.addEventListener("click", () => showEra(t.dataset.era, true)));
   wrap.dataset.done = "1";
 }
@@ -3769,15 +3804,8 @@ function buildEraTabs() {
 function showEra(key, userInitiated) {
   state.era = key;
   const personal = key === "you";
-  const data = state.chart.data, d0 = data.datasets[0], d1 = data.datasets[1], d2 = data.datasets[2];
-
-  // whole-section swap
-  const setHidden = (id, h) => { const el = $(id); if (el) el.hidden = h; };
-  setHidden("heroPersonal", !personal); setHidden("heroEra", personal);
-  setHidden("personalBlock", !personal); setHidden("eraBlock", personal);
-  setHidden("historySection", !personal); setHidden("handoffBlock", !personal);
-  setHidden("markerNote", !personal); setHidden("eraSwitchLabel", false);
-  if ($("revealCard")) $("revealCard").classList.toggle("mode-era", !personal);
+  const chart = personal ? state.chart : state.crisesChart;
+  const data = chart.data, d0 = data.datasets[0], d1 = data.datasets[1], d2 = data.datasets[2];
 
   if (personal) {
     const { you, stay, decByMonth } = state.psim;
@@ -3800,7 +3828,7 @@ function showEra(key, userInitiated) {
       if (typeof setFundNote === "function") setFundNote(fundActive);
     }
     $("legendNote").innerHTML = '<span style="color:#008074;font-weight:700">━ Your choices</span> &nbsp;·&nbsp; <span style="color:var(--navy);font-weight:700">━ Stayed invested</span>';
-    setChartA11y("Portfolio value, 2020 to 2025.", [["Your choices", fmt(you[you.length - 1])], ["Stayed invested", fmt(stay[stay.length - 1])]]);
+    setChartA11y("revealChart", "chartTable", "Portfolio value, 2020 to 2025.", [["Your choices", fmt(you[you.length - 1])], ["Stayed invested", fmt(stay[stay.length - 1])]]);
   } else {
     const era = HIST_ERAS.find((e) => e.key === key);
     const hold = era.moves ? growMoves(era.moves) : benchGrow(era.a, era.b);
@@ -3811,7 +3839,7 @@ function showEra(key, userInitiated) {
     Object.assign(d1, { label: "Sat out the best months", borderColor: "#b3402e", borderDash: [5, 3], data: missed, hidden: false });
     REVEAL_DEC = {};
     if (typeof FUND_LINE_ENABLED !== "undefined" && d2) { Object.assign(d2, { data: [], hidden: true }); if ($("fundNote")) $("fundNote").textContent = ""; }
-    $("legendNote").innerHTML = '<span style="color:var(--navy);font-weight:700">━ Stayed invested</span> &nbsp;·&nbsp; <span style="color:#b3402e;font-weight:700">╌ Sat out the best months</span>';
+    $("legendNoteCrises").innerHTML = '<span style="color:var(--navy);font-weight:700">━ Stayed invested</span> &nbsp;·&nbsp; <span style="color:#b3402e;font-weight:700">╌ Sat out the best months</span>';
     // era hero + result card + story
     const fh = hold[hold.length - 1], fm = missed[missed.length - 1], gap = Math.round((fm / fh - 1) * 100);
     $("eraBig").textContent = era.title;
@@ -3825,10 +3853,10 @@ function showEra(key, userInitiated) {
     if ($("eraDisclaimer")) $("eraDisclaimer").innerHTML = era.moves
       ? "Illustrative. Real MSCI World equity index monthly total returns (100% equities). Verified fixed income index data before 2005 isn't available, so this era is not blended with fixed income. “Sat out the best months” = the same portfolio with that period's best months held in cash — it shows the cost of being out of the market, not any specific trading strategy or Capital Group product. Past performance is not predictive of future results; verify data and obtain compliance review before external use."
       : "Illustrative. Real 60/40 benchmark monthly total returns (60% S&amp;P 500 / 40% Bloomberg U.S. Aggregate Bond Index). “Sat out the best months” = the same portfolio with that period's best months held in cash — it shows the cost of being out of the market, not any specific trading strategy or Capital Group product. Past performance is not predictive of future results; verify data and obtain compliance review before external use.";
-    setChartA11y("Portfolio value, " + era.years + " (" + era.title + ").", [["Stayed invested", fmt(fh)], ["Sat out the best months", fmt(fm)]]);
+    setChartA11y("crisesChart", "chartTableCrises", "Portfolio value, " + era.years + " (" + era.title + ").", [["Stayed invested", fmt(fh)], ["Sat out the best months", fmt(fm)]]);
   }
   document.querySelectorAll("#eraTabs .era-tab").forEach((t) => t.classList.toggle("sel", t.dataset.era === key));
-  state.chart.update();
+  chart.update();
 
   if (userInitiated) {
     const hero = personal ? $("heroPersonal") : $("heroEra");
@@ -3884,6 +3912,7 @@ function startGame() {
 function playAgain() {
   if (window.LIVE && LIVE.active) { location.href = location.pathname; return; }   // leave the room
   if (state.chart) { state.chart.destroy(); state.chart = null; }
+  if (state.crisesChart) { state.crisesChart.destroy(); state.crisesChart = null; }
   state.step = -1; state.decisions = []; state.fund = START; state.cash = 0; state.cursor = 0; state.startIdx = 0;
   $("trackerValue").textContent = fmt(START);
   $("trackerSplit").textContent = "";
@@ -3907,6 +3936,9 @@ $("btnHold").addEventListener("click", () => decide("hold"));
 $("btnSell").addEventListener("click", () => decide("sell"));
 $("btnContinue").addEventListener("click", nextStep);
 $("btnShare").addEventListener("click", shareResult);
+if ($("btnExploreCrises")) $("btnExploreCrises").addEventListener("click", openCrises);
+if ($("btnBackToResult")) $("btnBackToResult").addEventListener("click", () => showPhase("phase-reveal"));
+if ($("btnAgain2")) $("btnAgain2").addEventListener("click", playAgain);
 $("btnAgain").addEventListener("click", playAgain);
 </script>
 <script>
