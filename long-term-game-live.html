@@ -3309,7 +3309,7 @@ function renderScenario() {
     }
     state.cursor = mi;   // now sitting AT the event month; its return applies on decide
     // Round-3 windfall: a bonus lands and is invested at the balanced mix.
-    if (state.step === 2 && !state.injected) { state.fund += state.injectAmt; state.injected = true; }
+    if (state.step === 2 && !state.injected) { state.cash += state.injectAmt; state.injected = true; }
   }
   renderProgress();
   $("practiceBadge").hidden = !isTut;
@@ -3318,8 +3318,8 @@ function renderScenario() {
   if (wf) { const showWf = !isTut && state.step === 2;
     wf.hidden = !showWf;
     if (showWf) wf.innerHTML = '\uD83D\uDCB0 <b>An unexpected bonus.</b> ' + fmt(state.injectAmt) +
-      ' just landed and was invested at your balanced mix \u2014 your portfolio is now <b>' +
-      fmt(state.fund + state.cash) + '</b>. Do you add to a shaky market, or pull back?'; }
+      ' just landed as <b>cash on the sidelines</b> \u2014 your portfolio is now <b>' +
+      fmt(state.fund + state.cash) + '</b>, with ' + fmt(state.cash) + ' sitting in cash. Buy it into a shaky market, or keep it safe?'; }
   $("scTitle").textContent = sc.title;
   $("scStory").textContent = sc.story;
   $("scMood").textContent = sc.mood;
@@ -3441,7 +3441,7 @@ function simulatePath() {
   let yf = START, yc = 0, sv = START;
   for (let m = state.startIdx; m < MONTHS; m++) {
     // Round-3 windfall lands in BOTH lines, so the comparison stays fair.
-    if (m === state.injectIdx) { yf += state.injectAmt; sv += state.injectAmt; }
+    if (m === state.injectIdx) { yc += state.injectAmt; sv += state.injectAmt; }
     const r = compMonth(m, w);
     if (decByMonth[m] !== undefined) {           // act at the event month, before its return
       const total = yf + yc, d = decByMonth[m];
@@ -4142,7 +4142,7 @@ function renderHost() {
     const hw = $("hrWindfall"), showHw = st.round === 2;
     hw.hidden = !showHw;
     if (showHw) hw.innerHTML = '💰 <b>An unexpected bonus.</b> ' + fmt(INJECT_FRAC * START) +
-      ' just landed in every portfolio and was invested at the balanced mix. Add to a shaky market, or pull back?';
+      ' just landed as cash in every portfolio. Buy it into a shaky market, or keep it safe?';
     const votes = (m.votes && m.votes["r" + r]) || {};
     const vs = Object.values(votes), tot = vs.length;
     $("hrVoteCount").textContent = tot + " / " + n + " locked in";
@@ -4197,7 +4197,7 @@ function renderHost() {
     // "Invested" = money put in so far: the start, plus the round-3 windfall
     // once that moment has passed (the check after moment 4 is post-windfall).
     const invested = START + (st.round >= 2 ? INJECT_FRAC * START : 0);
-    $("pcChart").innerHTML = roomBarsHTML(rows, [{ v: invested, label: "invested · " + fmt(invested) }]);
+    $("pcChart").innerHTML = roomBarsHTML(rows, [{ v: invested, label: "you put in · " + fmt(invested) }]);
     const asc = vals.slice().sort((a, b) => a - b);
     const median = asc[Math.floor(asc.length / 2)];
     const ahead = vals.filter((v) => v >= invested).length;
@@ -4231,7 +4231,7 @@ function renderHost() {
     const invested = START * (1 + INJECT_FRAC);
     const rows = fin.map((f) => ({ n: f.n, v: f.v })).sort((a, b) => b.v - a.v);
     $("resChart").innerHTML = roomBarsHTML(rows,
-      [{ v: invested, label: "invested · " + fmt(invested) },
+      [{ v: invested, label: "you put in · " + fmt(invested) },
        { v: hold, label: "buy &amp; hold · " + fmt(hold), cls: "hold" }]);
   }
 }
