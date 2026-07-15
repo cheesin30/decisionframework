@@ -2910,7 +2910,7 @@ var qrcode = function() {
       <div class="reveal-hero" id="heroPersonal">
         <div class="eyebrow">The reveal</div>
         <div class="big">Every one of those was real.</div>
-        <div class="sub">Every moment you just faced was real — the actual months of <b>2020 to 2025</b>. Your choices turned $50,000 into <b id="bridgeStory"></b>. Below is the real month-by-month path, with your decisions placed exactly where they happened and the months in between filled in.</div>
+        <div class="sub">Every moment you just faced was real — the actual months of <b>2020 to 2025</b>. <span id="revealIntro"></span> Below is the real month-by-month path, with your decisions placed exactly where they happened and the months in between filled in.</div>
       </div>
       <div class="reveal-hero era-hero" id="heroEra" hidden>
         <span class="era-badge">Historical example · not your game</span>
@@ -3462,7 +3462,11 @@ function enterReveal() {
     state.fund *= 1 + r; state.cash *= CASH_MONTHLY;
   }
   state.cursor = MONTHS;
-  $("bridgeStory").textContent = fmt(state.fund + state.cash);
+  const finalV = state.fund + state.cash;
+  $("revealIntro").innerHTML = "You put in <b>" + fmt(START) + "</b>" +
+    (state.injectAmt > 0 ? " \u2014 plus a <b>" + fmt(state.injectAmt) + "</b> bonus midway (<b>" +
+      fmt(START + state.injectAmt) + "</b> in all)" : "") +
+    " \u2014 and your choices left you with <b>" + fmt(finalV) + "</b>.";
   $("tracker").classList.remove("show");
   buildChart();
   renderReveal();
