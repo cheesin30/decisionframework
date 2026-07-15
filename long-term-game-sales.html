@@ -908,7 +908,7 @@ function renderScenario() {
     }
     state.cursor = mi;   // now sitting AT the event month; its return applies on decide
     // Round-3 windfall: a bonus lands and is invested at the balanced mix.
-    if (state.step === 2 && !state.injected) { state.fund += state.injectAmt; state.injected = true; }
+    if (state.step === 2 && !state.injected) { state.cash += state.injectAmt; state.injected = true; }
   }
   renderProgress();
   $("practiceBadge").hidden = !isTut;
@@ -917,8 +917,8 @@ function renderScenario() {
   if (wf) { const showWf = !isTut && state.step === 2;
     wf.hidden = !showWf;
     if (showWf) wf.innerHTML = '\uD83D\uDCB0 <b>An unexpected bonus.</b> ' + fmt(state.injectAmt) +
-      ' just landed and was invested at your balanced mix \u2014 your portfolio is now <b>' +
-      fmt(state.fund + state.cash) + '</b>. Do you add to a shaky market, or pull back?'; }
+      ' just landed as <b>cash on the sidelines</b> \u2014 your portfolio is now <b>' +
+      fmt(state.fund + state.cash) + '</b>, with ' + fmt(state.cash) + ' sitting in cash. Buy it into a shaky market, or keep it safe?'; }
   $("scTitle").textContent = sc.title;
   $("scStory").textContent = sc.story;
   $("scMood").textContent = sc.mood;
@@ -1030,7 +1030,7 @@ function simulatePath() {
   let yf = START, yc = 0, sv = START;
   for (let m = state.startIdx; m < MONTHS; m++) {
     // Round-3 windfall lands in BOTH lines, so the comparison stays fair.
-    if (m === state.injectIdx) { yf += state.injectAmt; sv += state.injectAmt; }
+    if (m === state.injectIdx) { yc += state.injectAmt; sv += state.injectAmt; }
     const r = compMonth(m, w);
     if (decByMonth[m] !== undefined) {           // act at the event month, before its return
       const total = yf + yc, d = decByMonth[m];
