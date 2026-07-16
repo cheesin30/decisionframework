@@ -11,7 +11,7 @@
   sales build that overlays the American Balanced Fund and fund facts.)
 
   A variant of the Long Game with a FIXED timeline: the last six years of
-  markets (2020–2025). The player faces six real events (drawn at random from
+  markets (2020–2025). The player faces four real events (drawn at random from
   a pool of twelve and played in real chronological order) but is NOT told the
   year or the event — only the moment, as it hits. The twist is the final
   reveal: every scenario was a real thing that happened. A timeline maps each
@@ -188,6 +188,13 @@
   @media (max-width: 480px) { .decision-grid { grid-template-columns: 1fr; } }
   .decision-grid .btn { padding: 16px 10px; font-size: 15px; }
   .decision-grid .btn small { display: block; font-weight: 400; font-size: 11.5px; opacity: .8; margin-top: 3px; }
+  .action-slider { margin-top: 20px; padding: 13px 16px 11px; border: 1px solid var(--line); border-radius: 12px; background: #f2f7f7; }
+  .action-slider .as-head { display: flex; justify-content: space-between; align-items: baseline; }
+  .action-slider .as-head span:first-child { font-size: 13px; font-weight: 700; color: var(--navy); }
+  .action-slider .as-pct { font-size: 21px; font-weight: 800; color: var(--accent); }
+  .action-slider input[type=range] { margin: 9px 0 6px; }
+  .action-slider .as-hint { font-size: 11.5px; color: var(--gray); line-height: 1.4; }
+  .btn-label { display: block; }
   .btn-buy  { background: var(--navy); color: #fff; }
   .btn-buy:hover { background: var(--navy-soft); }
   .btn-hold { background: var(--accent); color: #fff; }
@@ -426,6 +433,10 @@
   .inj-amt { font-size: 46px; font-weight: 800; color: var(--green); margin: 6px 0 2px; letter-spacing: -.01em; }
   .inj-sub { font-size: 15px; line-height: 1.55; color: var(--ink); max-width: 460px; margin: 8px auto 20px; }
   .inj-sub b { color: var(--navy); }
+  .pi-emoji { font-size: 52px; line-height: 1; }
+  .pi-eyebrow { font-size: 11.5px; letter-spacing: .16em; text-transform: uppercase; font-weight: 800; color: var(--accent); margin-top: 6px; }
+  .pi-sub { font-size: 15px; line-height: 1.6; color: var(--ink); max-width: 480px; margin: 8px auto 22px; }
+  .pi-sub b { color: var(--navy); }
   /* Round-3 windfall banner on the scenario card. */
   .windfall { background: linear-gradient(90deg, rgba(0,209,144,.16), rgba(0,128,116,.10));
     border: 1px solid rgba(0,128,116,.35); border-radius: 12px; padding: 12px 14px; margin: 0 0 14px;
@@ -465,7 +476,7 @@
   <section class="phase active" id="phase-welcome">
     <div class="card">
       <h1>Choose how much you have invested.<br>Then live through the moments that test you.</h1>
-      <p class="lede">Six times, the world will throw something at you — a crash, a panic, a mania, a war. Each time, you decide what to do with your money.</p>
+      <p class="lede">Four times, the world will throw something at you — a crash, a panic, a mania, a war. Each time, you decide what to do with your money.</p>
       <p class="muted" style="margin:14px 0 8px"><b>Here's the catch:</b> you won't be told when you are. No dates, no names — just the moment, as it hits. Only at the very end will you find out what you just lived through.</p>
       <div class="amount-pick">
         <div class="amount-label">How much do you have to invest?</div>
@@ -479,7 +490,7 @@
       </div>
       <div class="stat-row">
         <div class="stat"><b>Balanced</b><span>60/40 composite fund</span></div>
-        <div class="stat"><b>6</b><span>moments ahead of you</span></div>
+        <div class="stat"><b>4</b><span>moments ahead of you</span></div>
         <div class="stat"><b>≈4 min</b><span>to play</span></div>
       </div>
       <p class="muted" style="margin-bottom:22px">Each time, you choose: <b>Hold</b> and stay invested, or <b>Sell</b> — pulling 25% of your money out into cash. Once you've stepped out, you can <b>Buy</b> back in. This is an educational simulation using real historical market returns — not investment advice.</p>
@@ -488,6 +499,17 @@
   </section>
 
   <!-- ═══ SCENARIO ═══ -->
+  <!-- ═══ PRACTICE INTRO ═══ -->
+  <section class="phase" id="phase-practice-intro">
+    <div class="card" style="text-align:center">
+      <div class="pi-emoji">🎈</div>
+      <div class="pi-eyebrow">Practice round</div>
+      <h2 style="margin:6px 0 10px">First, a quick practice round — it doesn't count.</h2>
+      <p class="pi-sub">You'll see one market moment and choose <b>Buy</b>, <b>Hold</b>, or <b>Sell</b>. Then you'll see what each choice would have done. This one is just to show you how it works — <b>nothing here affects your score</b>. The real game starts right after.</p>
+      <button class="btn btn-primary" id="btnPracticeGo">Got it — start the practice round →</button>
+    </div>
+  </section>
+
   <section class="phase" id="phase-scenario">
     <div class="card">
       <div class="progress" id="progressBar"></div>
@@ -495,10 +517,15 @@
       <h2 id="scTitle"></h2>
       <p class="story" id="scStory"></p>
       <div class="tie-in"><b>In the markets</b><span id="scMood"></span></div>
+      <div class="action-slider" id="actionSlider" hidden>
+        <div class="as-head"><span>How much of the move?</span><span class="as-pct" id="asPct">25%</span></div>
+        <input type="range" id="amtSlider" min="5" max="100" step="5" value="25" aria-label="Percent to buy or sell">
+        <div class="as-hint">Buy uses that % of your <b>cash</b> · Sell moves that % of your <b>holdings</b></div>
+      </div>
       <div class="decision-grid">
-        <button class="btn btn-buy"  id="btnBuy">Buy 25% more<small id="buyNote"></small></button>
-        <button class="btn btn-hold" id="btnHold">Hold<small>stay invested</small></button>
-        <button class="btn btn-sell" id="btnSell">Sell 25%<small id="sellNote"></small></button>
+        <button class="btn btn-buy"  id="btnBuy"><span class="btn-label" id="buyLabel">Buy 25% more</span><small id="buyNote"></small></button>
+        <button class="btn btn-hold" id="btnHold"><span class="btn-label">Hold</span><small>stay invested</small></button>
+        <button class="btn btn-sell" id="btnSell"><span class="btn-label" id="sellLabel">Sell 25%</span><small id="sellNote"></small></button>
       </div>
       <div class="hint" id="tutorialHint" hidden>
         💡 <b>How to play:</b> Go with your gut, the way you would in the moment. <b>Sell</b> moves money to safety, <b>Hold</b> rides it out, <b>Buy</b> leans in. Right after each choice you'll see what Buy, Hold and Sell would each have done — but never when you are.
@@ -651,62 +678,62 @@
    {month, event, what} to break the ambiguity. ── */
 const POOL = [
   { title: "The floor gives way", month: "2020-03", emotionalPull: "panic + fear",
-    story: "It starts as a headline you scroll past. Three weeks later it's the only headline — and your account is down more in a month than it normally moves in a year. This is the money that was supposed to buy your fifties back. Your dad calls, voice shaking: \"Get out. Now. Before it's all gone.\"",
+    story: "At first it's just another scary headline. A few weeks later it's everywhere — and your account is down more in one month than it normally moves in a year. This was money you were counting on. Someone close to you calls in a panic: \"Get out now, before it's all gone.\"",
     mood: "Freefall — faster and harder than anyone alive remembers.",
     event: "The COVID-19 crash · March 2020",
     what: "A global pandemic triggered the fastest bear market in history — equities fell about a third in five weeks." },
   { title: "It makes no sense", month: "2020-04", emotionalPull: "disbelief + sitting out",
-    story: "The real world is still getting worse — the news is wall-to-wall bad. Yet the market just posted its best month in decades, and the friends who panicked out have gone very quiet. Every cell in your body says this rally is a lie. And it keeps going up without you having to believe in it.",
+    story: "The news is still bad — really bad. But the market just had one of its best months in years, and the friends who sold in a panic have gone quiet. It feels like the rally can't be real. And it keeps climbing without you.",
     mood: "Ripping higher — against all logic.",
     event: "The stimulus rebound · April 2020",
     what: "Zero rates and trillions in stimulus fueled one of the fastest recoveries ever — equities had their best month in decades." },
   { title: "A breakthrough", month: "2020-11", emotionalPull: "hope + regret",
-    story: "One morning: actual good news, the kind that could genuinely end the crisis. The market gaps up before you've finished your coffee, and the group chat is pure euphoria. If you stepped aside earlier this year, every green day now lands like a small insult.",
+    story: "One morning brings real good news — the kind that could actually end the crisis. The market jumps before you've finished your coffee. If you sold earlier this year, every up day now stings a little.",
     mood: "A sharp, sudden relief rally.",
     event: "The vaccine breakthrough · November 2020",
     what: "The first highly effective vaccine was announced. Markets surged that month and beaten-down equities soared." },
   { title: "The first crack", month: "2021-09", emotionalPull: "unease + recency bias",
-    story: "Everything you buy costs a little more each month, and the people who kept the party going are hinting the punch bowl leaves soon. Your portfolio sits at numbers you're now scared to lose. For the first time in ages, it wobbles — and this one feels different.",
+    story: "Prices keep creeping higher on almost everything you buy, and there's talk the easy money is about to end. Your account sits at a high you'd hate to give back. Then it wobbles for the first time in a while — and this one feels different.",
     mood: "A first wobble after a long, easy climb.",
     event: "The inflation scare · September 2021",
     what: "Inflation began surging and the Fed signaled it would taper support — the first tremor before a hard year." },
   { title: "It won't stop bleeding", month: "2022-04", emotionalPull: "fear + helplessness",
-    story: "A crisis abroad has set the cost of everything on fire — and this time there is nowhere to hide. Even the 'safe' fixed income half of your portfolio is falling with the rest. Month after month, another leg down. You catch yourself doing the math on how many working years this is costing you.",
+    story: "A crisis overseas has pushed up the price of nearly everything, and there's nowhere to hide. Even the \"safe\" part of your portfolio is falling too. Every month brings another drop, and you start doing the math on what it's costing you.",
     mood: "Everything falling at once — no safe corner.",
     event: "War & inflation shock · April 2022",
     what: "War in Ukraine collided with 40-year-high inflation — unusually, equities and fixed income fell hard together." },
   { title: "No bottom in sight", month: "2022-06", emotionalPull: "fear + recency bias",
-    story: "Rates are rising faster than they have in decades and every rally dies within days. The pundits who called the top are taking victory laps; the voices that said 'hold on' have gone quiet. Down again this month. It genuinely feels like there is no floor.",
+    story: "Interest rates are rising fast and every bounce fades within days. The people who called the top are gloating; the ones who said \"hang on\" have gone quiet. Down again this month. It really feels like there's no floor.",
     mood: "A grinding, relentless decline.",
     event: "The rate-hike bear market · June 2022",
     what: "The most aggressive rate hikes in decades drove equities deep into a bear market." },
   { title: "Maximum pain", month: "2022-09", emotionalPull: "capitulation + loss aversion",
-    story: "The worst month of a brutal year. You've stopped opening your statements. Your neighbor swears he sold 'just in time' and sleeps great. A tired voice in your head keeps whispering the same thing: make it stop — sell what's left while there's something left.",
+    story: "The worst month of a brutal year. You've stopped opening your statements. A neighbor swears he sold \"just in time\" and sleeps fine. A tired voice keeps saying the same thing: just make it stop — sell what's left while there's still something there.",
     mood: "Peak pessimism — capitulation weather.",
     event: "The low · September 2022",
     what: "Equities hit their sharpest monthly drop of the bear market — just weeks before the bottom that October." },
   { title: "You're exhausted", month: "2022-10", emotionalPull: "capitulation + disbelief",
-    story: "A violent bounce, out of nowhere. You've been burned by every single rally this year, and this one smells exactly like the others. Selling into the strength and walking away would feel so clean. So final. So safe. You could just… be done.",
+    story: "A sharp bounce out of nowhere. Every rally this year has burned you, and this one looks just like the rest. Selling now and walking away would feel clean and safe. You could just be done with it.",
     mood: "A powerful bounce nobody believes.",
     event: "The turn · October 2022",
     what: "At peak fear the market began to recover — those who'd capitulated locked in their losses and missed the turn." },
   { title: "Something just broke", month: "2023-03", emotionalPull: "contagion fear",
-    story: "A household name in finance fails — overnight, just gone. Then a second one. Suddenly everyone around you is asking a question nobody has asked in fifteen years: is my money actually safe anywhere? You remember exactly how the last one of these felt.",
+    story: "A big, well-known bank fails overnight — then another. Suddenly everyone is asking a question you haven't heard in years: is my money actually safe anywhere? You remember exactly how the last scare like this felt.",
     mood: "A sudden jolt of fear out of nowhere.",
     event: "The banking scare · March 2023",
     what: "Several banks failed in days. Fears of a 2008 repeat faded fast — and the month actually closed higher." },
   { title: "Everyone's rich but you", month: "2023-06", emotionalPull: "FOMO + greed",
-    story: "A new technology has the market in a fever, and a handful of giant names are dragging the indexes up almost single-handedly. Your friend who piled in is up 40% and can't stop talking about it. The fear in your gut isn't losing money anymore — it's missing out.",
+    story: "A new technology has everyone excited, and a handful of giant companies are dragging the whole market up. A friend who jumped in early is up 40% and won't stop talking about it. The worry in your gut isn't losing money now — it's missing out.",
     mood: "A narrow, powerful rally.",
     event: "The AI boom · June 2023",
     what: "A viral AI tool sparked a frenzy; a few megacap tech equities powered a strong summer rally." },
   { title: "The all-clear", month: "2023-11", emotionalPull: "relief + regret",
-    story: "For over a year, every piece of good news was a trap. Now the ground finally shifts — and the market erupts into its best month in ages, everything up at once. The question stings more than any loss did: were you still in it when it mattered?",
+    story: "For over a year, every piece of good news turned into a trap. Now something finally shifts, and the market has its best month in ages — almost everything up at once. The question stings: were you still invested when it counted?",
     mood: "A furious, everything-up rally.",
     event: "The pivot rally · November 2023",
     what: "Hints that rate hikes were over set off one of the strongest months in years — for both equities and fixed income." },
   { title: "The rules just changed", month: "2025-03", emotionalPull: "fear + uncertainty",
-    story: "Overnight, a policy bombshell rewrites the rules of the global economy. Markets whipsaw on every headline, and nobody — not the pros, not the pundits — can tell you what tomorrow looks like. Stepping aside until the dust settles has never felt more reasonable.",
+    story: "Overnight, a surprise policy announcement shakes up the whole economy. The market swings wildly on every headline, and no one — not even the experts — can say what tomorrow looks like. Stepping aside until things calm down has never felt more reasonable.",
     mood: "Headline-driven whiplash out of a calm sky.",
     event: "The tariff shock · March 2025",
     what: "A sudden tariff announcement rattled markets after a calm stretch — a reminder that shocks never really stop." }
@@ -714,7 +741,7 @@ const POOL = [
 
 // Tutorial is a hypothetical warm-up (not a real month, doesn't count).
 const TUTORIAL = { title: "A jittery week", month: null, tutMove: -3, tutBond: 1, emotionalPull: "a warm-up",
-  story: "The market's had a few red days in a row — nothing dramatic, but the headlines are nervous and your feed is full of doom. A practice round to get your bearings.",
+  story: "The market's had a few down days in a row — nothing huge, but the headlines sound nervous. This is just a practice round to get the hang of it.",
   mood: "Ordinary turbulence." };
 
 /* ═══ REAL MONTHLY TOTAL RETURNS, 2020-01 … 2025-12 (72 months, %). ═══
@@ -754,7 +781,8 @@ const CASH_MONTHLY = Math.pow(1.02, 1/12);   // 2%/yr on cash
 const MONTHS = 72;                            // 2020-01 … 2025-12
 const RISK = { "60/40": { w: 0.60, sub: "60% equities · 40% fixed income" },
                "70/30": { w: 0.70, sub: "70% equities · 30% fixed income" } };
-const DRAW = 6;
+const DRAW = 4;
+const INJECT_STEP = DRAW <= 4 ? 1 : 2;  // windfall lands here (round 2 of 4, round 3 of 6)
 
 // Real move for a moment, looked up by its month.
 const eqMoveOf = (sc) => EQ_2020[monthIndex(sc.month)];
@@ -853,7 +881,7 @@ function renderScenario() {
     }
     state.cursor = mi;   // now sitting AT the event month; its return applies on decide
     // Round-3 windfall: a cash bonus lands. It gets its own screen (below).
-    if (state.step === 2 && !state.injected) {
+    if (state.step === INJECT_STEP && !state.injected) {
       state.cash += state.injectAmt; state.injected = true; state.pendingInjection = true;
     }
   }
@@ -864,13 +892,10 @@ function renderScenario() {
   $("scStory").textContent = sc.story;
   $("scMood").textContent = sc.mood;
 
-  const total = state.fund + state.cash;
-  const buyAmt  = Math.min(ACTION * total, state.cash);
-  const sellAmt = Math.min(ACTION * total, state.fund);
-  $("buyNote").textContent  = buyAmt  > 0 ? "move " + fmt(buyAmt)  + " in"  : "you're fully invested";
-  $("sellNote").textContent = sellAmt > 0 ? "move " + fmt(sellAmt) + " out" : "nothing invested";
-  $("btnBuy").disabled  = buyAmt  <= 0;
-  $("btnSell").disabled = sellAmt <= 0;
+  const showSlider = !isTut && state.injected;
+  if ($("actionSlider")) $("actionSlider").hidden = !showSlider;
+  if (showSlider) { if ($("amtSlider")) $("amtSlider").value = 25; state.actionFrac = 0.25; }
+  updateActionNotes();
 
   updateTracker();
   // A windfall just landed → show the bonus screen first; Continue reveals the moment.
@@ -880,12 +905,38 @@ function renderScenario() {
 
 /** Apply an action to {fund,cash} then let the month's blended return play out.
     `r` is the real blended monthly return (fraction). */
-function applyMoment(fund, cash, action, r) {
-  const total = fund + cash;
-  if (action === "buy")  { const a = Math.min(ACTION * total, cash); cash -= a; fund += a; }
-  else if (action === "sell") { const a = Math.min(ACTION * total, fund); fund -= a; cash += a; }
+function applyMoment(fund, cash, action, r, f) {
+  if (action === "buy")  { const a = f * cash; cash -= a; fund += a; }
+  else if (action === "sell") { const a = f * fund; fund -= a; cash += a; }
   fund *= 1 + r; cash *= CASH_MONTHLY;
   return { fund, cash, total: fund + cash, blend: r * 100 };
+}
+/* Fraction of the RELEVANT side to move. Pre-windfall: a fixed 25% of the whole
+   portfolio (capped). Post-windfall: the player's slider — % of cash for a buy,
+   % of holdings for a sell. */
+function actionFrac(action, fund, cash) {
+  if (state.injected) {
+    if (action === "buy")  return cash > 0 ? state.actionFrac : 0;
+    if (action === "sell") return fund > 0 ? state.actionFrac : 0;
+    return 0;
+  }
+  const total = fund + cash;
+  if (action === "buy")  return cash > 0 ? Math.min(ACTION * total / cash, 1) : 0;
+  if (action === "sell") return fund > 0 ? Math.min(ACTION * total / fund, 1) : 0;
+  return 0;
+}
+/* Keep the Buy/Sell notes, labels and disabled state in sync with the slider. */
+function updateActionNotes() {
+  const fB = actionFrac("buy", state.fund, state.cash), fS = actionFrac("sell", state.fund, state.cash);
+  const buyAmt = fB * state.cash, sellAmt = fS * state.fund;
+  if ($("buyNote"))  $("buyNote").textContent  = buyAmt  > 0.5 ? "move " + fmt(buyAmt)  + " in"  : "you're fully invested";
+  if ($("sellNote")) $("sellNote").textContent = sellAmt > 0.5 ? "move " + fmt(sellAmt) + " out" : "nothing invested";
+  if ($("btnBuy"))  $("btnBuy").disabled  = buyAmt  <= 0.5;
+  if ($("btnSell")) $("btnSell").disabled = sellAmt <= 0.5;
+  const pct = Math.round((state.actionFrac || 0.25) * 100);
+  if ($("asPct")) $("asPct").textContent = pct + "%";
+  if ($("buyLabel"))  $("buyLabel").textContent  = state.injected ? "Buy in"  : "Buy 25% more";
+  if ($("sellLabel")) $("sellLabel").textContent = state.injected ? "Sell out" : "Sell 25%";
 }
 
 function decide(action) {
@@ -900,15 +951,16 @@ function decide(action) {
   // What was actually available this moment: buy needs cash on the sidelines,
   // sell needs something invested. The outcome screen blurs the rest.
   const avail = { buy: state.cash > 0.005, hold: true, sell: state.fund > 0.005 };
+  const fBuy = actionFrac("buy", state.fund, state.cash), fSell = actionFrac("sell", state.fund, state.cash);
   const results = {
-    buy:  applyMoment(state.fund, state.cash, "buy",  r),
-    hold: applyMoment(state.fund, state.cash, "hold", r),
-    sell: applyMoment(state.fund, state.cash, "sell", r)
+    buy:  applyMoment(state.fund, state.cash, "buy",  r, fBuy),
+    hold: applyMoment(state.fund, state.cash, "hold", r, 0),
+    sell: applyMoment(state.fund, state.cash, "sell", r, fSell)
   };
   const chosen = results[action];
 
   if (!isTut) {
-    state.decisions.push(action);
+    state.decisions.push({ a: action, f: action === "buy" ? fBuy : action === "sell" ? fSell : 0 });
     state.fund = chosen.fund; state.cash = chosen.cash;
     state.cursor = monthIndex(sc.month) + 1;   // the event month's return is now spent
     updateTracker();
@@ -932,7 +984,7 @@ function decide(action) {
 }
 
 function renderCounterfactuals(before, results, chosen, avail) {
-  const order = ["buy", "hold", "sell"], noun = { buy: "Buy 25%", hold: "Hold", sell: "Sell 25%" };
+  const order = ["buy", "hold", "sell"], noun = { buy: "Buy", hold: "Hold", sell: "Sell" };
   const box = $("ocChoices"); box.innerHTML = "";
   order.forEach((act) => {
     const delta = results[act].total - before;
@@ -976,9 +1028,9 @@ function simulatePath() {
     if (m === state.injectIdx) { yc += state.injectAmt; sv += state.injectAmt; }
     const r = compMonth(m, w);
     if (decByMonth[m] !== undefined) {           // act at the event month, before its return
-      const total = yf + yc, d = decByMonth[m];
-      if (d === "buy")  { const a = Math.min(ACTION * total, yc); yc -= a; yf += a; }
-      else if (d === "sell") { const a = Math.min(ACTION * total, yf); yf -= a; yc += a; }
+      const d = decByMonth[m];
+      if (d.a === "buy")  { const a = d.f * yc; yc -= a; yf += a; }
+      else if (d.a === "sell") { const a = d.f * yf; yf -= a; yc += a; }
     }
     yf *= 1 + r; yc *= CASH_MONTHLY; sv *= 1 + r;
     you.push(yf + yc); stay.push(sv);
@@ -1064,7 +1116,7 @@ function renderReveal() {
     : gap > 0
       ? "Your timing beat staying invested by <b class=\"pos\">+" + gap.toFixed(1) + "%</b> — a rare outcome across these six years."
       : "Reacting to the headlines cost you <b class=\"neg\">" + gap.toFixed(1) + "%</b> versus simply staying invested.";
-  const sells = state.decisions.filter((d) => d === "sell").length;
+  const sells = state.decisions.filter((d) => d.a === "sell").length;
   $("sumTake").textContent = sells > 0
     ? "You reached for safety " + sells + (sells === 1 ? " time" : " times") + ". Through the worst of it, the surest path was simply to hold on."
     : "You held through every one of them — the hardest and most rewarding thing an investor can do.";
@@ -1072,8 +1124,8 @@ function renderReveal() {
   // decisions-so-far chips (in the moments' real order)
   const dr = $("decisionRow"); dr.innerHTML = "";
   const ordered = state.pool.map((sc, k) => ({ sc, d: state.decisions[k] })).sort((a, b) => monthIndex(a.sc.month) - monthIndex(b.sc.month));
-  ordered.forEach(({ d }, i) => { const c = document.createElement("span"); c.className = "dchip " + d;
-    c.textContent = (i + 1) + " · " + { buy: "Buy", hold: "Hold", sell: "Sell" }[d]; dr.appendChild(c); });
+  ordered.forEach(({ d }, i) => { const c = document.createElement("span"); c.className = "dchip " + d.a;
+    c.textContent = (i + 1) + " · " + { buy: "Buy", hold: "Hold", sell: "Sell" }[d.a]; dr.appendChild(c); });
 
   // (the chart's screen-reader label + table are set per view in showEra)
 
@@ -1089,7 +1141,7 @@ function renderReveal() {
     row.innerHTML = '<div class="tl-when">' + when + '</div>' +
       '<div class="tl-body"><b>' + name + '</b><p>' + sc.what + '</p>' +
       '<div class="tl-meta">Equities: <span class="tl-move ' + (m >= 0 ? "up" : "down") + '">' + mv + '</span>' +
-      '<span class="tl-you ' + d + '">· you ' + { buy: "bought", hold: "held", sell: "sold" }[d] + '</span></div></div>';
+      '<span class="tl-you ' + d.a + '">· you ' + { buy: "bought", hold: "held", sell: "sold" }[d.a] + '</span></div></div>';
     tl.appendChild(row);
   });
 
@@ -1289,7 +1341,7 @@ function showEra(key, userInitiated) {
     const chartIdxOf = (mi) => (mi - state.startIdx) + 1;
     const pr = you.map(() => 0), ps = you.map(() => "circle"), pbg = you.map(() => "transparent"), phr = you.map(() => 0);
     REVEAL_DEC = {};
-    Object.keys(decByMonth).forEach((mi) => { const idx = chartIdxOf(+mi), dd = decByMonth[mi];
+    Object.keys(decByMonth).forEach((mi) => { const idx = chartIdxOf(+mi), dd = decByMonth[mi].a;
       pr[idx] = 6; ps[idx] = decShape[dd]; pbg[idx] = decColor[dd]; phr[idx] = 8; REVEAL_DEC[idx] = dd; });
     Object.assign(d0, { pointRadius: pr, pointStyle: ps, pointBackgroundColor: pbg, pointBorderColor: "#fff", pointBorderWidth: 1.5, pointHoverRadius: phr });
     if (typeof FUND_LINE_ENABLED !== "undefined" && d2) {
@@ -1373,7 +1425,7 @@ function startGame() {
   state.cashStart = START - state.investedStart;
   state.pool = drawScenarios();
   state.startIdx = monthIndex(state.pool[0].month);   // total anchored at moment 1
-  state.injectIdx = monthIndex(state.pool[2].month);  // round-3 windfall month
+  state.injectIdx = monthIndex(state.pool[INJECT_STEP].month);  // round-3 windfall month
   state.injectAmt = INJECT_FRAC * START;
   state.injected = false; state.pendingInjection = false;
   state.step = -1; state.decisions = [];
@@ -1397,10 +1449,12 @@ wireAmountInput("startAmt");   // solo amount input
 updateAllocDisplay();
 if ($("btnInjectionGo")) $("btnInjectionGo").addEventListener("click", () => showPhase("phase-scenario"));
 selectRisk("60/40");           // Balanced is the only profile now
-$("btnStart").addEventListener("click", startGame);
+$("btnStart").addEventListener("click", () => showPhase("phase-practice-intro"));
+if ($("btnPracticeGo")) $("btnPracticeGo").addEventListener("click", startGame);
 $("btnBuy").addEventListener("click", () => decide("buy"));
 $("btnHold").addEventListener("click", () => decide("hold"));
 $("btnSell").addEventListener("click", () => decide("sell"));
+if ($("amtSlider")) $("amtSlider").addEventListener("input", () => { state.actionFrac = (+$("amtSlider").value) / 100; updateActionNotes(); });
 $("btnContinue").addEventListener("click", nextStep);
 $("btnShare").addEventListener("click", shareResult);
 if ($("btnExploreCrises")) $("btnExploreCrises").addEventListener("click", openCrises);
