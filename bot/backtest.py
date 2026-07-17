@@ -48,6 +48,11 @@ log = logging.getLogger("bot.backtest")
 SLIPPAGE_PCT = 0.0005  # 0.05% per side
 COMMISSION = 0.0       # Alpaca is commission-free
 
+# Go-live gate: every strategy must clear both of these over the backtest
+# window, or its parameters need adjusting before live trading.
+MIN_SHARPE = 0.0
+MAX_DRAWDOWN_LIMIT = 0.15
+
 EQUITY_MINUTES_PER_DAY = 390
 CRYPTO_MINUTES_PER_DAY = 1440
 
@@ -461,22 +466,39 @@ def print_report(metrics: List[dict], strategy_by_label: Dict[str, object]) -> N
         print("  ".join(row))
     print("=" * len(header))
 
-    flagged = [m for m in metrics if not math.isnan(m["sharpe"])
-               and m["sharpe"] < 0 and m["label"] in strategy_by_label]
-    if flagged:
-        print("\n⚠ NEGATIVE SHARPE — parameters to revisit:")
-        for m in flagged:
-            strat = strategy_by_label[m["label"]]
-            print(f"  ⚠ {m['label']} ({strat.name}): Sharpe {m['sharpe']:.2f} "
-                  f"— consider adjusting {PARAM_HINTS[strat.name]} "
+    # Go-live gate: flag any strategy with a negative Sharpe or a max
+    # drawdown above the limit.
+    flagged = False
+    for m in metrics:
+        issues = []
+        if not math.isnan(m["sharpe"]) and m["sharpe"] < MIN_SHARPE:
+            issues.append(f"negative Sharpe ({m['sharpe']:.2f})")
+        if m["max_drawdown"] > MAX_DRAWDOWN_LIMIT:
+            issues.append(f"max drawdown {m['max_drawdown'] * 100:.1f}% > "
+                          f"{MAX_DRAWDOWN_LIMIT * 100:.0f}% limit")
+        if not issues:
+            continue
+        flagged = True
+        strat = strategy_by_label.get(m["label"])
+        if strat is not None:
+            print(f"\n  ⚠ {m['label']} ({strat.name}): {', '.join(issues)} — "
+                  f"adjust {PARAM_HINTS[strat.name]} "
                   f"(current params: {strat.params})")
+        else:
+            print(f"\n  ⚠ {m['label']}: {', '.join(issues)}")
+    if flagged:
+        print("\nGO-LIVE CHECK: ✗ FAILED — fix the flagged strategies and "
+              "re-run before switching ALPACA_PAPER to false.")
     else:
-        print("\nNo strategy had a negative Sharpe ratio over the window.")
+        print(f"\nGO-LIVE CHECK: ✓ PASSED — every strategy has Sharpe >= "
+              f"{MIN_SHARPE:.0f} and max drawdown <= "
+              f"{MAX_DRAWDOWN_LIMIT * 100:.0f}%.")
 
 
 # ---------------------------------------------------------------------- main
 def run_backtest(bars_map: Dict[str, pd.DataFrame], trade_start: datetime,
-                 initial_equity: float, output_png: str) -> List[dict]:
+                 initial_equity: float, output_png: str,
+                 metrics_csv: Optional[str] = "backtest_metrics.csv") -> List[dict]:
     """Run per-instrument and combined simulations on prefetched bars."""
     instruments = build_instruments(bars_map)
 
@@ -495,6 +517,9 @@ def run_backtest(bars_map: Dict[str, pd.DataFrame], trade_start: datetime,
     metrics = [compute_metrics(r) for r in per_results]
     metrics.append(compute_metrics(combined))
     plot_equity_curves(combined, per_results, output_png)
+    if metrics_csv:
+        pd.DataFrame(metrics).to_csv(metrics_csv, index=False)
+        log.info("Metrics written to %s", metrics_csv)
     print_report(metrics, strategy_by_label)
     return metrics
 
@@ -507,6 +532,8 @@ def main() -> None:
                         help="Starting equity per run (default 100000)")
     parser.add_argument("--output", default="backtest_results.png",
                         help="Equity curve chart path")
+    parser.add_argument("--metrics-csv", default="backtest_metrics.csv",
+                        help="Where to write the metrics table as CSV")
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO,
@@ -523,7 +550,7 @@ def main() -> None:
              SLIPPAGE_PCT * 100, COMMISSION)
     bars_map = fetch_history(start, end)
     run_backtest(bars_map, trade_start=start, initial_equity=args.equity,
-                 output_png=args.output)
+                 output_png=args.output, metrics_csv=args.metrics_csv)
 
 
 if __name__ == "__main__":

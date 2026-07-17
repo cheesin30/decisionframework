@@ -81,9 +81,13 @@ positions still open at the end are force-closed on the final bar.
 It reports, per instrument (independent runs) and for the combined portfolio
 (shared equity, correlation filter active): total trades, win rate, average
 win/loss, profit factor, maximum drawdown, Sharpe ratio (daily returns,
-annualized), and total return. Any strategy with a negative Sharpe over the
-window is flagged with the parameters to revisit. An equity-curve chart is
-saved to `backtest_results.png`.
+annualized), and total return. An equity-curve chart is saved to
+`backtest_results.png` and the metrics table to `backtest_metrics.csv`.
+
+The report ends with a **go-live check**: any strategy with a negative
+Sharpe ratio or a maximum drawdown above 15% is flagged with the parameters
+to revisit, and the check prints FAILED. Do not switch `ALPACA_PAPER` to
+false until it passes.
 
 ## Output files
 
