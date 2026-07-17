@@ -41,6 +41,7 @@ bot/
   risk_manager.py         # Sizing, stops, correlation filter
   portfolio.py            # Positions, order execution, CSV logging
   main.py                 # Continuous loop / scheduler
+  backtest.py             # Historical simulation of all strategies
 config.py                 # All tunables (instruments, params, paths)
 .env.example              # Template for API keys
 requirements.txt
@@ -61,6 +62,28 @@ price, and evaluates each strategy once per newly completed candle (15 m /
 Alpaca's clock endpoint); BTC/USD trades 24/7. API errors and disconnections
 are caught and retried with exponential backoff, so a dropped connection or a
 market closure never kills the process.
+
+## Backtesting
+
+```bash
+python -m bot.backtest              # 6 months, $100k, backtest_results.png
+python -m bot.backtest --months 12 --equity 50000 --output curve.png
+```
+
+Pulls historical bars from Alpaca for all five instruments at their live
+timeframes (plus extra pre-window data so the 200-period EMA and ATR are
+warmed up before the first tradable bar) and replays them through the *same*
+strategy classes and risk manager the live bot uses. Fills happen at the
+signal candle's close with 0.05% slippage per side and zero commission;
+stops are honored intra-bar (gaps through a stop fill at the open);
+positions still open at the end are force-closed on the final bar.
+
+It reports, per instrument (independent runs) and for the combined portfolio
+(shared equity, correlation filter active): total trades, win rate, average
+win/loss, profit factor, maximum drawdown, Sharpe ratio (daily returns,
+annualized), and total return. Any strategy with a negative Sharpe over the
+window is flagged with the parameters to revisit. An equity-curve chart is
+saved to `backtest_results.png`.
 
 ## Output files
 
