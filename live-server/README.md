@@ -46,7 +46,7 @@ whole thing runs self-contained. Now it just needs a company home.
 
 **Step 2 — Get the two approvals that actually gate this.** These matter more
 than the tech:
-- **Compliance / brand review.** It's Capital Group-branded and uses market
+- **Compliance / brand review.** It uses real market
   data that's marked "verify before external use." Get sign-off before any
   real audience sees it. *(This is the real long pole — start it early.)*
 - **A home to run it on.** That's an IT request (Step 3).

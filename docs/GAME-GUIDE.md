@@ -7,7 +7,7 @@ knowledge needed. If you can open a web link, you can run this.
 
 ## 1 · What it is
 
-"The Long Game" is a short, Capital Group-branded investing game. A player is
+"The Long Game" is a short, browser-based investing game. A player is
 given a portfolio and lives through six real market moments — a crash, a
 panic, a mania — without being told the dates. At each moment they choose to
 **Hold, Sell, or Buy**. At the end, the game reveals that every moment was
@@ -19,16 +19,14 @@ It comes in three editions — pick one for your situation:
 |---|---|---|
 | **Live Room** | A room of people at an event, each on their phone, with results on a big screen | None (product-agnostic) |
 | **Learning** | One person playing solo, on their own device | None (product-agnostic) |
-| **Sales** | One person solo, when you want to show the American Balanced Fund | Includes the fund panel + chart line |
+| **Sales** | One person solo, when you want to show a representative balanced fund | Includes the fund panel + chart line |
 
 All three teach the same lesson and play almost identically. The Live Room
 adds phones, a leaderboard, and performance checks; the Sales edition adds
 fund information at the end.
 
-> **Before anything else:** these are **internal / pre-approval** tools. Every
-> screen carries a "For internal use only · Do not disseminate" line. Do not
-> put them in front of a real client or external audience until the data and
-> compliance sign-offs are complete.
+> **Note:** these are educational demonstrations. The market data is real but
+> illustrative, and the games are not investment advice.
 
 ---
 

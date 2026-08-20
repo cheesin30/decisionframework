@@ -4,6 +4,8 @@
 
 **▶ Live demo:** https://cheesin30.github.io/decisionframework/
 
+*An independent personal project — built solo to explore how game design can teach investor behavior. Not affiliated with any company or fund; the market data is real but used purely for education.*
+
 <p align="center">
   <img src="assets/live-host.png" width="80%" alt="Live Room host screen — a QR code, room code, joined players, and one shared starting amount">
 </p>
@@ -85,11 +87,11 @@ long-term-game-learning.html   Solo, product-agnostic
 long-term-game-sales.html      Solo, benchmarked to a real balanced fund
 live-server/                   Self-hostable relay (Node · Python · C# · PowerShell)
 consultant-materials/          Presenter walkthrough deck + FAQ one-pager
-docs/                          How-to guide, handover guide, data & compliance checklist
+docs/                          How-to guide + handover notes
 archive/                       Earlier prototype iterations, kept for history
 assets/                        Screenshots used in this README
 ```
 
 ## A note on the data
 
-The market data is real and the mechanics are honest, but this is an **educational demonstration, not investment advice**. Fund and index figures intended for any real audience should be re-verified against source data first — see [`docs/VERIFICATION-CHECKLIST.md`](docs/VERIFICATION-CHECKLIST.md).
+The market data is real and the mechanics are honest, but this is an **educational demonstration, not investment advice**. The balanced-fund figures in the Sales edition are representative and illustrative. Past performance is not predictive of future results.

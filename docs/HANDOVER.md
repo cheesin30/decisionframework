@@ -9,7 +9,7 @@ change them safely, how to test, and how to keep yourself safe with backups.
 
 ## 1 · What this is, in 30 seconds
 
-"The Long Game" is a set of Capital Group-branded investing games. A player
+"The Long Game" is a set of browser-based investing games. A player
 gets $50,000, faces real historical market moments without being told the
 dates, chooses Buy / Hold / Sell, and at the end sees the big reveal: every
 moment was real, and simply staying invested usually won.
@@ -30,7 +30,7 @@ That also means sharing a game is trivial: send someone the `.html` file
 |---|---|---|
 | `long-term-game-live.html` | **Live Room** — the audience event version. Big screen + phones voting via QR code. | Yes |
 | `long-term-game-learning.html` | **Learning** — the solo, product-agnostic version. No fund mentioned. | Yes |
-| `long-term-game-sales.html` | **Sales** — the solo version WITH the American Balanced Fund panel and fund line on the chart. | Yes |
+| `long-term-game-sales.html` | **Sales** — the solo version WITH a representative balanced-fund panel and fund line on the chart. | Yes |
 | `long-term-investing-game.html`, `long-term-investing-game-2020.html` | Older prototypes, kept for reference only. | No — leave them alone |
 | `VERIFICATION-CHECKLIST.md` | The list of every number that must be verified and every compliance sign-off needed **before real client use**. | Read it. Update it when data changes. |
 | `live-server/` folder | The kit for running the Live Room on a company laptop with no internet services. Has its own plain-English `README.md`. | Only if events need it |
@@ -275,7 +275,7 @@ needs no changes to be hosted anywhere.
 
 ## 10 · The rules that outrank everything (compliance)
 
-This is a Capital Group-branded prototype with real market data and real
+This is a personal prototype with real market data and real
 fund performance in it. It is currently **internal / pre-approval**:
 
 1. **`VERIFICATION-CHECKLIST.md` is the contract.** Nothing goes in front of
