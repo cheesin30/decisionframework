@@ -20,11 +20,11 @@ The gap between those two lines is the whole lesson — and because you lived it
 
 ## Three editions
 
-| Edition | File | Who it's for |
-|---|---|---|
-| **Live Room** | [`long-term-game-live.html`](long-term-game-live.html) | A presenter hosts on a big screen; an audience joins from their phones by QR and plays together in real time, with a live leaderboard. 6 moments. |
-| **Learning** | [`long-term-game-learning.html`](long-term-game-learning.html) | Solo, product-agnostic self-play. 4 moments. |
-| **Sales** | [`long-term-game-sales.html`](long-term-game-sales.html) | Solo, advisor-led, benchmarked against a real balanced fund's monthly returns. 4 moments. |
+| Edition | Play it | Source | Who it's for |
+|---|---|---|---|
+| **Live Room** | [▶ play](https://cheesin30.github.io/decisionframework/long-term-game-live.html) | [`long-term-game-live.html`](long-term-game-live.html) | A presenter hosts on a big screen; an audience joins from their phones by QR and plays together in real time, with a live leaderboard. 6 moments. |
+| **Learning** | [▶ play](https://cheesin30.github.io/decisionframework/long-term-game-learning.html) | [`long-term-game-learning.html`](long-term-game-learning.html) | Solo, product-agnostic self-play. 4 moments. |
+| **Sales** | [▶ play](https://cheesin30.github.io/decisionframework/long-term-game-sales.html) | [`long-term-game-sales.html`](long-term-game-sales.html) | Solo, advisor-led, benchmarked against a real balanced fund's monthly returns. 4 moments. |
 
 Each is a **single self-contained HTML file** — no build step, no server, no dependencies to install. Open it in any browser and it runs.
 
