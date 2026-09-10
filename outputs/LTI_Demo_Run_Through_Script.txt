@@ -1,0 +1,254 @@
+LTI MATERIALS RUN-THROUGH — THOUGHT-PROCESS SCRIPT
+============================================================
+
+Companion to: LTI_Presentation_Script.txt
+Starts at:    Slide 6 — "Now, the flow in action."
+Runtime:      ~8-10 minutes
+Flow:         PREPARE -> DELIVER -> FOLLOW UP
+
+Principle for this section: the screen shows WHAT it is —
+you only ever say WHY it's built that way. Never read the
+material aloud. Open it, give the room two seconds to look,
+then explain the decision behind it.
+
+SETUP CHECKLIST (before the session)
+  [ ] Pre-Workshop Diagnostic + Post-Workshop Survey open in tabs
+  [ ] The four toolkit PDFs open in order
+  [ ] Engagement Calendar tool open
+  [ ] QR tested with your own phone that morning
+  [ ] Printed toolkit copies to pass around (optional but strong)
+
+
+------------------------------------------------------------
+PART 1 — PREPARE  ·  the pre-workshop survey
+------------------------------------------------------------
+(~2 minutes. Open the diagnostic. Pause. Then talk about
+decisions, not questions.)
+
+OPEN the Pre-Workshop Diagnostic. Let them read the cover. Then:
+
+  The first design decision was how the workshop opens. Before a
+  single slide, the room scans a QR code and does this — two
+  minutes, on their own phones. I chose that over sending a link
+  in advance for a simple reason: pre-work sent by email doesn't
+  get done, and chasing it burns goodwill. A QR on the opening
+  slide gets a captive room and a hundred percent completion —
+  and it means every adviser has named their own problem before
+  the teaching starts. They begin as participants, not spectators.
+
+  It also quietly rehearses the mechanic: scan, form, done. The
+  workshop ENDS with the exact same gesture — so by the time the
+  closing QR appears, nobody in the room hesitates.
+
+  Second decision: everything is tap, not type. The moment you
+  ask an adviser to write sentences on a phone, completion
+  collapses. Every question is a tap; the whole thing fits in
+  the two minutes before we begin.
+
+SCROLL slowly through the questions while you talk:
+
+  Third — and this is the one I care most about — every answer
+  option is plausible. There's no obviously "correct" choice to
+  perform. That matters because this looks like a survey, but
+  it's really a diagnostic: one of these questions quietly tests
+  whether an adviser's instinct is to respond to a client concern
+  with data, or to first ask what's driving it. If the right
+  answer were obvious, everyone would pick it and I'd learn
+  nothing. Because all four feel reasonable, people answer
+  honestly — and the honest answers tell me exactly what the
+  room needs.
+
+  Last decision here: I end with a confidence self-rating, and I
+  deliberately ask the identical questions again after the
+  workshop. One survey tells you opinions. Two identical
+  measurements tell you whether anything changed. That
+  before-and-after is the evidence this whole experience stands on.
+
+TRANSITION:
+  "So that's the front door. Now the part I rebuilt the most —
+  what advisers actually leave with."
+
+
+------------------------------------------------------------
+PART 2 — DELIVER  ·  the advisor toolkit (4 pieces)
+------------------------------------------------------------
+(~4 minutes. One decision-story per document. Open each,
+two-second pause, then the why.)
+
+--- 2a. CLIENT CONVERSATION TIP SHEET (~1 min) ---
+
+OPEN it. Pause. Then:
+
+  The constraint I set myself here was brutal: one page. Not
+  because paper is expensive — because a second page is where
+  method goes to die. If an adviser can't find the response
+  while the client is still talking, the material has failed.
+
+  The structure came from a real observation: advisers don't
+  struggle with knowledge, they struggle in the moment. So it's
+  organised by what the client SAYS — the objection in the
+  client's own words — not by investment topic. You look up the
+  sentence you just heard, not a chapter.
+
+  And I wrote the response lines word-for-word on purpose. Not
+  because advisers can't write their own — but because in a live
+  conversation, having A line beats composing THE line. They'll
+  make it their own by week two. The sheet just gets them through
+  conversation one.
+
+--- 2b. ADVISOR TALKING POINTS (~1 min) ---
+
+OPEN it, flick two pages. Then:
+
+  These charts existed before I touched anything — they're the
+  strongest part of the workshop. The problem was their shape: a
+  chart in a deck is something you present AT someone. I wanted
+  something an adviser can USE.
+
+  So the design rule for every page is the same triple: three
+  things you can say, one question you ask the client, one thing
+  YOU do next. Say, ask, do. The chart earns its place only if it
+  converts into a move in a conversation.
+
+  The "ask your client" line is the one I fought for hardest —
+  because the diagnostic showed most advisers respond to concerns
+  with information. Every page here forces the opposite habit:
+  the chart sets up a question, not a lecture.
+
+--- 2c. CLIENT BOOKLET (~1 min) ---
+
+OPEN the cover. Then:
+
+  Everything else you've seen is for the adviser. This one exists
+  because at some point the adviser needs something to physically
+  put in a client's hands — and nothing in the workshop was
+  client-safe. Different audience, different rules: no jargon, no
+  framework language, nothing to study. Four ideas, one per
+  spread, each anchored on a single number, because clients
+  remember one number per idea and nothing more.
+
+  The ending was a deliberate choice: it doesn't end with a
+  conclusion, it ends with three questions the client can only
+  really answer WITH their adviser. A brochure that ends with
+  answers gets filed. One that ends with questions books the next
+  meeting. That's the whole trick of it.
+
+--- 2d. STEPS FOR SUCCESS (~1 min) ---
+
+OPEN it. Then:
+
+  This piece exists because of the most predictable failure in
+  all workshop training: everything is forgotten by Friday. I
+  didn't want more content — I wanted a behaviour to survive
+  contact with a busy diary.
+
+  So it's built like a habit programme, not a curriculum: one
+  action per touchpoint, sized at three minutes, over eight
+  weeks. Each action is one rep of the method in a REAL client
+  conversation — because the workshop can only ever rehearse;
+  the habit forms in the field.
+
+  And notice it assumes nobody re-reads instructions: the
+  sequence is designed to arrive as calendar reminders. Which is
+  the perfect segue —
+
+TRANSITION:
+  "— because the honest question about all of this is: who
+  actually remembers to send the right thing at the right time?
+  Nobody. So I made 'nobody' the design requirement."
+
+
+------------------------------------------------------------
+PART 3 — FOLLOW UP  ·  the engagement calendar (+ the scan)
+------------------------------------------------------------
+(~3 minutes. Open the tool. This is the peak — slow down.)
+
+OPEN the touchpoint view. Then:
+
+  Two decisions define this tool. The first is how FEW
+  touchpoints there are. My first draft had twelve — it felt
+  thorough, and it was wrong. Twelve reminders is noise; noise
+  gets muted; muted means zero. I cut it to three, and the test
+  for what survived was simple: each touchpoint had to carry the
+  entire method in one action. Day zero, one real concern. Week
+  one, one full response. Month one, one kept habit. Iteration
+  here wasn't adding — it was deleting.
+
+  The second decision: the follow-up lives in the adviser's OWN
+  calendar, not in another portal or newsletter. Emails get
+  archived; portals need remembering. A calendar reminder is the
+  one notification that interrupts a working day at the moment
+  it's meant to.
+
+SHOW the export briefly:
+
+  And it's built once, exported forever — a consultant doesn't
+  assemble follow-ups per workshop; the journey with all its
+  materials travels as a single file.
+
+NOW the QR. Put it on screen:
+
+  The last problem was delivery, and it's harder than it looks:
+  how do you get a calendar file with attachments onto a
+  stranger's phone in a workshop, with no login, in seconds? My
+  first attempts failed in interesting ways — a shared link that
+  iPhones refused to trust taught me that the QR can only ever
+  point somewhere, never carry the file.
+
+  The version that works is deliberately boring: the code opens a
+  short form — name and email, nothing else — and an automated
+  flow inside our own Microsoft environment emails the calendar
+  out. About thirty seconds, no external hosting, nothing for IT
+  to worry about.
+
+  Try it — grab your phones and scan.
+
+WHILE PHONES ARE OUT (one sentence only):
+
+  One design principle in that half-minute of waiting: I removed
+  a sign-in step from an earlier version — every extra field
+  costs participation, and I'd rather have engagement than data.
+
+WHEN PHONES BUZZ: stop talking. Let it land. Then:
+
+  What you just experienced is the adviser's last thirty seconds
+  of the workshop — and the reason the learning doesn't end when
+  the room empties.
+
+CLOSE THE LOOP (optional, 20 seconds):
+
+  And the post-workshop survey re-measures the same confidence
+  baseline from the start — so every workshop produces its own
+  before-and-after, and tells us what to fix next time.
+
+TRANSITION (back to the deck, Slide 7):
+  "So that's the thinking, end to end. One more thing — where
+  this goes next."
+
+
+------------------------------------------------------------
+TIMING SUMMARY
+------------------------------------------------------------
+
+  Part 1   Prepare — the survey decisions ........... ~2:00
+  Part 2   Deliver — one decision-story per piece ... ~4:00
+  Part 3   Follow up — the cut to 3 + the scan ...... ~3:00
+
+  Total: ~8-10 minutes, then return to Slide 7.
+
+
+------------------------------------------------------------
+IF SOMETHING FAILS — FALLBACKS
+------------------------------------------------------------
+
+  QR won't scan on the room screen
+    -> read out the short link, or show the email arriving on
+       YOUR phone via the room screen.
+
+  Email takes longer than 30 seconds
+    -> keep going; circle back when the first phone buzzes:
+       "there it is."
+
+  No internet / Forms down
+    -> the printed toolkit carries Part 2; talk Parts 1 and 3
+       over static screenshots kept in the deck's appendix.
