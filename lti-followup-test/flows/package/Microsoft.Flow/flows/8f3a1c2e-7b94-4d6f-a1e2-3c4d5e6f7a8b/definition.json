@@ -1,0 +1,213 @@
+{
+  "name": "8f3a1c2e-7b94-4d6f-a1e2-3c4d5e6f7a8b",
+  "id": "/providers/Microsoft.Flow/flows/8f3a1c2e-7b94-4d6f-a1e2-3c4d5e6f7a8b",
+  "type": "Microsoft.Flow/flows",
+  "properties": {
+    "apiId": "/providers/Microsoft.PowerApps/apis/shared_logicflows",
+    "displayName": "LTI Follow-up Sender",
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        }
+      },
+      "triggers": {
+        "When_a_new_response_is_submitted": {
+          "type": "OpenApiConnectionWebhook",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_microsoftforms",
+              "operationId": "CreateFormWebhook",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_microsoftforms"
+            },
+            "parameters": {
+              "form_id": "REPLACE_WITH_FORM_ID"
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "splitOn": "@triggerOutputs()?['body/value']"
+        }
+      },
+      "actions": {
+        "Get_response_details": {
+          "runAfter": {},
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_microsoftforms",
+              "operationId": "GetFormResponseById",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_microsoftforms"
+            },
+            "parameters": {
+              "form_id": "REPLACE_WITH_FORM_ID",
+              "response_id": "@triggerOutputs()?['body/resourceData/responseId']"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Compose_filename": {
+          "runAfter": {
+            "Get_response_details": ["Succeeded"]
+          },
+          "type": "Compose",
+          "inputs": "@concat(body('Get_response_details')?['Firm'], '_LTI_Follow_Up_', body('Get_response_details')?['WorkshopDate'], '.ics')"
+        },
+        "Try": {
+          "runAfter": {
+            "Compose_filename": ["Succeeded"]
+          },
+          "type": "Scope",
+          "actions": {
+            "Get_file_content_using_path": {
+              "runAfter": {},
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "GetFileContentByPath",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "https://capitalgroup.sharepoint.com/sites/CapitalLearningHub",
+                  "path": "/LTI/Generated ICS/@{outputs('Compose_filename')}",
+                  "inferContentType": true
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            },
+            "Get_howto_pdf": {
+              "runAfter": {
+                "Get_file_content_using_path": ["Succeeded"]
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "GetFileContentByPath",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "https://capitalgroup.sharepoint.com/sites/CapitalLearningHub",
+                  "path": "/LTI/Assets/LTI_Calendar_How-To.pdf",
+                  "inferContentType": true
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            },
+            "Send_advisor_email": {
+              "runAfter": {
+                "Get_howto_pdf": ["Succeeded"]
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_office365",
+                  "operationId": "SendEmailV2",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+                },
+                "parameters": {
+                  "emailMessage/To": "@body('Get_response_details')?['YourEmail']",
+                  "emailMessage/Subject": "Your LTI workshop follow-up",
+                  "emailMessage/Body": "<div style=\"margin:0;padding:0;background:#f4f6f8;\"><table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f4f6f8;font-family:Arial,Helvetica,sans-serif;\"><tr><td align=\"center\" style=\"padding:24px 12px;\"><table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:600px;width:100%;background:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #e3e8ee;\"><tr><td style=\"background:#003DA5;padding:22px 28px;\"><span style=\"color:#ffffff;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;font-weight:bold;\">Capital Group &middot; Capital Learning</span></td></tr><tr><td style=\"padding:28px;color:#1c2833;font-size:16px;line-height:1.6;\"><p style=\"margin:0 0 16px;\">Hi @{body('Get_response_details')?['YourName']},</p><p style=\"margin:0 0 16px;\">Thanks for joining today's LTI workshop. Your follow-up pack is attached as a calendar file. Tap the .ics on your phone and the three client touchpoints &mdash; with talking points built into each event &mdash; will land in your calendar.</p><p style=\"margin:0 0 16px;padding:12px 16px;background:#eef4fb;border-left:4px solid #003DA5;border-radius:0 6px 6px 0;font-size:15px;\"><strong style=\"color:#003DA5;\">How to use it:</strong> Tap the .ics on your phone, or open it in Outlook on desktop. New to calendar files? Open the attached <strong>How-To guide (PDF)</strong> for step-by-step help on phone and desktop.</p><p style=\"margin:0 0 16px;\">If you have any questions, just reply to this email and the Capital Learning team will help.</p><p style=\"margin:24px 0 4px;\">Warm regards,</p><p style=\"margin:0;font-weight:bold;color:#003DA5;\">Capital Learning Team</p></td></tr><tr><td style=\"background:#f4f6f8;padding:16px 28px;color:#5d6b78;font-size:12px;line-height:1.5;border-top:1px solid #e3e8ee;\">Capital Group &middot; Sent following your Long-Term Investing workshop.</td></tr></table></td></tr></table></div>",
+                  "emailMessage/Importance": "Normal",
+                  "emailMessage/ReplyTo": "cheesin.foong@capitalgroup.com",
+                  "emailMessage/Attachments": [
+                    {
+                      "Name": "@outputs('Compose_filename')",
+                      "ContentBytes": "@body('Get_file_content_using_path')?['$content']"
+                    },
+                    {
+                      "Name": "LTI_Calendar_How-To.pdf",
+                      "ContentBytes": "@body('Get_howto_pdf')?['$content']"
+                    }
+                  ]
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            }
+          }
+        },
+        "Catch": {
+          "runAfter": {
+            "Try": ["Failed", "TimedOut"]
+          },
+          "type": "Scope",
+          "actions": {
+            "Filter_failed_actions": {
+              "runAfter": {},
+              "type": "Query",
+              "inputs": {
+                "from": "@result('Try')",
+                "where": "@equals(item()?['status'], 'Failed')"
+              }
+            },
+            "Compose_error": {
+              "runAfter": {
+                "Filter_failed_actions": ["Succeeded"]
+              },
+              "type": "Compose",
+              "inputs": "@first(body('Filter_failed_actions'))?['error']?['message']"
+            },
+            "Send_diagnostic_email": {
+              "runAfter": {
+                "Compose_error": ["Succeeded"]
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_office365",
+                  "operationId": "SendEmailV2",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+                },
+                "parameters": {
+                  "emailMessage/To": "cheesin.foong@capitalgroup.com",
+                  "emailMessage/Subject": "@concat('LTI Follow-up FAILED - ', outputs('Compose_filename'))",
+                  "emailMessage/Importance": "High",
+                  "emailMessage/Body": "<div style=\"margin:0;padding:0;background:#f4f6f8;\"><table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f4f6f8;font-family:Arial,Helvetica,sans-serif;\"><tr><td align=\"center\" style=\"padding:24px 12px;\"><table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:600px;width:100%;background:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #e3e8ee;\"><tr><td style=\"background:#b42318;padding:20px 28px;\"><span style=\"color:#ffffff;font-size:14px;font-weight:bold;\">LTI Follow-up delivery FAILED</span></td></tr><tr><td style=\"padding:24px 28px;color:#1c2833;font-size:14px;line-height:1.6;\"><p style=\"margin:0 0 16px;\">Flow A could not deliver a follow-up pack. Debug context:</p><table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"font-size:13px;border-collapse:collapse;\"><tr><td style=\"padding:8px 10px;background:#f4f6f8;border:1px solid #e3e8ee;font-weight:bold;width:160px;\">Constructed filename</td><td style=\"padding:8px 10px;border:1px solid #e3e8ee;\">@{outputs('Compose_filename')}</td></tr><tr><td style=\"padding:8px 10px;background:#f4f6f8;border:1px solid #e3e8ee;font-weight:bold;\">Firm</td><td style=\"padding:8px 10px;border:1px solid #e3e8ee;\">@{body('Get_response_details')?['Firm']}</td></tr><tr><td style=\"padding:8px 10px;background:#f4f6f8;border:1px solid #e3e8ee;font-weight:bold;\">Workshop date</td><td style=\"padding:8px 10px;border:1px solid #e3e8ee;\">@{body('Get_response_details')?['WorkshopDate']}</td></tr><tr><td style=\"padding:8px 10px;background:#f4f6f8;border:1px solid #e3e8ee;font-weight:bold;\">Adviser email</td><td style=\"padding:8px 10px;border:1px solid #e3e8ee;\">@{body('Get_response_details')?['YourEmail']}</td></tr><tr><td style=\"padding:8px 10px;background:#f4f6f8;border:1px solid #e3e8ee;font-weight:bold;\">Timestamp (SGT)</td><td style=\"padding:8px 10px;border:1px solid #e3e8ee;\">@{convertFromUtc(utcNow(), 'Singapore Standard Time', 'yyyy-MM-dd HH:mm:ss')}</td></tr><tr><td style=\"padding:8px 10px;background:#fdeeed;border:1px solid #f0bcb6;font-weight:bold;color:#b42318;\">Error message</td><td style=\"padding:8px 10px;border:1px solid #f0bcb6;color:#b42318;\">@{outputs('Compose_error')}</td></tr></table><p style=\"margin:18px 0 0;color:#5d6b78;font-size:12px;\">First check: does <strong>@{outputs('Compose_filename')}</strong> exist in /Capital Learning Hub/LTI/Generated ICS/ with that exact name (case-sensitive Firm, yyyy-MM-dd date)? See docs/RUNBOOK.md.</p></td></tr></table></td></tr></table></div>"
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            },
+            "Terminate": {
+              "runAfter": {
+                "Send_diagnostic_email": ["Succeeded"]
+              },
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Failed",
+                "runError": {
+                  "code": "ICSDeliveryFailed",
+                  "message": "@outputs('Compose_error')"
+                }
+              }
+            }
+          }
+        }
+      },
+      "outputs": {}
+    },
+    "connectionReferences": {
+      "shared_microsoftforms": {
+        "connectionName": "shared-microsoftforms-CONNECTION",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_microsoftforms",
+        "tier": "NotSpecified"
+      },
+      "shared_sharepointonline": {
+        "connectionName": "shared-sharepointonl-CONNECTION",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+        "tier": "NotSpecified"
+      },
+      "shared_office365": {
+        "connectionName": "shared-office365-CONNECTION",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_office365",
+        "tier": "NotSpecified"
+      }
+    }
+  }
+}

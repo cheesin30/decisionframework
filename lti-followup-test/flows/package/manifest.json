@@ -1,0 +1,71 @@
+{
+  "schema": "1.0",
+  "details": {
+    "displayName": "LTI Follow-up Sender",
+    "description": "Emails the pre-generated .ics follow-up pack to an adviser after they submit the LTI Workshop Follow-up form. Fetches the file from SharePoint by reconstructing its fixed filename, attaches it plus a static how-to PDF, and emails a diagnostic alert on failure.",
+    "createdTime": "2026-06-30T00:00:00.0000000Z",
+    "packageTelemetryId": "8f3a1c2e-7b94-4d6f-a1e2-3c4d5e6f7a8b",
+    "creator": "Capital Learning",
+    "sourceEnvironment": ""
+  },
+  "resources": {
+    "8F3A1C2E-7B94-4D6F-A1E2-3C4D5E6F7A8B": {
+      "id": "/providers/Microsoft.Flow/flows/8f3a1c2e-7b94-4d6f-a1e2-3c4d5e6f7a8b",
+      "name": "8f3a1c2e-7b94-4d6f-a1e2-3c4d5e6f7a8b",
+      "type": "Microsoft.Flow/flows",
+      "suggestedCreationType": "New",
+      "details": {
+        "displayName": "LTI Follow-up Sender"
+      },
+      "configurableBy": "User",
+      "hierarchy": "Root",
+      "dependsOn": [
+        "FORMS_CONNECTION",
+        "SHAREPOINT_CONNECTION",
+        "OFFICE365_CONNECTION"
+      ]
+    },
+    "FORMS_CONNECTION": {
+      "type": "Microsoft.PowerApps/apis/connections",
+      "suggestedCreationType": "Existing",
+      "details": {
+        "displayName": "Microsoft Forms"
+      },
+      "configurableBy": "User",
+      "hierarchy": "Child",
+      "dependsOn": [],
+      "apiDefinition": {
+        "name": "shared_microsoftforms",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_microsoftforms"
+      }
+    },
+    "SHAREPOINT_CONNECTION": {
+      "type": "Microsoft.PowerApps/apis/connections",
+      "suggestedCreationType": "Existing",
+      "details": {
+        "displayName": "SharePoint"
+      },
+      "configurableBy": "User",
+      "hierarchy": "Child",
+      "dependsOn": [],
+      "apiDefinition": {
+        "name": "shared_sharepointonline",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+      }
+    },
+    "OFFICE365_CONNECTION": {
+      "type": "Microsoft.PowerApps/apis/connections",
+      "suggestedCreationType": "Existing",
+      "details": {
+        "displayName": "Office 365 Outlook"
+      },
+      "configurableBy": "User",
+      "hierarchy": "Child",
+      "dependsOn": [],
+      "apiDefinition": {
+        "name": "shared_office365",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_office365"
+      }
+    }
+  }
+}
