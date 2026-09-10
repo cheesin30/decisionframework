@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Capital Learning · Workshop Tool Generator</title>
+<style>
+:root{
+  --navy:#083469; --navy-700:#005E9D; --blue:#0068AE; --mist:#eef4f8;
+  --teal:#008074; --mint:#00D190; --ink:#1c2833; --muted:#5d6b78; --line:#e3e8ee;
+  --r-lg:18px; --r-md:13px; --r-sm:9px;
+  --shadow:0 18px 50px rgba(8,52,105,.10); --shadow-sm:0 4px 14px rgba(8,52,105,.06);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Helvetica Neue",Arial,sans-serif;color:var(--ink);background:#f6f9fb;-webkit-font-smoothing:antialiased}
+.wrap{max-width:880px;margin:0 auto;padding:28px 18px 70px}
+.appbar h1{font-family:Georgia,"Times New Roman",serif;margin:0;font-size:26px;color:var(--navy);letter-spacing:-.01em}
+.eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--navy);margin:0 0 8px;font-weight:700}
+.eyebrow .tick{width:26px;height:2px;background:var(--teal);display:inline-block;border-radius:2px}
+.lede{color:var(--muted);font-size:13.5px;line-height:1.55;margin:10px 0 22px;max-width:46em}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow-sm);padding:22px 24px;margin-bottom:16px}
+.card h2{margin:0 0 4px;font-size:16px;color:var(--navy)}
+.card .hint{margin:0 0 14px;color:var(--muted);font-size:12.5px;line-height:1.5}
+label{display:block;font-weight:700;margin:13px 0 6px;color:var(--navy);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase}
+input,select,textarea{font-family:inherit;width:100%;padding:10px 12px;border:1px solid #cdd5dd;border-radius:var(--r-sm);font-size:13.5px;color:var(--ink);background:#fff}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,104,174,.14)}
+textarea{min-height:64px;resize:vertical;line-height:1.5}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn{border:none;border-radius:var(--r-sm);background:var(--navy);color:#fff;font-weight:700;font-size:13.5px;cursor:pointer;padding:12px 16px;display:inline-flex;align-items:center;gap:7px}
+.btn:hover{filter:brightness(1.1)}
+.btn.full{width:100%;justify-content:center}
+.btn.primary{background:linear-gradient(135deg,var(--navy-700),var(--blue));font-weight:800}
+.btn.ghost{background:#dce8f0;color:var(--navy);font-weight:700}
+.btn.small{padding:7px 12px;font-size:12px;border-radius:999px}
+.btn.danger{background:#fbe0dd;color:#9a1d12}
+.chip{display:inline-flex;align-items:center;border-radius:999px;padding:5px 11px;background:var(--mist);color:#3c5566;font-size:11.5px;font-weight:700;margin:2px 4px 2px 0}
+.chip.ok{background:#e7f4ee;color:var(--teal)}
+.chip.bad{background:#fdeeed;color:#b42318}
+.note{background:#eef9f4;border-left:3px solid var(--mint);padding:11px 14px;color:#1f5b54;font-size:12.5px;line-height:1.55;margin-top:14px;border-radius:0 var(--r-sm) var(--r-sm) 0}
+.warn{background:#fff6ec;border-left:3px solid #d99019;padding:11px 14px;color:#7a4a00;font-size:12.5px;line-height:1.55;margin-top:14px;border-radius:0 var(--r-sm) var(--r-sm) 0}
+.tp{border:1px solid var(--line);border-radius:var(--r-md);padding:14px;margin-top:12px;background:#fbfdfe}
+.tp .row{display:grid;grid-template-columns:110px 90px 110px 1fr auto;gap:10px;align-items:end}
+.tp textarea{margin-top:10px}
+.tp label{margin-top:0}
+.small{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5}
+.small code,.hint code,.lede code{font-family:Menlo,Consolas,monospace;font-size:11px;background:var(--mist);padding:1px 5px;border-radius:4px;color:var(--navy)}
+#report{margin-top:12px}
+.preview{font-family:Menlo,Consolas,monospace;font-size:11.5px;background:#f1faf9;border:1px solid #cfe9e6;border-radius:var(--r-sm);padding:8px 11px;margin-top:8px;word-break:break-all;color:var(--teal)}
+@media(max-width:640px){.two{grid-template-columns:1fr}.tp .row{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow"><span class="tick"></span> Capital Group · Capital Learning</p>
+  <h1 class="appbar">Workshop Tool Generator</h1>
+  <p class="lede">Creates an <strong>exact, independent replica</strong> of the engagement-calendar tool for a new workshop — same wizard, QR, SharePoint save and safeguards — rebranded and reconfigured for that workshop. It works from the <em>current</em> tool file you give it, so every fix in the source carries over automatically.</p>
+
+  <!-- 1. Source -->
+  <div class="card">
+    <h2>1 · Source tool</h2>
+    <p class="hint">Pick the current calendar tool file (e.g. <code>LTI_Engagement_Calendar_QR_v1.html</code>). The replica is derived from it.</p>
+    <button class="btn ghost" onclick="pickSource()">Choose the source .html…</button>
+    <span id="srcStatus" class="chip">No file loaded</span>
+    <div id="srcReport"></div>
+  </div>
+
+  <!-- 2. Identity -->
+  <div class="card">
+    <h2>2 · Workshop identity</h2>
+    <p class="hint">Used everywhere the source says “Long-Term Investing” / “LTI”: page titles, the calendar name advisers see, filenames, the printed handout.</p>
+    <div class="two">
+      <div><label for="fullName">Full workshop name</label><input id="fullName" placeholder="e.g. Leading Beyond Borders" oninput="refreshPreview()"></div>
+      <div><label for="code">Short code (2–10 letters/digits)</label><input id="code" placeholder="e.g. TKO" oninput="refreshPreview()"></div>
+    </div>
+    <label for="folder">SharePoint “Generated ICS” folder for this workshop</label>
+    <input id="folder" placeholder="/Capital Learning Hub/TKO/Generated ICS/" oninput="refreshPreview()">
+    <div class="small">Files will be named <span class="preview" id="fnPreview" style="display:inline-block;padding:2px 8px">…</span></div>
+  </div>
+
+  <!-- 3. Form -->
+  <div class="card">
+    <h2>3 · Microsoft Form (optional now, needed before launch)</h2>
+    <p class="hint">Paste this workshop's Form <strong>pre-fill link</strong> (Forms → Collect responses → Get pre-filled results, with a sample firm and date typed in). The generator maps the firm/date fields automatically. Leave blank to configure later inside the replica's <em>Form settings</em>.</p>
+    <textarea id="formTpl" style="font-family:Menlo,Consolas,monospace;font-size:11.5px" placeholder="https://forms.office.com/Pages/ResponsePage.aspx?id=…&r…=DBS&r…=2026-06-26" oninput="refreshPreview()"></textarea>
+    <div id="formInfo"></div>
+  </div>
+
+  <!-- 4. Touchpoints -->
+  <div class="card">
+    <h2>4 · Default touchpoints</h2>
+    <p class="hint">The sequence every consultant starts from (they can still edit per cohort). Pre-loaded with the source defaults.</p>
+    <div id="tpList"></div>
+    <button class="btn ghost small" style="margin-top:12px" onclick="addTp()">+ Add touchpoint</button>
+  </div>
+
+  <!-- 5. Generate -->
+  <div class="card">
+    <h2>5 · Generate</h2>
+    <p class="hint">Builds the replica and downloads it. Every replacement is checked and listed — if the source has changed shape and an anchor can't be found, you'll see it here instead of getting a silently broken file.</p>
+    <button class="btn primary full" onclick="generateReplica()">⚙ Generate workshop tool</button>
+    <div id="report"></div>
+    <div class="note"><strong>The replica is fully independent:</strong> its own saved state (touchpoints, resources, folder pick), its own filenames and SharePoint folder — running it never interferes with the LTI tool or other workshops. Distribute it with the same consultant how-to; only the names differ.</div>
+  </div>
+</div>
+
+<script>
+"use strict";
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+
+/* ---------- state ---------- */
+var srcText=null;
+var touchpoints=[
+  {label:"Day 1",offsetValue:1,offsetUnit:"days",title:"Prepare, then capture one real client concern",description:"Review one resource and decide which client concern it helps you address. Then write down one real client objection in the client's own words — don't solve it yet, just capture it clearly so you can respond more effectively next time."},
+  {label:"Week 1",offsetValue:1,offsetUnit:"weeks",title:"Build one full response in your next conversation",description:"In your next conversation, work through the full loop: acknowledge the concern first, add one useful perspective from the workshop, then end with one clear, practical next step. Keep it simple — one insight, one example, one takeaway."},
+  {label:"Month 1",offsetValue:1,offsetUnit:"months",title:"Keep one habit and reinforce the core message",description:"Choose one behaviour to keep as part of your standard client preparation. Use a resource to reconnect clients to their long-term goals and reinforce the workshop's core message."}
+];
+
+/* Anchors that must exist in the source for a faithful replica. */
+var ANCHORS=[
+  {name:"Storage namespace (BUILD_ID)", re:/var BUILD_ID="[^"]+"/},
+  {name:"Default touchpoints (DEFAULT_REMINDERS)", re:/var DEFAULT_REMINDERS=\[[\s\S]*?\];/},
+  {name:"Form link (FORM_DEFAULT_TEMPLATE)", re:/var FORM_DEFAULT_TEMPLATE="[^"]*";/},
+  {name:"Form field mapping (formState defaults)", re:/var formState=\{template:FORM_DEFAULT_TEMPLATE,firmParam:"[^"]*",dateParam:"[^"]*"\};/},
+  {name:"Filename convention (_LTI_Follow_Up_)", find:"_LTI_Follow_Up_"},
+  {name:"SharePoint folder path", find:"/Capital Learning Hub/LTI/Generated ICS/"},
+  {name:"Workshop long name", find:"Long-Term Investing"},
+  {name:"Workshop code (LTI)", find:"LTI"}
+];
+
+/* ---------- source ---------- */
+function pickSource(){
+  var input=document.createElement("input");input.type="file";input.accept=".html,text/html";
+  input.onchange=function(){
+    var f=input.files[0];if(!f)return;
+    var reader=new FileReader();
+    reader.onload=function(){
+      srcText=String(reader.result);
+      $("srcStatus").textContent=f.name+" · "+Math.round(srcText.length/1024)+" KB";
+      $("srcStatus").className="chip ok";
+      // Pull the source's own default touchpoints so the generator starts from truth.
+      var m=srcText.match(/var DEFAULT_REMINDERS=(\[[\s\S]*?\]);/);
+      if(m){try{
+        touchpoints=JSON.parse(m[1]).map(function(r){return {label:r.label,offsetValue:r.offsetValue,offsetUnit:r.offsetUnit,title:r.title,description:r.description};});
+        renderTps();
+      }catch(e){}}
+      $("srcReport").innerHTML=ANCHORS.map(function(a){
+        var ok=a.re?a.re.test(srcText):srcText.indexOf(a.find)>=0;
+        return '<span class="chip '+(ok?"ok":"bad")+'">'+(ok?"✓ ":"✗ ")+esc(a.name)+'</span>';
+      }).join("")+'<div class="small">All checks should be green. A red one means the source has changed shape — the generator needs updating before it can replicate faithfully.</div>';
+    };
+    reader.readAsText(f);
+  };
+  input.click();
+}
+
+/* ---------- identity / form preview ---------- */
+function cleanCode(){return ($("code").value||"").replace(/[^A-Za-z0-9]/g,"").slice(0,10);}
+function defaultFolder(){var c=cleanCode();return c?"/Capital Learning Hub/"+c+"/Generated ICS/":"";}
+function formParams(tpl){
+  var out=[];
+  try{var u=new URL(String(tpl||"").trim());u.searchParams.forEach(function(v,k){if(/^r[0-9a-fA-F]{16,}$/.test(k))out.push({k:k,v:v});});}catch(e){}
+  return out;
+}
+function mapForm(tpl){
+  var ps=formParams(tpl);if(!ps.length)return null;
+  var date=null;for(var i=0;i<ps.length;i++){if(/^\d{4}-\d{2}-\d{2}$/.test(ps[i].v)){date=ps[i];break;}}
+  var firm=null;for(var j=0;j<ps.length;j++){if(ps[j]!==date){firm=ps[j];break;}}
+  return {firmParam:(firm||ps[0]).k, dateParam:(date||ps[ps.length>1?1:0]).k};
+}
+function refreshPreview(){
+  var c=cleanCode();
+  if($("folder")&&!$("folder").value.trim()&&c)$("folder").placeholder=defaultFolder();
+  $("fnPreview").textContent="<Firm>_"+(c||"CODE")+"_Follow_Up_<YYYY-MM-DD>.ics";
+  var tpl=$("formTpl").value.trim();
+  if(!tpl){$("formInfo").innerHTML="";return;}
+  var map=mapForm(tpl);
+  $("formInfo").innerHTML=map
+    ?'<span class="chip ok">✓ firm field '+esc(map.firmParam.slice(0,10))+'…</span><span class="chip ok">✓ date field '+esc(map.dateParam.slice(0,10))+'…</span>'
+    :'<span class="chip bad">✗ No pre-fill fields found — make sure this is a “Get pre-filled results” link with sample answers typed in</span>';
+}
+
+/* ---------- touchpoint editor ---------- */
+function renderTps(){
+  $("tpList").innerHTML=touchpoints.map(function(t,i){
+    return '<div class="tp">'+
+      '<div class="row">'+
+        '<div><label>Label</label><input value="'+esc(t.label)+'" oninput="upTp('+i+',\'label\',this.value)"></div>'+
+        '<div><label>Offset</label><input type="number" min="0" value="'+esc(t.offsetValue)+'" oninput="upTp('+i+',\'offsetValue\',this.value)"></div>'+
+        '<div><label>Unit</label><select onchange="upTp('+i+',\'offsetUnit\',this.value)">'+["days","weeks","months"].map(function(u){return '<option'+(t.offsetUnit===u?" selected":"")+'>'+u+'</option>';}).join("")+'</select></div>'+
+        '<div><label>Calendar title</label><input value="'+esc(t.title)+'" oninput="upTp('+i+',\'title\',this.value)"></div>'+
+        '<div><button class="btn danger small" onclick="rmTp('+i+')">Remove</button></div>'+
+      '</div>'+
+      '<label>Talking point / description</label><textarea oninput="upTp('+i+',\'description\',this.value)">'+esc(t.description)+'</textarea>'+
+    '</div>';
+  }).join("");
+}
+function upTp(i,k,v){touchpoints[i][k]=(k==="offsetValue")?(Number(v)||0):v;}
+function rmTp(i){touchpoints.splice(i,1);renderTps();}
+function addTp(){touchpoints.push({label:"New",offsetValue:1,offsetUnit:"weeks",title:"New touchpoint",description:"Describe the action or talking point."});renderTps();}
+
+/* ---------- build ---------- */
+function buildReplica(source,cfg){
+  var text=source, report=[];
+  function log(name,count){report.push({name:name,count:count,ok:count>0});}
+  function subRe(name,re,replacement){
+    var count=0;
+    text=text.replace(re,function(){count++;return replacement;});
+    log(name,count);
+  }
+  function subAll(name,find,replacement){
+    var count=text.split(find).length-1;
+    text=text.split(find).join(replacement);
+    log(name,count);
+  }
+
+  // Placeholder tokens so user-supplied values are never re-transformed by later renames.
+  var T={BID:" T_BID ",REM:" T_REM ",FORM:" T_FORM ",STATE:" T_STATE ",FOLDER:" T_FOLDER "};
+
+  // 1. Config anchors -> tokens
+  subRe("Storage namespace",/var BUILD_ID="[^"]+"/,'var BUILD_ID="'+T.BID+'"');
+  subRe("Default touchpoints",/var DEFAULT_REMINDERS=\[[\s\S]*?\];/,'var DEFAULT_REMINDERS='+T.REM+';');
+  subRe("Form link",/var FORM_DEFAULT_TEMPLATE="[^"]*";/,'var FORM_DEFAULT_TEMPLATE="'+T.FORM+'";');
+  subRe("Form field mapping",/var formState=\{template:FORM_DEFAULT_TEMPLATE,firmParam:"[^"]*",dateParam:"[^"]*"\};/,'var formState={template:FORM_DEFAULT_TEMPLATE,'+T.STATE+'};');
+
+  // 2. Renames on the remaining source text
+  subAll("Filename convention","_LTI_Follow_Up_","_"+cfg.code+"_Follow_Up_");
+  subAll("SharePoint folder","/Capital Learning Hub/LTI/Generated ICS/",T.FOLDER);
+  subAll("Workshop long name","Long-Term Investing",cfg.fullName);
+  subAll("Workshop code","LTI",cfg.code);
+  subAll("Internal ids (lti-)","lti-",cfg.code.toLowerCase()+"-");
+
+  // 3. Tokens -> final values (safe from the renames above)
+  var reminders=cfg.touchpoints.map(function(t,i){
+    return {id:"tp"+(i+1),label:t.label,offsetValue:Number(t.offsetValue)||0,offsetUnit:t.offsetUnit,enabled:true,title:t.title,description:t.description,assetIds:[]};
+  });
+  text=text.split(T.BID).join(cfg.code.toLowerCase()+"-engagement-calendar-v1");
+  text=text.split(T.REM).join(JSON.stringify(reminders));
+  text=text.split(T.FORM).join(cfg.formTpl||"");
+  text=text.split(T.STATE).join('firmParam:"'+(cfg.map?cfg.map.firmParam:"")+'",dateParam:"'+(cfg.map?cfg.map.dateParam:"")+'"');
+  text=text.split(T.FOLDER).join(cfg.folder);
+
+  return {text:text,report:report};
+}
+
+function downloadBlob(blob,filename){var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href);},500);}
+
+function generateReplica(){
+  if(!srcText){alert("Pick the source tool file first (section 1).");return;}
+  var fullName=$("fullName").value.trim(), code=cleanCode();
+  if(!fullName||code.length<2){alert("Fill in the workshop name and a 2–10 character code (section 2).");return;}
+  if(!touchpoints.length){alert("Add at least one default touchpoint (section 4).");return;}
+  var folder=$("folder").value.trim()||defaultFolder();
+  if(!/^\//.test(folder))folder="/"+folder;
+  if(!/\/$/.test(folder))folder+="/";
+  var tpl=$("formTpl").value.trim(), map=tpl?mapForm(tpl):null;
+  if(tpl&&!map){alert("That Form link has no recognisable pre-fill fields. Fix it or leave it blank to configure inside the replica later.");return;}
+
+  var out=buildReplica(srcText,{fullName:fullName,code:code,folder:folder,formTpl:tpl,map:map,touchpoints:touchpoints});
+  var allOk=out.report.every(function(r){return r.ok;});
+  $("report").innerHTML=out.report.map(function(r){
+    return '<span class="chip '+(r.ok?"ok":"bad")+'">'+(r.ok?"✓ ":"✗ ")+esc(r.name)+" ("+r.count+")</span>";
+  }).join("")+(allOk
+    ?'<div class="note" style="margin-top:10px"><strong>Replica generated.</strong> Before rollout: ① open it and click through the 4 steps, ② create the SharePoint folder <code>'+esc(folder)+'</code> and its Sync, ③ '+(tpl?"the Form is wired in":"paste the Form link in its <em>Form settings</em>")+', ④ clone Flow A for this workshop (same guide, new folder/Form).</div>'
+    :'<div class="warn" style="margin-top:10px"><strong>Not saved — some anchors were not found</strong> (red above). The source tool has likely changed shape; the generator needs a matching update. Nothing was downloaded, so there is no half-broken file.</div>');
+  if(!allOk)return;
+  downloadBlob(new Blob([out.text],{type:"text/html;charset=utf-8"}),code+"_Engagement_Calendar_QR_v1.html");
+}
+
+renderTps();refreshPreview();
+</script>
+</body>
+</html>

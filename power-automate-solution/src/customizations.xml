@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ImportExportXml version="9.2.24101.00157" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="LTIEngagementCalendarTool">
+  <Entities />
+  <Roles />
+  <Workflows>
+    <Workflow WorkflowIdUnique="{aaa34424-2a00-4306-a7b4-9666f4fc86b9}" Name="LTI Follow-up Sender (No-Premium JSON)" Id="{aaa34424-2a00-4306-a7b4-9666f4fc86b9}">
+      <JsonFileName>Workflows\new_LTIFollowupSenderNoPremium-aaa34424-2a00-4306-a7b4-9666f4fc86b9.json</JsonFileName>
+      <Type>1</Type>
+      <Subprocess>0</Subprocess>
+      <Category>5</Category>
+      <Mode>0</Mode>
+      <Scope>4</Scope>
+      <OnDemand>0</OnDemand>
+      <TriggerOnCreate>0</TriggerOnCreate>
+      <TriggerOnDelete>0</TriggerOnDelete>
+      <AsyncAutodelete>0</AsyncAutodelete>
+      <SyncWorkflowLogOnFailure>0</SyncWorkflowLogOnFailure>
+      <StateCode>0</StateCode>
+      <StatusCode>1</StatusCode>
+      <RunAsSystem>0</RunAsSystem>
+      <IsTransacted>1</IsTransacted>
+      <IntroducedVersion>1.0.0.0</IntroducedVersion>
+      <IsCustomizable>1</IsCustomizable>
+      <BusinessProcessType>0</BusinessProcessType>
+      <IsCustomProcessingStepAllowedForOtherPublishers>1</IsCustomProcessingStepAllowedForOtherPublishers>
+      <PrimaryEntity>none</PrimaryEntity>
+      <LocalizedNames>
+        <LocalizedName description="LTI Follow-up Sender (No-Premium JSON)" languagecode="1033" />
+      </LocalizedNames>
+      <Descriptions>
+        <Description description="Test/troubleshooting copy using the tool's JSON export instead of Execute JavaScript Code (no premium licensing needed). Imported Off/Draft on purpose - fix the REPLACE_WITH_ placeholders and turn it on manually." languagecode="1033" />
+      </Descriptions>
+    </Workflow>
+  </Workflows>
+  <FieldSecurityProfiles />
+  <Templates />
+  <EntityMaps />
+  <EntityRelationships />
+  <OrganizationSettings />
+  <Languages>
+    <Language>1033</Language>
+  </Languages>
+</ImportExportXml>

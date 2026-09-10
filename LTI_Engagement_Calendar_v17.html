@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Build a three-touchpoint follow-up sequence for advisers who completed the Long-Term Investing workshop, attach resources, and export one calendar (.ics) file to send." />
+  <meta name="color-scheme" content="light" />
+  <meta name="theme-color" content="#083469" />
+  <title>Long-Term Investing · Post-Workshop Engagement Calendar</title>
+  <style>
+:root{
+  /* Official Capital Group palette: navy #083469, deep blue #005E9D, blue #0068AE, teal #008074, mint #00D190, pale teal #D0EAE9 */
+  --navy:#083469; --navy-700:#005E9D; --blue:#0068AE; --sky:#3ea0d6; --mist:#eef4f8;
+  --paper:#fbfaf7; --card:#ffffff; --ink:#1c2833; --muted:#5d6b78; --line:#e3e8ee;
+  --gold:#008074; --gold-soft:#D0EAE9;
+  --success:#008074; --success-soft:#e7f4ee; --danger:#b42318; --danger-soft:#fdeeed;
+  --teal:#008074; --mint:#00D190;
+  --shadow:0 18px 50px rgba(8,52,105,.10); --shadow-sm:0 6px 18px rgba(8,52,105,.06);
+  --r-lg:20px; --r-md:14px; --r-sm:10px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  font-family:"Georgia","Times New Roman",serif;
+  background:
+    radial-gradient(1200px 500px at 80% -10%, rgba(62,160,214,.10), transparent 60%),
+    linear-gradient(180deg,var(--paper),#fff 40%);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+}
+.ui{font-family:"Helvetica Neue",Arial,sans-serif}
+.wrap{max-width:1200px;margin:0 auto;padding:30px 20px 70px}
+
+/* ---------- Hero ---------- */
+.hero{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden}
+.hero-top{
+  position:relative;color:#fff;padding:38px 40px 34px;
+  background:linear-gradient(135deg,var(--navy) 0%,var(--navy-700) 52%,var(--blue) 100%);
+}
+.hero-top::after{
+  content:"";position:absolute;right:-60px;top:-60px;width:280px;height:280px;border-radius:50%;
+  background:radial-gradient(circle at 30% 30%, rgba(200,168,90,.30), transparent 62%);pointer-events:none;
+}
+.eyebrow{font-family:"Helvetica Neue",Arial,sans-serif;display:inline-flex;align-items:center;gap:9px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.82);margin:0 0 16px;font-weight:700}
+.eyebrow .tick{width:26px;height:2px;background:var(--gold);display:inline-block;border-radius:2px}
+.hero h1{margin:0;font-size:38px;line-height:1.12;font-weight:700;letter-spacing:-.01em;max-width:760px}
+.hero .lede{font-family:"Helvetica Neue",Arial,sans-serif;margin:16px 0 0;color:rgba(255,255,255,.88);font-size:15px;max-width:680px;line-height:1.6}
+.hero-meta{font-family:"Helvetica Neue",Arial,sans-serif;display:flex;gap:26px;flex-wrap:wrap;margin-top:24px;padding-top:22px;border-top:1px solid rgba(255,255,255,.16)}
+.hmetric strong{display:block;font-size:30px;line-height:1;font-weight:700}
+.hmetric span{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.72);margin-top:6px;font-weight:700}
+
+.content{padding:28px 32px 34px}
+.layout{display:grid;grid-template-columns:320px minmax(0,1fr);gap:22px;align-items:start}
+
+/* ---------- Panels & UI ---------- */
+.panel{border:1px solid var(--line);border-radius:var(--r-md);padding:20px;background:#fff;box-shadow:var(--shadow-sm)}
+.sticky{position:sticky;top:16px}
+.panel h2{font-family:"Helvetica Neue",Arial,sans-serif;margin:0 0 6px;font-size:16px;color:var(--navy);letter-spacing:-.01em}
+.panel .hint{font-family:"Helvetica Neue",Arial,sans-serif;margin:0 0 16px;color:var(--muted);font-size:12.5px;line-height:1.5}
+label{font-family:"Helvetica Neue",Arial,sans-serif;display:block;font-weight:700;margin:14px 0 7px;color:var(--navy);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase}
+input,select,textarea{font-family:"Helvetica Neue",Arial,sans-serif;width:100%;padding:11px 12px;border:1px solid #cdd5dd;border-radius:var(--r-sm);font-size:14px;color:var(--ink);background:#fff;transition:border-color .15s, box-shadow .15s}
+textarea{min-height:84px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,115,168,.14)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+.btn{font-family:"Helvetica Neue",Arial,sans-serif;border:none;border-radius:var(--r-sm);background:var(--navy);color:#fff;font-weight:700;font-size:13.5px;cursor:pointer;padding:12px 16px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:transform .08s, filter .15s, background .15s;letter-spacing:.01em}
+.btn:hover{filter:brightness(1.08)}.btn:active{transform:translateY(1px)}
+.btn.full{width:100%}
+.btn.primary{background:linear-gradient(135deg,var(--navy-700),var(--blue));color:#fff!important;font-weight:800}
+.btn.secondary{background:#005E9D;color:#fff!important;font-weight:800}
+.btn.primary .ico,.btn.secondary .ico{color:#fff!important}
+.btn.ghost{background:#dce8f0;color:var(--navy);border:1px solid #b9cdda;font-weight:800}
+.btn.gold{background:var(--gold);color:#fff}
+.btn.danger{background:#fbe0dd;color:#9a1d12;border:1px solid #f0bcb6;font-weight:800}
+.btn.small{padding:8px 12px;font-size:12px;border-radius:999px}
+.btn .ico{font-size:14px;line-height:1}
+
+.small{font-family:"Helvetica Neue",Arial,sans-serif;font-size:12px;color:var(--muted);margin-top:12px;line-height:1.5}
+.small strong{color:var(--navy)}
+.status{font-family:"Helvetica Neue",Arial,sans-serif;display:none;margin-top:12px;padding:10px 12px;border-radius:var(--r-sm);background:var(--success-soft);color:var(--success);font-size:12px;font-weight:700;border:1px solid #c4e6d4}
+.note{font-family:"Helvetica Neue",Arial,sans-serif;background:var(--gold-soft);border-left:3px solid var(--gold);padding:12px 14px;color:#1f5b54;font-size:12.5px;line-height:1.55;margin-top:16px;border-radius:0 var(--r-sm) var(--r-sm) 0}
+.warning{font-family:"Helvetica Neue",Arial,sans-serif;padding:11px 13px;border-radius:var(--r-sm);background:#eef4f8;color:#0a3a63;border:1px solid #b9cdda;font-size:12px;line-height:1.5;margin-top:12px}
+
+.divider{height:1px;background:var(--line);margin:18px 0}
+
+/* ---------- Tabs ---------- */
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;font-family:"Helvetica Neue",Arial,sans-serif}
+.tab{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:999px;padding:9px 16px;font-weight:700;font-size:13px;cursor:pointer;transition:all .15s}
+.tab:hover{border-color:var(--sky)}
+.tab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+.section-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-end;margin-bottom:16px}
+.section-head h2{font-family:"Helvetica Neue",Arial,sans-serif;margin:0;color:var(--navy);font-size:21px;letter-spacing:-.01em}
+.section-head .sub{font-family:"Helvetica Neue",Arial,sans-serif;margin:5px 0 0;color:var(--muted);font-size:13px;line-height:1.5}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* ---------- Quick start ---------- */
+.quick-start{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;font-family:"Helvetica Neue",Arial,sans-serif}
+.step{border:1px solid var(--line);background:linear-gradient(180deg,#fbfdfe,#fff);border-radius:var(--r-md);padding:15px;position:relative;overflow:hidden}
+.step .num{font-size:11px;font-weight:800;color:var(--gold);letter-spacing:.1em}
+.step strong{color:var(--navy);display:block;margin:6px 0 4px;font-size:13.5px}
+.step p{margin:0;font-size:12px;color:var(--muted);line-height:1.45}
+
+/* ---------- Asset cards ---------- */
+.asset-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px}
+.asset-card{border:1px solid var(--line);border-radius:var(--r-md);padding:16px;background:#fff;display:grid;gap:11px;box-shadow:var(--shadow-sm);transition:border-color .15s}
+.asset-card:hover{border-color:var(--sky)}
+.asset-card h3{font-family:"Helvetica Neue",Arial,sans-serif;margin:0;font-size:14.5px;color:var(--navy)}
+.asset-card p{font-family:"Helvetica Neue",Arial,sans-serif;margin:0;font-size:12px;color:var(--muted);line-height:1.45}
+.meta{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-family:"Helvetica Neue",Arial,sans-serif;display:inline-flex;align-items:center;border-radius:999px;padding:5px 10px;background:var(--mist);color:#3c5566;font-size:11px;font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip.ready{background:var(--success-soft);color:var(--success)}
+.chip.warn{background:var(--danger-soft);color:var(--danger)}
+
+.empty{font-family:"Helvetica Neue",Arial,sans-serif;border:1px dashed var(--sky);background:#f7fbfd;border-radius:var(--r-md);padding:26px;text-align:center;color:var(--muted);line-height:1.55;font-size:13px}
+.empty strong{color:var(--navy)}
+
+/* ---------- Reminder sequence ---------- */
+.sequence{display:grid;gap:12px}
+.reminder-card{border:1px solid var(--line);border-radius:var(--r-md);background:#fff;overflow:hidden;box-shadow:var(--shadow-sm)}
+.reminder-main{display:grid;grid-template-columns:104px minmax(0,1fr) auto;gap:14px;align-items:center;padding:15px;font-family:"Helvetica Neue",Arial,sans-serif}
+.date-label{background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;border-radius:var(--r-sm);padding:11px 8px;text-align:center;font-weight:800;font-size:12px;letter-spacing:.02em}
+.reminder-main h3{margin:0 0 5px;color:var(--ink);font-size:15px}
+.reminder-main .desc{margin:0;color:var(--muted);font-size:12px;line-height:1.45}
+.reminder-edit{display:none;padding:16px;border-top:1px solid var(--line);background:#fbfdfe;font-family:"Helvetica Neue",Arial,sans-serif}
+.reminder-card.open .reminder-edit{display:block}
+.reminder-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.asset-select-box{border:1px solid var(--line);border-radius:var(--r-md);padding:14px;background:#fff;margin-top:14px}
+.asset-select-box h4{font-family:"Helvetica Neue",Arial,sans-serif;margin:0 0 10px;color:var(--navy);font-size:13px}
+.asset-checks{display:flex;flex-wrap:wrap;gap:8px}
+.asset-check{display:inline-flex;gap:7px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 11px;font-size:12px;color:#3c5566;cursor:pointer}
+.asset-check:hover{border-color:var(--sky)}
+.asset-check input{width:auto;margin:0}
+.linked-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.linked-pill{font-family:"Helvetica Neue",Arial,sans-serif;background:var(--mist);color:var(--navy);border-radius:999px;padding:5px 10px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px}
+.linked-pill::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--gold)}
+
+/* ---------- Preview ---------- */
+.summary-band{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;font-family:"Helvetica Neue",Arial,sans-serif}
+.sum-card{border:1px solid var(--line);border-radius:var(--r-md);padding:14px 16px;background:#fff;box-shadow:var(--shadow-sm)}
+.sum-card .v{font-size:24px;font-weight:800;color:var(--navy);line-height:1}
+.sum-card .k{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-top:6px;font-weight:700}
+.sum-card.accent{background:linear-gradient(135deg,var(--navy),var(--navy-700));border:none}
+.sum-card.accent .v{color:#fff}.sum-card.accent .k{color:rgba(255,255,255,.78)}
+
+.timeline{font-family:"Helvetica Neue",Arial,sans-serif;position:relative;margin:0;padding:4px 0 4px 0}
+.tl-row{display:grid;grid-template-columns:150px minmax(0,1fr);gap:18px;padding:14px 0;border-bottom:1px solid var(--line);position:relative}
+.tl-row:last-child{border-bottom:none}
+.tl-when{position:relative;padding-left:22px}
+.tl-when::before{content:"";position:absolute;left:4px;top:4px;width:9px;height:9px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 3px var(--gold-soft)}
+.tl-when::after{content:"";position:absolute;left:8px;top:14px;bottom:-14px;width:1px;background:var(--line)}
+.tl-row:last-child .tl-when::after{display:none}
+.tl-date{font-size:13px;font-weight:800;color:var(--navy)}
+.tl-rel{font-size:11px;color:var(--muted);margin-top:3px}
+.tl-title{font-size:14px;font-weight:700;color:var(--ink);margin:0 0 4px}
+.tl-desc{font-size:12px;color:var(--muted);line-height:1.5;margin:0 0 8px}
+.tl-assets{display:flex;flex-wrap:wrap;gap:6px}
+.tl-noassets{font-size:11.5px;color:var(--muted);font-style:italic}
+
+.progress{display:none;margin-top:14px;font-family:"Helvetica Neue",Arial,sans-serif}
+.bar-wrap{height:8px;background:#e7eef3;border-radius:999px;overflow:hidden}
+.bar{height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--gold));transition:width .2s}
+.progress p{margin:8px 0 0;color:var(--muted);font-size:12px}
+
+.toast{font-family:"Helvetica Neue",Arial,sans-serif;position:fixed;right:22px;bottom:22px;background:var(--navy);color:#fff;padding:13px 18px;border-radius:var(--r-sm);box-shadow:0 14px 34px rgba(0,0,0,.20);display:none;z-index:40;font-size:13px;font-weight:600}
+
+footer.legal{font-family:"Helvetica Neue",Arial,sans-serif;margin-top:20px;text-align:center;color:var(--muted);font-size:11px;line-height:1.6}
+
+@media(max-width:980px){
+  .hero-top{padding:30px 26px}
+  .hero h1{font-size:30px}
+  .layout{grid-template-columns:1fr}
+  .sticky{position:static}
+  .quick-start{grid-template-columns:1fr}
+  .summary-band{grid-template-columns:1fr 1fr}
+  .reminder-main{grid-template-columns:1fr}
+  .reminder-grid{grid-template-columns:1fr}
+  .tl-row{grid-template-columns:1fr;gap:8px}
+  .tl-when::after{display:none}
+}
+@media(max-width:560px){
+  .wrap{padding:16px 12px}
+  .content{padding:20px}
+  .hero h1{font-size:25px}
+  .hero-meta{gap:18px}
+  .summary-band{grid-template-columns:1fr}
+  .actions .btn{flex:1}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none !important}}
+
+/* ---------- Print (timeline / preview) ---------- */
+@media print{
+  body{background:#fff}
+  .wrap{max-width:none;padding:0}
+  .hero{border:none;box-shadow:none}
+  .hero-top::after{display:none}
+  .panel.sticky, .tabs, .quick-start, .actions, .section-head .actions,
+  .btn, .progress, .status, .toast{display:none !important}
+  .layout{grid-template-columns:1fr}
+  .reminder-card, .asset-card, .sum-card, .summary-band{box-shadow:none}
+  .tl-row{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div class="hero-top">
+        <p class="eyebrow"><span class="tick"></span> Capital Group · Capital Learning</p>
+        <h1>Long-Term Investing Post-Workshop Engagement Calendar</h1>
+        <p class="lede">Build a focused three-touchpoint follow-up sequence for advisers who completed the Long-Term Investing workshop. Attach the right resource to each touchpoint, then export one calendar file to send straight to the adviser.</p>
+        <div class="hero-meta">
+          <div class="hmetric"><strong id="reminderCount">3</strong><span>Touchpoints</span></div>
+          <div class="hmetric"><strong id="assetCount">0</strong><span>Resources loaded</span></div>
+          <div class="hmetric"><strong id="linkCount">0</strong><span>Resource links</span></div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="layout">
+          <aside class="panel sticky">
+            <h2>Session details</h2>
+            <p class="hint">Enter the adviser and workshop details. Resources are chosen inside each touchpoint below.</p>
+
+            <label for="clientName">Adviser / firm name</label>
+            <input id="clientName" placeholder="e.g., DBS Private Bank" />
+
+            <label for="startDate">Workshop completion date</label>
+            <input id="startDate" type="date" />
+
+            <div class="two">
+              <div><label for="reminderTime">Reminder time</label><input id="reminderTime" type="time" value="09:00" /></div>
+              <div><label for="duration">Duration</label><select id="duration"><option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option></select></div>
+            </div>
+
+            <label for="timezone">Time zone</label>
+            <select id="timezone"><option>Asia/Singapore</option><option>Asia/Hong_Kong</option><option>Asia/Tokyo</option><option>Europe/London</option><option>America/New_York</option><option>Australia/Sydney</option></select>
+
+            <label for="weekendRule">Weekend handling</label>
+            <select id="weekendRule"><option value="nextMonday">Move weekend reminders to Monday</option><option value="previousFriday">Move weekend reminders to Friday</option></select>
+
+            <div class="divider"></div>
+
+            <button class="btn primary full" onclick="downloadICS()"><span class="ico" aria-hidden="true">↓</span> Export calendar to send</button>
+            <button class="btn ghost full" style="margin-top:9px" onclick="setTab('assets');uploadFileAssets()"><span class="ico" aria-hidden="true">+</span> Upload resources</button>
+
+            <div class="small">Active touchpoints: <strong id="activeCount">3</strong></div>
+
+            <div class="progress" id="progress"><div class="bar-wrap"><div class="bar" id="bar"></div></div><p id="progressText">Preparing…</p></div>
+            <div class="status" id="status" role="status" aria-live="polite"></div>
+
+            <div class="note"><strong>How resources attach:</strong> each file is embedded into the specific touchpoint you link it to, so the adviser's calendar event carries exactly the resource it needs.</div>
+            <div class="warning">Keep files compact. Large attachments make the calendar file heavy and slower for the adviser to import.</div>
+          </aside>
+
+          <main>
+            <div class="tabs">
+              <button id="tab-sequence" class="tab active" onclick="setTab('sequence')">Touchpoint sequence</button>
+              <button id="tab-assets" class="tab" onclick="setTab('assets')">Resource library</button>
+              <button id="tab-preview" class="tab" onclick="setTab('preview')">Preview &amp; export</button>
+            </div>
+
+            <div id="mainPanel"></div>
+          </main>
+        </div>
+      </div>
+    </div>
+    <footer class="legal">For Capital Group adviser engagement use. Resources remain in this browser session until you export. No data leaves your device.</footer>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script>
+var BUILD_ID="lti-engagement-calendar-v16"; /* localStorage key — kept stable so saved setups survive upgrades */
+var APP_VERSION="v17"; /* display / ICS PRODID version */
+var DEFAULT_REMINDERS=[
+{"id":"day0","label":"Day 0","offsetValue":0,"offsetUnit":"days","enabled":true,"title":"Prepare, then capture one real client concern","description":"Review one resource and decide which client concern it helps you address. Then write down one real client objection in the client's own words — don't solve it yet, just capture it clearly so you can respond more effectively next time.","assetIds":[]},
+{"id":"week1","label":"Week 1","offsetValue":1,"offsetUnit":"weeks","enabled":true,"title":"Build one full response in your next conversation","description":"In your next conversation, work through the full loop: acknowledge the concern first, add one useful perspective from the workshop (inflation, compounding, volatility or time in market), then end with one clear, practical next step. Keep it simple — one insight, one example, one takeaway.","assetIds":[]},
+{"id":"month1","label":"Month 1","offsetValue":1,"offsetUnit":"months","enabled":true,"title":"Keep one habit and reinforce the core message","description":"Choose one behaviour to keep as part of your standard client preparation — a better discovery question, a strong metaphor, or always ending with a next step. Use a resource to reconnect clients to their long-term goals and reinforce the workshop's core message: staying invested matters more than trying to time every move.","assetIds":[]}
+];
+var LS_REMINDERS=BUILD_ID+"-reminders";
+var LS_ASSETS=BUILD_ID+"-assets";
+var activeTab="sequence";
+var reminders=loadReminders();
+var assets=loadAssets();
+var sessionFiles={};
+
+function $(id){return document.getElementById(id);}
+function clone(o){return JSON.parse(JSON.stringify(o));}
+function uid(prefix){return (prefix||"id")+"-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,7);}
+function escapeHtml(s){s=String(s==null?"":s);return s.replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function pad(n){return String(n).padStart(2,"0");}
+function slug(s){return String(s||"").trim().replace(/[^a-zA-Z0-9]+/g,"_").replace(/^_|_$/g,"")||"LTI";}
+function toast(msg){var t=$("toast");t.textContent=msg;t.style.display="block";clearTimeout(t._t);t._t=setTimeout(function(){t.style.display="none";},2300);}
+function saveReminders(){try{localStorage.setItem(LS_REMINDERS,JSON.stringify(reminders));}catch(e){}}
+function saveAssets(){try{localStorage.setItem(LS_ASSETS,JSON.stringify(assets));}catch(e){}}
+function loadReminders(){try{return JSON.parse(localStorage.getItem(LS_REMINDERS))||clone(DEFAULT_REMINDERS);}catch(e){return clone(DEFAULT_REMINDERS);}}
+function loadAssets(){try{return JSON.parse(localStorage.getItem(LS_ASSETS))||[];}catch(e){return [];}}
+function getAsset(id){for(var i=0;i<assets.length;i++){if(assets[i].id===id)return assets[i];}return null;}
+function findReminder(id){for(var i=0;i<reminders.length;i++){if(reminders[i].id===id)return reminders[i];}return null;}
+function assetNames(ids){var out=[];ids=ids||[];for(var i=0;i<ids.length;i++){var a=getAsset(ids[i]);if(a)out.push(a.name);}return out;}
+function formatBytes(n){if(!n)return"0 KB";var u=["B","KB","MB","GB"],i=0;while(n>=1024&&i<u.length-1){n/=1024;i++;}return (i? n.toFixed(1):Math.round(n))+" "+u[i];}
+function displayNameFromFile(file){return file.name.replace(/\.[^.]+$/,"").replace(/[_-]+/g," ").replace(/\b\w/g,function(m){return m.toUpperCase();});}
+function assetType(file){var n=file.name.toLowerCase();if(n.endsWith(".pptx")||n.endsWith(".ppt"))return"PowerPoint";if(n.endsWith(".docx")||n.endsWith(".doc"))return"Word";if(n.endsWith(".xlsx")||n.endsWith(".xls"))return"Excel";if(n.endsWith(".pdf"))return"PDF";if(n.endsWith(".png")||n.endsWith(".jpg")||n.endsWith(".jpeg")||n.endsWith(".gif"))return"Image";return"File";}
+function downloadBlob(blob,filename){var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href);},500);}
+function setTab(tab){activeTab=tab;["sequence","assets","preview"].forEach(function(x){var el=$("tab-"+x);if(el)el.classList.toggle("active",tab===x);});render();}
+
+function updateStats(){
+  $("assetCount").textContent=assets.length;
+  var active=reminders.filter(function(r){return r.enabled;}).length;
+  $("reminderCount").textContent=active;
+  if($("activeCount"))$("activeCount").textContent=active;
+  var linked=0;reminders.forEach(function(r){linked+=(r.assetIds||[]).length;});
+  $("linkCount").textContent=linked;
+}
+function render(){updateStats();if(activeTab==="sequence")renderSequence();if(activeTab==="assets")renderAssets();if(activeTab==="preview")renderPreview();}
+
+/* ---------- Sequence ---------- */
+function renderSequence(openId){
+  $("mainPanel").innerHTML=
+  '<div class="quick-start">'+
+    '<div class="step"><div class="num">STEP 01</div><strong>Upload resources</strong><p>Add the PDFs, decks and charts you want advisers to receive. Files stay in this session.</p></div>'+
+    '<div class="step"><div class="num">STEP 02</div><strong>Link to touchpoints</strong><p>Open a touchpoint and attach the resource that fits that moment in the journey.</p></div>'+
+    '<div class="step"><div class="num">STEP 03</div><strong>Export &amp; send</strong><p>Download one calendar file and send it to the adviser to import.</p></div>'+
+  '</div>'+
+  '<div class="section-head"><div><h2>Touchpoint sequence</h2><p class="sub">A focused three-touchpoint follow-up journey. Open any touchpoint to edit it or attach resources.</p></div>'+
+  '<div class="actions"><button class="btn ghost small" onclick="addReminder()">+ Add touchpoint</button><button class="btn ghost small" onclick="resetReminders()">Reset to default</button></div></div>'+
+  '<div class="sequence">'+reminders.map(reminderCard).join("")+'</div>';
+  bindReminderInputs();
+  if(openId){var c=$("rem-"+openId);if(c)c.classList.add("open");}
+}
+function reminderCard(r){
+  var selectedNames=assetNames(r.assetIds);
+  var assetChips=selectedNames.length?selectedNames.map(function(n){return'<span class="linked-pill">'+escapeHtml(n)+'</span>';}).join(""):'<span class="chip">No resource linked</span>';
+  var checks=assets.length?assets.map(function(a){
+    var checked=(r.assetIds||[]).indexOf(a.id)>=0?"checked":"";
+    var status=(sessionFiles[a.id]?"":" · reselect");
+    return'<label class="asset-check"><input type="checkbox" data-rem-asset="'+r.id+'" value="'+a.id+'" '+checked+'> '+escapeHtml(a.name)+escapeHtml(status)+'</label>';
+  }).join(""):'<div class="empty" style="padding:14px;text-align:left">No resources yet. Upload them from the Resource library.</div>';
+  return '<article class="reminder-card" id="rem-'+r.id+'">'+
+    '<div class="reminder-main">'+
+      '<div class="date-label" id="label-'+r.id+'">'+escapeHtml(r.label)+'</div>'+
+      '<div><h3 id="title-view-'+r.id+'">'+escapeHtml(r.title)+'</h3>'+
+        '<p class="desc" id="summary-'+r.id+'">'+(r.enabled?"Active":"Disabled")+' · '+r.offsetValue+' '+r.offsetUnit+' after workshop · '+selectedNames.length+' resource(s)</p>'+
+        '<div class="linked-list" id="linked-'+r.id+'">'+assetChips+'</div>'+
+      '</div>'+
+      '<div class="actions"><button class="btn ghost small" onclick="toggleReminder(\''+r.id+'\')">Edit</button><button class="btn danger small" onclick="deleteReminder(\''+r.id+'\')">Delete</button></div>'+
+    '</div>'+
+    '<div class="reminder-edit">'+
+      '<div class="reminder-grid">'+
+        '<div><label>Label</label><input data-rid="'+r.id+'" data-key="label" value="'+escapeHtml(r.label)+'"></div>'+
+        '<div><label>Enabled</label><select data-rid="'+r.id+'" data-key="enabled"><option value="true" '+(r.enabled?"selected":"")+'>Yes</option><option value="false" '+(!r.enabled?"selected":"")+'>No</option></select></div>'+
+        '<div><label>Offset</label><input type="number" min="0" data-rid="'+r.id+'" data-key="offsetValue" value="'+r.offsetValue+'"></div>'+
+        '<div><label>Unit</label><select data-rid="'+r.id+'" data-key="offsetUnit"><option '+(r.offsetUnit==="days"?"selected":"")+'>days</option><option '+(r.offsetUnit==="weeks"?"selected":"")+'>weeks</option><option '+(r.offsetUnit==="months"?"selected":"")+'>months</option></select></div>'+
+      '</div>'+
+      '<label style="margin-top:14px">Calendar title</label><input data-rid="'+r.id+'" data-key="title" value="'+escapeHtml(r.title)+'">'+
+      '<label>Description / talking point</label><textarea data-rid="'+r.id+'" data-key="description">'+escapeHtml(r.description)+'</textarea>'+
+      '<div class="asset-select-box"><h4>Resources for this touchpoint</h4><div class="asset-checks">'+checks+'</div>'+
+        '<div class="actions" style="margin-top:12px"><button class="btn secondary small" onclick="setTab(\'assets\');uploadFileAssets()">+ Upload more</button><button class="btn ghost small" onclick="clearReminderAssets(\''+r.id+'\')">Remove all</button></div>'+
+      '</div>'+
+      '<div class="actions" style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line)"><button class="btn primary small" onclick="saveReminder(\''+r.id+'\')"><span class="ico" aria-hidden="true">✓</span> Save changes</button><button class="btn ghost small" onclick="toggleReminder(\''+r.id+'\')">Close</button></div>'+
+    '</div>'+
+  '</article>';
+}
+function bindReminderInputs(){
+  document.querySelectorAll("[data-rid]").forEach(function(el){
+    var handler=function(){var r=findReminder(el.dataset.rid);if(!r)return;var v=el.value;if(el.dataset.key==="enabled")v=(v==="true");if(el.dataset.key==="offsetValue")v=Number(v)||0;r[el.dataset.key]=v;saveReminders();updateReminderVisual(r.id);updateStats();};
+    el.addEventListener("input",handler);el.addEventListener("change",handler);
+  });
+  document.querySelectorAll("[data-rem-asset]").forEach(function(el){
+    el.addEventListener("change",function(){var r=findReminder(el.dataset.remAsset);if(!r)return;r.assetIds=[].slice.call(document.querySelectorAll('[data-rem-asset="'+r.id+'"]:checked')).map(function(x){return x.value;});saveReminders();updateReminderVisual(r.id);updateStats();});
+  });
+}
+function updateReminderVisual(id){
+  var r=findReminder(id);if(!r)return;var names=assetNames(r.assetIds);
+  if($("label-"+id))$("label-"+id).textContent=r.label;
+  if($("title-view-"+id))$("title-view-"+id).textContent=r.title;
+  if($("summary-"+id))$("summary-"+id).textContent=(r.enabled?"Active":"Disabled")+" · "+r.offsetValue+" "+r.offsetUnit+" after workshop · "+names.length+" resource(s)";
+  if($("linked-"+id))$("linked-"+id).innerHTML=names.length?names.map(function(n){return'<span class="linked-pill">'+escapeHtml(n)+'</span>';}).join(""):'<span class="chip">No resource linked</span>';
+}
+function toggleReminder(id){var c=$("rem-"+id);if(c)c.classList.toggle("open");}
+function saveReminder(id){var r=findReminder(id);if(!r)return;saveReminders();updateReminderVisual(id);updateStats();var c=$("rem-"+id);if(c)c.classList.remove("open");toast("Touchpoint saved");}
+function addReminder(){var r={id:uid("rem"),label:"New",offsetValue:1,offsetUnit:"weeks",enabled:true,title:"New touchpoint",description:"Add the action or talking point for this touchpoint.",assetIds:[]};reminders.push(r);saveReminders();renderSequence(r.id);toast("Touchpoint added");}
+function deleteReminder(id){if(!confirm("Delete this touchpoint?"))return;reminders=reminders.filter(function(r){return r.id!==id;});saveReminders();renderSequence();updateStats();toast("Touchpoint deleted");}
+function resetReminders(){if(!confirm("Reset to the default three-touchpoint sequence? Your resource library stays intact."))return;reminders=clone(DEFAULT_REMINDERS);saveReminders();renderSequence();updateStats();toast("Sequence reset");}
+function clearReminderAssets(id){var r=findReminder(id);if(!r)return;r.assetIds=[];saveReminders();renderSequence(id);toast("Resources removed from touchpoint");}
+
+/* ---------- Resource library ---------- */
+function renderAssets(){
+  $("mainPanel").innerHTML=
+  '<div class="section-head"><div><h2>Resource library</h2><p class="sub">Upload the materials advisers receive. Each file embeds into the touchpoints you link it to.</p></div>'+
+  '<div class="actions"><button class="btn primary small" onclick="uploadFileAssets()">+ Upload resources</button><button class="btn ghost small" onclick="exportSettings()">Export setup</button><button class="btn ghost small" onclick="importSettings()">Import setup</button></div></div>'+
+  (assets.length?'<div class="asset-grid">'+assets.map(assetCard).join("")+'</div>':'<div class="empty"><strong>No resources uploaded yet.</strong><br>Select <strong>Upload resources</strong> to add PDFs, PowerPoints, Word documents, charts or other workshop materials.</div>')+
+  '<div class="note"><strong>Session storage:</strong> file contents stay in this browser tab while you work. The touchpoint structure is saved automatically. Use <strong>Export setup</strong> to save your full configuration <em>including the resource files</em> in one .json — importing it later restores everything with no reselecting needed.</div>';
+}
+function assetCard(a){
+  var linkedCount=0;reminders.forEach(function(r){if((r.assetIds||[]).indexOf(a.id)>=0)linkedCount++;});
+  var ready=!!sessionFiles[a.id];
+  return '<article class="asset-card"><div><h3>'+escapeHtml(a.name)+'</h3><p>'+escapeHtml(a.description||"Adviser resource.")+'</p></div>'+
+    '<div class="meta"><span class="chip">'+escapeHtml(a.type||"File")+'</span><span class="chip">'+escapeHtml(a.filename||"")+'</span><span class="chip">'+formatBytes(a.size)+'</span>'+
+    '<span class="chip '+(ready?"ready":"warn")+'">'+(ready?"Ready":"Reselect file")+'</span><span class="chip">'+linkedCount+' touchpoint(s)</span></div>'+
+    '<div class="actions"><button class="btn secondary small" onclick="reselectAsset(\''+a.id+'\')">Reselect</button><button class="btn ghost small" onclick="editAsset(\''+a.id+'\')">Edit</button><button class="btn danger small" onclick="deleteAsset(\''+a.id+'\')">Delete</button></div></article>';
+}
+function uploadFileAssets(){
+  var input=document.createElement("input");input.type="file";input.multiple=true;
+  input.onchange=function(){var files=[].slice.call(input.files);if(!files.length)return;files.forEach(function(file){var id=uid("asset");sessionFiles[id]=file;assets.unshift({id:id,kind:"sessionFile",name:displayNameFromFile(file),type:assetType(file),filename:file.name,mime:file.type||"application/octet-stream",description:"Uploaded resource. Held in memory for this session.",size:file.size,createdAt:new Date().toISOString()});});saveAssets();renderAssets();updateStats();toast(files.length+" resource"+(files.length===1?"":"s")+" uploaded");};
+  input.click();
+}
+function reselectAsset(id){
+  var input=document.createElement("input");input.type="file";
+  input.onchange=function(){var file=input.files[0];if(!file)return;sessionFiles[id]=file;var a=getAsset(id);if(a){a.filename=file.name;a.mime=file.type||"application/octet-stream";a.type=assetType(file);a.size=file.size;a.name=a.name||displayNameFromFile(file);a.updatedAt=new Date().toISOString();saveAssets();renderAssets();toast("File reselected and ready");}};
+  input.click();
+}
+function editAsset(id){var a=getAsset(id);if(!a)return;var name=prompt("Resource display name",a.name);if(name===null)return;var type=prompt("Resource type / category",a.type||"File");if(type===null)return;var description=prompt("Short description",a.description||"");if(description===null)return;a.name=name;a.type=type;a.description=description;saveAssets();renderAssets();toast("Resource updated");}
+function deleteAsset(id){if(!confirm("Delete this resource and unlink it from all touchpoints?"))return;assets=assets.filter(function(a){return a.id!==id;});reminders.forEach(function(r){r.assetIds=(r.assetIds||[]).filter(function(x){return x!==id;});});delete sessionFiles[id];saveAssets();saveReminders();render();toast("Resource deleted");}
+
+/* ---------- Scheduling ---------- */
+function addOffset(base,r){var d=new Date(base);if(r.offsetUnit==="days")d.setDate(d.getDate()+Number(r.offsetValue));if(r.offsetUnit==="weeks")d.setDate(d.getDate()+Number(r.offsetValue)*7);if(r.offsetUnit==="months")d.setMonth(d.getMonth()+Number(r.offsetValue));return d;}
+function weekdayDate(d){var x=new Date(d),rule=$("weekendRule").value,day=x.getDay();if(day===6)x.setDate(x.getDate()+(rule==="previousFriday"?-1:2));if(day===0)x.setDate(x.getDate()+(rule==="previousFriday"?-2:1));return x;}
+function scheduledReminders(){var base=new Date($("startDate").value+"T00:00:00");return reminders.filter(function(r){return r.enabled;}).map(function(r){var x=clone(r);x.date=weekdayDate(addOffset(base,r));return x;}).sort(function(a,b){return a.date-b.date;});}
+
+/* ---------- Preview ---------- */
+function relativeLabel(r){var v=Number(r.offsetValue)||0;if(v===0)return "On workshop day";var unit=String(r.offsetUnit).replace(/s$/,"");return v+" "+unit+(v===1?"":"s")+" after workshop";}
+function renderPreview(){
+  if(!$("startDate").value){$("mainPanel").innerHTML='<div class="empty"><strong>Select a workshop completion date first.</strong><br>Add it in Session details to generate the timeline.</div>';return;}
+  var rows=scheduledReminders();
+  var attachmentCount=0, estimatedBytes=0, withAssets=0;
+  rows.forEach(function(r){
+    if((r.assetIds||[]).length)withAssets++;
+    (r.assetIds||[]).forEach(function(id){var a=getAsset(id);if(a){attachmentCount++;estimatedBytes+=Number(a.size||0);}});
+  });
+  var lastDate=rows.length?rows[rows.length-1].date.toLocaleDateString(undefined,{month:"short",year:"numeric"}):"—";
+
+  var band='<div class="summary-band">'+
+    '<div class="sum-card accent"><div class="v">'+rows.length+'</div><div class="k">Touchpoints</div></div>'+
+    '<div class="sum-card"><div class="v">'+attachmentCount+'</div><div class="k">Resources embedded</div></div>'+
+    '<div class="sum-card"><div class="v">'+formatBytes(estimatedBytes)+'</div><div class="k">Approx. payload</div></div>'+
+    '<div class="sum-card"><div class="v" style="font-size:18px;padding-top:3px">'+lastDate+'</div><div class="k">Journey ends</div></div>'+
+  '</div>';
+
+  var timeline='<div class="timeline">'+rows.map(function(r){
+    var names=assetNames(r.assetIds);
+    var assetHtml=names.length?'<div class="tl-assets">'+names.map(function(n){return'<span class="linked-pill">'+escapeHtml(n)+'</span>';}).join("")+'</div>':'<div class="tl-noassets">No resource attached to this touchpoint</div>';
+    return '<div class="tl-row">'+
+      '<div class="tl-when"><div class="tl-date">'+r.date.toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short",year:"numeric"})+'</div><div class="tl-rel">'+escapeHtml(relativeLabel(r))+'</div></div>'+
+      '<div><p class="tl-title">'+escapeHtml(r.title)+'</p><p class="tl-desc">'+escapeHtml(r.description)+'</p>'+assetHtml+'</div>'+
+    '</div>';
+  }).join("")+'</div>';
+
+  var missingFiles=[];
+  rows.forEach(function(r){(r.assetIds||[]).forEach(function(id){var a=getAsset(id);if(a&&!sessionFiles[a.id])missingFiles.push(a.name);});});
+  var warn=missingFiles.length?'<div class="warning"><strong>Reselect needed:</strong> '+missingFiles.length+' linked file(s) are not loaded in this session. Reselect them in the Resource library before exporting.</div>':'';
+
+  $("mainPanel").innerHTML=
+    '<div class="section-head"><div><h2>Preview &amp; export</h2><p class="sub">This is the journey the adviser receives. Review it, then export the calendar file to send.</p></div>'+
+    '<button class="btn primary small" onclick="downloadICS()"><span class="ico" aria-hidden="true">↓</span> Export calendar</button></div>'+
+    band+warn+timeline;
+}
+
+/* ---------- ICS generation (per-event embedding) ---------- */
+function formatIcsDate(d,time){var parts=time.split(":").map(Number);return ""+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+"T"+pad(parts[0])+pad(parts[1])+"00";}
+function escIcs(s){return String(s==null?"":s).replace(/\\/g,"\\\\").replace(/\r\n|\r|\n/g,"\\n").replace(/,/g,"\\,").replace(/;/g,"\\;");}
+/* RFC 5545 §3.1: content lines must not exceed 75 octets; fold longer lines with CRLF + a leading space. */
+var ICS_ENC=(typeof TextEncoder!=="undefined")?new TextEncoder():null;
+function icsByteLen(s){return ICS_ENC?ICS_ENC.encode(s).length:unescape(encodeURIComponent(s)).length;}
+function foldIcs(line){
+  var chars=Array.from(String(line)),out="",seg="",segBytes=0;
+  for(var i=0;i<chars.length;i++){
+    var ch=chars[i],b=icsByteLen(ch);
+    if(segBytes+b>74){out+=(out?"\r\n ":"")+seg;seg=ch;segBytes=b;}
+    else{seg+=ch;segBytes+=b;}
+  }
+  return out+(out?"\r\n ":"")+seg;
+}
+/* Push one complete (already-escaped) content line, folded, with its trailing CRLF. */
+function pushLine(parts,line){parts.push(foldIcs(line)+"\r\n");}
+function bytesToBase64(bytes){var binary="",len=bytes.byteLength,batch=0x8000;for(var i=0;i<len;i+=batch){var sub=bytes.subarray(i,Math.min(i+batch,len));binary+=String.fromCharCode.apply(null,sub);}return btoa(binary);}
+function readBlobPart(file,start,end){return new Promise(function(resolve,reject){var reader=new FileReader();reader.onload=function(){resolve(new Uint8Array(reader.result));};reader.onerror=reject;reader.readAsArrayBuffer(file.slice(start,end));});}
+async function appendFileAttachment(parts,file,asset,onProgress,totalBytesDone,totalBytesAll){
+  var mime=asset.mime||file.type||"application/octet-stream";
+  var filename=asset.filename||file.name;
+  pushLine(parts,"ATTACH;ENCODING=BASE64;VALUE=BINARY;FMTTYPE="+mime+";X-FILENAME="+escIcs(filename)+":");
+  var chunkSize=49152, written=0;
+  for(var start=0;start<file.size;start+=chunkSize){
+    var end=Math.min(start+chunkSize,file.size);
+    var bytes=await readBlobPart(file,start,end);
+    var b64=bytesToBase64(bytes);
+    for(var i=0;i<b64.length;i+=72){parts.push(" "+b64.slice(i,i+72)+"\r\n");}
+    written+=(end-start);
+    if(onProgress)onProgress(totalBytesDone+written,totalBytesAll,filename);
+    await new Promise(function(r){setTimeout(r,0);});
+  }
+}
+function showStatus(msg){var s=$("status");s.textContent=msg;s.style.display="block";clearTimeout(s._t);s._t=setTimeout(function(){s.style.display="none";},3800);}
+
+async function downloadICS(){
+  if(!$("startDate").value){alert("Select the workshop completion date first.");setTab("preview");return;}
+  var rows=scheduledReminders();
+  if(!rows.length){alert("No active touchpoints to export. Enable at least one in the Touchpoint sequence.");return;}
+
+  var missing=[],seen={};
+  rows.forEach(function(r){(r.assetIds||[]).forEach(function(id){var a=getAsset(id);if(a&&!sessionFiles[a.id]&&!seen[a.id]){seen[a.id]=true;missing.push(a);}});});
+  if(missing.length){
+    alert("Reselect these files before exporting:\n\n"+missing.map(function(a){return "• "+a.name;}).join("\n"));
+    setTab("assets");
+    return;
+  }
+
+  var totalBytes=0,attachmentCount=0;
+  rows.forEach(function(r){(r.assetIds||[]).forEach(function(id){var a=getAsset(id),f=a?sessionFiles[a.id]:null;if(f){totalBytes+=f.size;attachmentCount++;}});});
+  if(totalBytes>25*1024*1024){
+    if(!confirm("This will embed "+attachmentCount+" file(s), about "+formatBytes(totalBytes)+" before encoding. Large calendars can be slow for advisers to import. Continue?"))return;
+  }
+
+  var progress=$("progress"),bar=$("bar"),progressText=$("progressText");
+  progress.style.display="block";bar.style.width="0%";progressText.textContent="Preparing calendar…";
+  var client=$("clientName").value.trim(),time=$("reminderTime").value||"09:00",tz=$("timezone").value,duration=Number($("duration").value)||15;
+  var now=new Date();
+  var stamp=""+now.getUTCFullYear()+pad(now.getUTCMonth()+1)+pad(now.getUTCDate())+"T"+pad(now.getUTCHours())+pad(now.getUTCMinutes())+pad(now.getUTCSeconds())+"Z";
+  var parts=[];
+  parts.push("BEGIN:VCALENDAR\r\nVERSION:2.0\r\n");
+  pushLine(parts,"PRODID:-//Capital Group Capital Learning//LTI Engagement Calendar "+APP_VERSION+"//EN");
+  parts.push("CALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\n");
+  pushLine(parts,"X-WR-CALNAME:"+escIcs((client?client+" — ":"")+"Long-Term Investing Follow-Up"));
+  pushLine(parts,"X-WR-TIMEZONE:"+tz);
+  var bytesCompletedBefore=0;
+
+  for(var i=0;i<rows.length;i++){
+    var r=rows[i],end=new Date(r.date),hm=time.split(":").map(Number);end.setHours(hm[0],hm[1]+duration,0,0);
+    var linked=(r.assetIds||[]).map(getAsset).filter(Boolean);
+    var desc=r.description;
+    parts.push("BEGIN:VEVENT\r\n");
+    pushLine(parts,"UID:lti-"+r.id+"-"+i+"-"+$("startDate").value+"@capitalgroup-learning");
+    parts.push("DTSTAMP:"+stamp+"\r\n");
+    parts.push("DTSTART;TZID="+tz+":"+formatIcsDate(r.date,time)+"\r\n");
+    parts.push("DTEND;TZID="+tz+":"+formatIcsDate(end,pad(end.getHours())+":"+pad(end.getMinutes()))+"\r\n");
+    pushLine(parts,"SUMMARY:"+escIcs((client?client+": ":"")+r.title));
+    pushLine(parts,"DESCRIPTION:"+escIcs(desc));
+    for(var j=0;j<linked.length;j++){
+      var asset=linked[j],file=sessionFiles[asset.id];
+      if(file){
+        await appendFileAttachment(parts,file,asset,function(done,total,filename){var pct=total?Math.min(99,Math.round((done/total)*100)):60;bar.style.width=pct+"%";progressText.textContent="Embedding "+filename+" — "+pct+"%";},bytesCompletedBefore,totalBytes);
+        bytesCompletedBefore+=file.size;
+      }
+    }
+    parts.push("BEGIN:VALARM\r\nTRIGGER:-PT15M\r\nACTION:DISPLAY\r\n");
+    pushLine(parts,"DESCRIPTION:"+escIcs(r.title));
+    parts.push("END:VALARM\r\nEND:VEVENT\r\n");
+  }
+  parts.push("END:VCALENDAR\r\n");
+  bar.style.width="100%";progressText.textContent="Finalising download…";
+  downloadBlob(new Blob(parts,{type:"text/calendar;charset=utf-8"}),slug(client||"LTI")+"_LTI_Follow_Up_"+$("startDate").value+".ics");
+  showStatus("Calendar exported. Send the .ics file to the adviser to import.");
+  setTimeout(function(){progress.style.display="none";},1600);
+}
+
+/* ---------- Setup backup ---------- */
+function base64ToBytes(b64){var binary=atob(b64),len=binary.length,bytes=new Uint8Array(len);for(var i=0;i<len;i++){bytes[i]=binary.charCodeAt(i);}return bytes;}
+async function exportSettings(){var files={};var missing=[];for(var i=0;i<assets.length;i++){var a=assets[i],f=sessionFiles[a.id];if(f){try{var bytes=await readBlobPart(f,0,f.size);files[a.id]={filename:f.name,mime:f.type||a.mime||"application/octet-stream",data:bytesToBase64(bytes)};}catch(e){missing.push(a.name);}}else{missing.push(a.name);}}var backup={version:BUILD_ID,exportedAt:new Date().toISOString(),reminders:reminders,assets:assets,files:files};downloadBlob(new Blob([JSON.stringify(backup,null,2)],{type:"application/json"}),"LTI_Calendar_Setup.json");if(missing.length){toast("Setup exported. "+missing.length+" resource(s) had no file loaded and were saved as metadata only.");}else{toast("Setup exported with resource files included");}}
+function importSettings(){var input=document.createElement("input");input.type="file";input.accept=".json,application/json";input.onchange=async function(){var file=input.files[0];if(!file)return;var text=await file.text();var backup;try{backup=JSON.parse(text);}catch(e){alert("That file is not a valid setup file.");return;}if(!backup.reminders||!backup.assets){alert("This file does not contain touchpoint and resource data.");return;}reminders=backup.reminders;assets=backup.assets;sessionFiles={};var restored=0,pending=0;if(backup.files){for(var id in backup.files){if(!backup.files.hasOwnProperty(id))continue;var rec=backup.files[id];try{var bytes=base64ToBytes(rec.data);var blob=new Blob([bytes],{type:rec.mime||"application/octet-stream"});var f=new File([blob],rec.filename||"resource",{type:rec.mime||"application/octet-stream"});sessionFiles[id]=f;restored++;}catch(e){pending++;}}}assets.forEach(function(a){if(!sessionFiles[a.id])pending++;});saveReminders();saveAssets();render();if(restored&&!pending){toast("Setup imported with "+restored+" resource file(s) restored. Ready to export.");}else if(restored){toast("Setup imported. "+restored+" file(s) restored, "+pending+" need reselecting.");}else{toast("Setup imported. Reselect files before exporting.");}};input.click();}
+
+/* ---------- Init ---------- */
+function init(){
+  var today=new Date();
+  $("startDate").value=today.getFullYear()+"-"+pad(today.getMonth()+1)+"-"+pad(today.getDate());
+  ["clientName","startDate","reminderTime","duration","timezone","weekendRule"].forEach(function(id){var el=$(id);if(el)el.addEventListener("input",function(){if(activeTab==="preview")renderPreview();});});
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"){var open=document.querySelector(".reminder-card.open");if(open){open.classList.remove("open");}}});
+  render();
+}
+try{init();}catch(e){console.error(e);var target=$("mainPanel");if(target)target.innerHTML='<div class="warning"><strong>Interactive mode did not load.</strong> Open this file in Chrome, Edge or Safari.</div>';}
+</script>
+</body>
+</html>
